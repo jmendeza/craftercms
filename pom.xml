@@ -670,11 +670,6 @@
 				<version>${cglib.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>rome</groupId>
-				<artifactId>rome</artifactId>
-				<version>${rome.version}</version>
-			</dependency>
-			<dependency>
 				<groupId>org.tuckey</groupId>
 				<artifactId>urlrewritefilter</artifactId>
 				<version>${urlrewritefilter.version}</version>
