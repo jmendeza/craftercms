@@ -270,7 +270,7 @@ task buildAuthoringTomcat(group: "Build", description: "Builds the Authoring Tom
 		}
 
 		exec {
-			commandLine 'docker', 'build', '--target', authoringBuildTarget, '-t', "${project.authoringTomcatImageName}:${project.version}", imageBuildDir
+			commandLine 'docker', 'buildx', 'build', '--sbom=true', '--provenance=true', '--target', authoringBuildTarget, '-t', "${project.authoringTomcatImageName}:${project.version}", imageBuildDir
 		}
 
 		pushTagDockerImage(project.authoringTomcatImageName)
@@ -301,7 +301,7 @@ task buildAuthoringLocal(group: "Build", description: "Builds the Authoring Tomc
 		}
 
 		exec {
-			commandLine 'docker', 'build', '--target', authoringBuildTarget, '-t', "${project.authoringLocalImageName}:${project.version}", imageBuildDir
+			commandLine 'docker', 'buildx', 'build', '--sbom=true', '--provenance=true', '--target', authoringBuildTarget, '-t', "${project.authoringLocalImageName}:${project.version}", imageBuildDir
 		}
 
 		pushTagDockerImage(project.authoringLocalImageName)
@@ -315,7 +315,7 @@ task buildAuthoringTomcatWithImageMagick(group: "Build", description: "Builds th
 
 	doLast {
 		exec {
-			commandLine 'docker', 'build', '--target', 'imagemagick', '-t', "${project.authoringTomcatWithImageMagickImageName}:${project.version}", imageBuildDir
+			commandLine 'docker', 'buildx', 'build', '--sbom=true', '--provenance=true', '--target', 'imagemagick', '-t', "${project.authoringTomcatWithImageMagickImageName}:${project.version}", imageBuildDir
 		}
 
 		pushTagDockerImage(project.authoringTomcatWithImageMagickImageName)
@@ -346,7 +346,7 @@ task buildDeliveryTomcat(group: "Build", description: "Builds the Delivery Tomca
 		}
 
 		exec {
-			commandLine 'docker', 'build', '-t', "${project.deliveryTomcatImageName}:${project.version}", imageBuildDir
+			commandLine 'docker', 'buildx', 'build', '--sbom=true', '--provenance=true', '-t', "${project.deliveryTomcatImageName}:${project.version}", imageBuildDir
 		}
 
 		pushTagDockerImage(project.deliveryTomcatImageName)
@@ -383,7 +383,7 @@ task buildDeployer(group: "Build", description: "Builds the Deployer Docker imag
 		}
 
 		exec {
-			commandLine 'docker', 'build', '-t', "${project.deployerImageName}:${project.version}", imageBuildDir
+			commandLine 'docker', 'buildx', 'build', '--sbom=true', '--provenance=true', '-t', "${project.deployerImageName}:${project.version}", imageBuildDir
 		}
 
 		pushTagDockerImage(project.deployerImageName)
@@ -416,7 +416,7 @@ task buildProfile(group: "Build", description: "Builds the Profile Docker image"
 		}
 
 		exec {
-			commandLine 'docker', 'build', '-t', "${project.profileImageName}:${project.version}", imageBuildDir
+			commandLine 'docker', 'buildx', 'build', '--sbom=true', '--provenance=true', '-t', "${project.profileImageName}:${project.version}", imageBuildDir
 		}
 
 		pushTagDockerImage(project.profileImageName)
@@ -436,7 +436,7 @@ task buildGitSshServer(group: "Build", description: "Builds the Git SSH Server D
 		}
 
 		exec {
-			commandLine 'docker', 'build', '-t', "${project.gitSshServerImageName }:${project.version}", imageBuildDir
+			commandLine 'docker', 'buildx', 'build', '--sbom=true', '--provenance=true', '-t', "${project.gitSshServerImageName }:${project.version}", imageBuildDir
 		}
 
 		pushTagDockerImage(project.gitSshServerImageName)
@@ -456,7 +456,7 @@ task buildGitHttpsServer(group: "Build", description: "Builds the Git HTTPS Serv
 		}
 
 		exec {
-			commandLine 'docker', 'build', '-t', "${project.gitHttpsServerImageName}:${project.version}", imageBuildDir
+			commandLine 'docker', 'buildx', 'build', '--sbom=true', '--provenance=true', '-t', "${project.gitHttpsServerImageName}:${project.version}", imageBuildDir
 		}
 
 		pushTagDockerImage(project.gitHttpsServerImageName)
@@ -476,14 +476,14 @@ task buildLogrotate(group: "Build", description: "Builds the Logrotate Docker im
 		}
 
 		exec {
-			commandLine 'docker', 'build', '-t', "${project.logrotateImageName}:${project.version}", imageBuildDir
+			commandLine 'docker', 'buildx', 'build', '--sbom=true', '--provenance=true', '-t', "${project.logrotateImageName}:${project.version}", imageBuildDir
 		}
 
 		pushTagDockerImage(project.logrotateImageName)
 	}
 }
 
-task buildMainImages(group: "Build", description: "Builds main Docker images") {
+task buildMainImages(group: 'Build', description: 'Builds main Docker images') {
 	dependsOn buildLogrotate
 	dependsOn buildAuthoringTomcat
 	dependsOn buildAuthoringLocal
@@ -492,21 +492,21 @@ task buildMainImages(group: "Build", description: "Builds main Docker images") {
 	dependsOn buildGitSshServer
 	dependsOn buildGitHttpsServer
 	if (dockerEnterprise) {
-		if (project.hasProperty("imagemagick")) {
+		if (project.hasProperty('imagemagick')) {
 			dependsOn buildAuthoringTomcatWithImageMagick
 		}
 	}
 }
 
-task buildAllImages(group: "Build", description: "Builds all Docker images") {
+task buildAllImages(group: 'Build', description: 'Builds all Docker images') {
 	dependsOn buildMainImages
 	dependsOn buildProfile
 }
 
-task deleteDockerArtifacts(group: "Build", description: "Deletes Docker build artifacts") {
+task deleteDockerArtifacts(group: 'Build', description: 'Deletes Docker build artifacts') {
 	doLast {
-		execCommand(["docker", "container", "prune", "-f"], "${projectDir}")
-		execCommand(["docker", "image", "prune", "-af"], "${projectDir}")
-		execCommand(["docker", "volume", "prune", "-af"], "${projectDir}")
+		execCommand(['docker', 'container', "prune", '-f'], "${projectDir}")
+		execCommand(['docker', 'image', 'prune', '-af'], "${projectDir}")
+		execCommand(['docker', 'volume', 'prune', '-af'], "${projectDir}")
 	}
 }
