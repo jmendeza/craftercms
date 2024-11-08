@@ -67,7 +67,7 @@
 		<!-- Main -->
 		<!-- Spring -->
 		<spring.version>5.3.39</spring.version>
-		<spring.security.version>5.8.12</spring.security.version>
+		<spring.security.version>5.8.15</spring.security.version>
 		<spring.data.version>2.7.18</spring.data.version>
 		<spring.ldap.version>2.4.1</spring.ldap.version>
 		<spring.social.version>1.1.6.RELEASE</spring.social.version>
@@ -94,7 +94,6 @@
 		<mongo.version>4.9.1</mongo.version>
 		<jongo.version>1.5.1</jongo.version>
 		<gmongo.version>1.5</gmongo.version>
-		<velocity.engine.version>2.3</velocity.engine.version>
 		<xstream.version>1.4.20</xstream.version>
 		<slf4j.version>2.0.11</slf4j.version>
 		<log4j.version>2.20.0</log4j.version>
