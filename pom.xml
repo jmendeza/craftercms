@@ -90,11 +90,11 @@
 		<commons-compress.version>1.27.1</commons-compress.version>
 
 		<httpmime.version>4.5.14</httpmime.version>
-		<httpclient5.version>5.4</httpclient5.version>
+		<httpclient5.version>5.4.1</httpclient5.version>
 
 		<mongo.version>5.2.0</mongo.version>
 		<jongo.version>1.5.1</jongo.version>
-		<xstream.version>1.4.20</xstream.version>
+		<xstream.version>1.4.21</xstream.version>
 		<slf4j.version>2.0.16</slf4j.version>
 		<freemarker.version>2.3.33</freemarker.version>
 		<aspectj.version>1.9.22.1</aspectj.version>
@@ -124,7 +124,7 @@
 		<ibatis-sqlmap.version>2.3.4.726</ibatis-sqlmap.version>
 		<mybatis-spring.version>3.0.4</mybatis-spring.version>
 		<mybatis.version>3.5.16</mybatis.version>
-		<mariadb-java-client.version>3.4.1</mariadb-java-client.version>
+		<mariadb-java-client.version>3.5.0</mariadb-java-client.version>
 		<greenmail.version>2.1.0</greenmail.version>
 		<stax2-api.version>4.2.2</stax2-api.version>
 		<joda-time.version>2.13.0</joda-time.version>
