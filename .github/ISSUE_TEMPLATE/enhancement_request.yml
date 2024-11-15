@@ -15,6 +15,7 @@ body:
       description: We roll bug fixes, performance enhancements, and other improvements into new releases.
       options:
         - label: The issue is in the develop branch
+        - label: The issue is in the latest released 4.2.x
         - label: The issue is in the latest released 4.1.x
         
   - type: markdown
