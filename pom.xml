@@ -71,10 +71,10 @@
 
 		<!-- Main -->
 		<!-- Spring -->
-		<spring.version>6.1.14</spring.version>
-		<spring-security.version>6.3.4</spring-security.version>
-		<spring-data-commons.version>3.3.5</spring-data-commons.version>
-		<spring-ldap-core.version>3.2.7</spring-ldap-core.version>
+		<spring.version>6.2.0</spring.version>
+		<spring-security.version>6.4.0</spring-security.version>
+		<spring-data-commons.version>3.4.0</spring-data-commons.version>
+		<spring-ldap-core.version>3.2.8</spring-ldap-core.version>
 		<spring-social-web.version>1.1.6.RELEASE</spring-social-web.version>
 		<spring-social-facebook.version>2.0.3.RELEASE</spring-social-facebook.version>
 
@@ -92,7 +92,7 @@
 		<httpmime.version>4.5.14</httpmime.version>
 		<httpclient5.version>5.4.1</httpclient5.version>
 
-		<mongo.version>5.2.0</mongo.version>
+		<mongo.version>5.2.1</mongo.version>
 		<jongo.version>1.5.1</jongo.version>
 		<xstream.version>1.4.21</xstream.version>
 		<slf4j.version>2.0.16</slf4j.version>
@@ -125,7 +125,7 @@
 		<mybatis-spring.version>3.0.4</mybatis-spring.version>
 		<mybatis.version>3.5.16</mybatis.version>
 		<mariadb-java-client.version>3.5.0</mariadb-java-client.version>
-		<greenmail.version>2.1.0</greenmail.version>
+		<greenmail.version>2.1.1</greenmail.version>
 		<stax2-api.version>4.2.2</stax2-api.version>
 		<joda-time.version>2.13.0</joda-time.version>
 		<hibernate-validator.version>8.0.1.Final</hibernate-validator.version>
@@ -133,7 +133,7 @@
 		<opensearch-rest-high-level-client.version>2.18.0</opensearch-rest-high-level-client.version>
 		<opensearch-java.version>2.18.0</opensearch-java.version>
 		<opensearch-runner.version>2.18.0.0</opensearch-runner.version>
-		<tika.version>2.9.2</tika.version>
+		<tika.version>3.0.0</tika.version>
 		<poi-scratchpad.version>5.3.0</poi-scratchpad.version>
 		<metadata-extractor.version>2.19.0</metadata-extractor.version>
 		<jsoup.version>1.18.1</jsoup.version>
@@ -160,7 +160,7 @@
 		<testng-engine.version>1.0.5</testng-engine.version>
 		<mockito-core.version>5.14.2</mockito-core.version>
 		<embedmongo-maven-plugin.version>0.4.2</embedmongo-maven-plugin.version>
-		<de.flapdoodle.embed.mongo.version>4.17.0</de.flapdoodle.embed.mongo.version>
+		<de.flapdoodle.embed.mongo.version>4.18.0</de.flapdoodle.embed.mongo.version>
 		<hamcrest.version>3.0</hamcrest.version>
 		<xmlunit-core.version>2.10.0</xmlunit-core.version>
 
@@ -176,8 +176,8 @@
 		<buildnumber-maven-plugin.version>3.2.1</buildnumber-maven-plugin.version>
 		<maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
 		<maven-clean-plugin.version>3.4.0</maven-clean-plugin.version>
-		<maven-surefire-plugin.version>3.5.1</maven-surefire-plugin.version>
-		<maven-failsafe-plugin.version>3.5.1</maven-failsafe-plugin.version>
+		<maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
+		<maven-failsafe-plugin.version>3.5.2</maven-failsafe-plugin.version>
 		<gmavenplus-plugin.version>4.0.1</gmavenplus-plugin.version>
 		<appassembler-maven-plugin.version>2.1.0</appassembler-maven-plugin.version>
 		<maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
