@@ -89,7 +89,7 @@ task download() {
 
 task clone() {
 	description 'Clones the modules if required.'
-	dependsOn = ["download"]
+	dependsOn = ["preFlightCheck"]
 	doFirst {
 		getAllModules().each { module ->
 			cloneModule(module, gitUrl, shallowClone, gitBranch, gitRemote)
@@ -167,7 +167,7 @@ task deployToMaven() {
 
 task buildBaseEnvs() {
 	description 'Build base target environments.'
-	dependsOn = ["clone"]
+	dependsOn = ["clone", "download"]
 	doFirst {
 		getEnvironments().each { environment ->
 			println "Deploying the foundation of $environment"
