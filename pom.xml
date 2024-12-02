@@ -125,7 +125,7 @@
 		<mybatis-spring.version>3.0.4</mybatis-spring.version>
 		<mybatis.version>3.5.17</mybatis.version>
 		<mariadb-java-client.version>3.5.0</mariadb-java-client.version>
-		<greenmail.version>2.1.1</greenmail.version>
+		<greenmail.version>2.1.2</greenmail.version>
 		<stax2-api.version>4.2.2</stax2-api.version>
 		<joda-time.version>2.13.0</joda-time.version>
 		<hibernate-validator.version>8.0.1.Final</hibernate-validator.version>
@@ -136,8 +136,8 @@
 		<tika.version>3.0.0</tika.version>
 		<poi-scratchpad.version>5.3.0</poi-scratchpad.version>
 		<metadata-extractor.version>2.19.0</metadata-extractor.version>
-		<jsoup.version>1.18.2</jsoup.version>
-		<protobuf-java.version>4.28.3</protobuf-java.version>
+		<jsoup.version>1.18.3</jsoup.version>
+		<protobuf-java.version>4.29.0</protobuf-java.version>
 		<unit-api.version>2.2</unit-api.version>
 		<javax.inject.version>1</javax.inject.version>
 		<semver4j.version>3.1.0</semver4j.version>
