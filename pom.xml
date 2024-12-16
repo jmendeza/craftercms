@@ -71,10 +71,10 @@
 
 		<!-- Main -->
 		<!-- Spring -->
-		<spring.version>6.2.0</spring.version>
+		<spring.version>6.2.1</spring.version>
 		<spring-security.version>6.4.1</spring-security.version>
 		<spring-data-commons.version>3.4.0</spring-data-commons.version>
-		<spring-ldap-core.version>3.2.8</spring-ldap-core.version>
+		<spring-ldap-core.version>3.2.10</spring-ldap-core.version>
 		<spring-social-web.version>1.1.6.RELEASE</spring-social-web.version>
 		<spring-social-facebook.version>2.0.3.RELEASE</spring-social-facebook.version>
 
@@ -83,7 +83,7 @@
 		<commons-collections4.version>4.4</commons-collections4.version>
 		<commons-codec.version>1.17.1</commons-codec.version>
 		<commons-beanutils.version>1.9.4</commons-beanutils.version>
-		<commons-text.version>1.12.0</commons-text.version>
+		<commons-text.version>1.13.0</commons-text.version>
 		<commons-cli.version>1.9.0</commons-cli.version>
 		<commons-dbcp2.version>2.13.0</commons-dbcp2.version>
 		<commons-fileupload2-jakarta-servlet6.version>2.0.0-M2</commons-fileupload2-jakarta-servlet6.version>
@@ -131,7 +131,7 @@
 		<hibernate-validator.version>8.0.1.Final</hibernate-validator.version>
 		<jakarta.validation-api.version>3.1.0</jakarta.validation-api.version>
 		<opensearch-rest-high-level-client.version>2.18.0</opensearch-rest-high-level-client.version>
-		<opensearch-java.version>2.18.0</opensearch-java.version>
+		<opensearch-java.version>2.19.0</opensearch-java.version>
 		<opensearch-runner.version>2.18.0.0</opensearch-runner.version>
 		<tika.version>3.0.0</tika.version>
 		<poi-scratchpad.version>5.3.0</poi-scratchpad.version>
