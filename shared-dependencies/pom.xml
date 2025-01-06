@@ -73,11 +73,11 @@
 		<okio.version>3.9.1</okio.version>
 		<bouncycastle.version>1.79</bouncycastle.version>
 		<jackson.version>2.18.2</jackson.version>
-		<aws.sdk.version>2.29.38</aws.sdk.version>
+		<aws.sdk.version>2.29.45</aws.sdk.version>
 		<box-java-sdk.version>4.13.1</box-java-sdk.version>
 		<jose4j.version>0.9.6</jose4j.version>
 		<groovy.version>4.0.24</groovy.version>
-		<ivy.version>2.5.2</ivy.version>
+		<ivy.version>2.5.3</ivy.version>
 		<quartz.version>2.5.0</quartz.version>
 
 		<maven-deploy-plugin.version>3.1.3</maven-deploy-plugin.version>
