@@ -285,6 +285,16 @@
 				<version>${aws.sdk.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>sso</artifactId>
+				<version>${aws.sdk.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>ssooidc</artifactId>
+				<version>${aws.sdk.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>com.box</groupId>
 				<artifactId>box-java-sdk</artifactId>
 				<version>${box-java-sdk.version}</version>
