@@ -25,6 +25,8 @@ Security Analysts
 =================
 | Name                               | URL                                  | Contribution                                                                              |
 |------------------------------------|--------------------------------------|-------------------------------------------------------------------------------------------|
+| Carlos Ortiz                       | https://github.com/cortiz            | [CV-2021120106](https://craftercms.com/docs/current/security/advisory.html#cv-2021120106) |
+|                                    |                                      | [CV-2025011501](https://craftercms.com/docs/current/security/advisory.html#cv-2025011501) |
 | Egidio Romano                      | egidio.romano@mindedsecurity.com     | [CV-2023080301](https://craftercms.com/docs/current/security/advisory.html#cv-2023080301) |
 | Gil Correia                        | gil.correia@devoteam.com             | [CV-2023021701](https://craftercms.com/docs/current/security/advisory.html#cv-2023021701) |
 | Matei "Mal" Badanoiu               | https://github.com/mbadanoiu         | [CV-2022091301](https://craftercms.com/docs/current/security/advisory.html#cv-2022091301) |
@@ -37,7 +39,6 @@ Security Analysts
 |                                    |                                      | [CV-2021120105](https://craftercms.com/docs/current/security/advisory.html#cv-2021120105) |
 |                                    |                                      | [CV-2022051603](https://craftercms.com/docs/current/security/advisory.html#cv-2022051603) |
 | Sparsh Kulshrestha                 | https://github.com/sparshkulshrestha | [CV-2021120107](https://craftercms.com/docs/current/security/advisory.html#cv-2021120107) |
-| Carlos Ortiz                       | https://github.com/cortiz            | [CV-2021120106](https://craftercms.com/docs/current/security/advisory.html#cv-2021120106) |
 | Faizan Wani                        | https://github.com/faizanw8          | [CV-2022051601](https://craftercms.com/docs/current/security/advisory.html#cv-2022051601) |
 |                                    |                                      | [CV-2022051602](https://craftercms.com/docs/current/security/advisory.html#cv-2022051602) |
 | Alvaro Muñoz <br> (GitHub)         | https://github.com/pwntester         | [CV-2020080102](https://craftercms.com/docs/current/security/advisory.html#cv-2020080102) |
