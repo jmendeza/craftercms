@@ -15,145 +15,145 @@
  */
 
 buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath group: 'org.apache.commons', name: 'commons-lang3', version: project.property('commons-lang3.version')
-    }
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath group: 'org.apache.commons', name: 'commons-lang3', version: project.property('commons-lang3.version')
+	}
 }
 
 apply from: 'commons.gradle'
 apply plugin: 'de.undercouch.download'
 
 ext.downloads = [
-    [
-        name: "tomcat",
-        url: "https://archive.apache.org/dist/tomcat/tomcat-${tomcatMajorVersion}/v${tomcatVersion}/bin/apache-tomcat-${tomcatVersion}.zip",
-        destinationFile: "${downloadDir}/apache-tomcat-${tomcatVersion}.zip",
-        checksumAlgorithm: "sha512",
-        expand: "true",
-        expandFolder: "${downloadDir}"
-    ],
-    [
-        name: "groovy",
-        url: "https://groovy.jfrog.io/artifactory/dist-release-local/groovy-zips/apache-groovy-sdk-${groovyVersion}.zip",
-        destinationFile: "${downloadDir}/apache-groovy-${groovyVersion}.zip",
-        checksumAlgorithm: "sha256",
-        expand: "true",
-        expandFolder: "${downloadDir}"
-    ],
-    [
-        name: "openSearch",
-        url: "https://artifacts.opensearch.org/releases/bundle/opensearch/${openSearchVersion}/opensearch-${openSearchVersion}-${openSearchPlatform}-${openSearchArch}.tar.gz",
-        destinationFile: "${downloadDir}/openSearch-${openSearchVersion}-${openSearchPlatform}-${openSearchArch}.tar.gz",
-        checksumAlgorithm: "sha512",
-        expand: "true",
-        expandFolder: "${downloadDir}"
-    ],
-    [
-        name: "mariadb4j",
-        url: "https://repo1.maven.org/maven2/org/craftercms/mariaDB4j/mariaDB4j-app/${mariadb4jVersion}/mariaDB4j-app-${mariadb4jVersion}.jar",
-        destinationFile: "${downloadDir}/mariaDB4j-app-${mariadb4jVersion}.jar",
-        checksumAlgorithm: "md5",
-        expand: "false",
-        expandFolder: ""
-    ],
-    [
-        name: "mongodb",
-        url: "https://fastdl.mongodb.org/${mongodbPlatform}/mongodb-${mongodbBinary}-${mongodbArch}-${mongodbVersion}.tgz",
-        destinationFile: "${downloadDir}/mongodb-${mongodbBinary}-${mongodbArch}-${mongodbVersion}.tar.gz",
-        checksumAlgorithm: "sha256",
-        expand: "true",
-        expandFolder: "${downloadDir}"
-    ],
-    [
-        name: "mongosh",
-        url: "https://downloads.mongodb.com/compass/mongosh-${mongoshVersion}-${currentPlatform}-${mongoshArch}.${mongoExtension}",
-        destinationFile: "${downloadDir}/mongosh-${mongoshVersion}-${currentPlatform}-${mongoshArch}.${mongoExtension}".replace(".tgz", ".tar.gz"),
-        verifyArtifact: false,
-        expand: "true",
-        expandFolder: "${downloadDir}"
-    ],
-    [
-        name: "mongodb-database-tools",
-        url: "https://fastdl.mongodb.org/tools/db/mongodb-database-tools-${mongoToolsArch}-${mongoToolsVersion}.${mongoExtension}",
-        destinationFile: "${downloadDir}/mongodb-database-tools-${mongoToolsArch}-${mongoToolsVersion}.${mongoExtension}".replace(".tgz", ".tar.gz"),
-        verifyArtifact: false,
-        expand: "true",
-        expandFolder: "${downloadDir}"
-    ]
+	[
+		name             : "tomcat",
+		url              : "https://archive.apache.org/dist/tomcat/tomcat-${tomcatMajorVersion}/v${tomcatVersion}/bin/apache-tomcat-${tomcatVersion}.zip",
+		destinationFile  : "${downloadDir}/apache-tomcat-${tomcatVersion}.zip",
+		checksumAlgorithm: "sha512",
+		expand           : "true",
+		expandFolder     : "${downloadDir}"
+	],
+	[
+		name             : "groovy",
+		url              : "https://groovy.jfrog.io/artifactory/dist-release-local/groovy-zips/apache-groovy-sdk-${groovyVersion}.zip",
+		destinationFile  : "${downloadDir}/apache-groovy-${groovyVersion}.zip",
+		checksumAlgorithm: "sha256",
+		expand           : "true",
+		expandFolder     : "${downloadDir}"
+	],
+	[
+		name             : "openSearch",
+		url              : "https://artifacts.opensearch.org/releases/bundle/opensearch/${openSearchVersion}/opensearch-${openSearchVersion}-${openSearchPlatform}-${openSearchArch}.tar.gz",
+		destinationFile  : "${downloadDir}/openSearch-${openSearchVersion}-${openSearchPlatform}-${openSearchArch}.tar.gz",
+		checksumAlgorithm: "sha512",
+		expand           : "true",
+		expandFolder     : "${downloadDir}"
+	],
+	[
+		name             : "mariadb4j",
+		url              : "https://repo1.maven.org/maven2/org/craftercms/mariaDB4j/mariaDB4j-app/${mariadb4jVersion}/mariaDB4j-app-${mariadb4jVersion}.jar",
+		destinationFile  : "${downloadDir}/mariaDB4j-app-${mariadb4jVersion}.jar",
+		checksumAlgorithm: "md5",
+		expand           : "false",
+		expandFolder     : ""
+	],
+	[
+		name             : "mongodb",
+		url              : "https://fastdl.mongodb.org/${mongodbPlatform}/mongodb-${mongodbBinary}-${mongodbArch}-${mongodbVersion}.tgz",
+		destinationFile  : "${downloadDir}/mongodb-${mongodbBinary}-${mongodbArch}-${mongodbVersion}.tar.gz",
+		checksumAlgorithm: "sha256",
+		expand           : "true",
+		expandFolder     : "${downloadDir}"
+	],
+	[
+		name           : "mongosh",
+		url            : "https://downloads.mongodb.com/compass/mongosh-${mongoshVersion}-${currentPlatform}-${mongoshArch}.${mongoExtension}",
+		destinationFile: "${downloadDir}/mongosh-${mongoshVersion}-${currentPlatform}-${mongoshArch}.${mongoExtension}".replace(".tgz", ".tar.gz"),
+		verifyArtifact : false,
+		expand         : "true",
+		expandFolder   : "${downloadDir}"
+	],
+	[
+		name           : "mongodb-database-tools",
+		url            : "https://fastdl.mongodb.org/tools/db/mongodb-database-tools-${mongoToolsArch}-${mongoToolsVersion}.${mongoExtension}",
+		destinationFile: "${downloadDir}/mongodb-database-tools-${mongoToolsArch}-${mongoToolsVersion}.${mongoExtension}".replace(".tgz", ".tar.gz"),
+		verifyArtifact : false,
+		expand         : "true",
+		expandFolder   : "${downloadDir}"
+	]
 ]
 
 ext.getDownloads = { ->
-    return downloads;
+	return downloads;
 }
 
 ext.extractArtifact = { artifact, extractFolder ->
-    if (file(artifact).exists()) {
-        if (artifact.endsWith(".zip")) {
-            copy {
-                from zipTree(artifact)
-                into extractFolder
-            }
-        } else if (artifact.endsWith(".tar.gz")) {
-            copy {
-                from tarTree(artifact)
-                into extractFolder
-            }
-        } else {
-            throw new GradleException("I don't know how to expand " + artifact)
-        }
-    } else {
-        throw new GradleException("Artifact \"" + artifact + "\" not found, unable to expand.")
-    }
+	if (file(artifact).exists()) {
+		if (artifact.endsWith(".zip")) {
+			copy {
+				from zipTree(artifact)
+				into extractFolder
+			}
+		} else if (artifact.endsWith(".tar.gz")) {
+			copy {
+				from tarTree(artifact)
+				into extractFolder
+			}
+		} else {
+			throw new GradleException("I don't know how to expand " + artifact)
+		}
+	} else {
+		throw new GradleException("Artifact \"" + artifact + "\" not found, unable to expand.")
+	}
 }
 
 ext.downloadArtifact = { name, url, destinationFile, checksumAlgorithm, overwriteArtifact, verifyArtifact,
-                            expandArtifact, expandFolder ->
-    def downloaded = false
+			 expandArtifact, expandFolder ->
+	def downloaded = false
 
-    if (!file(destinationFile).exists() || overwriteArtifact) {
-        download.run {
-            src url
-            dest destinationFile
-            overwrite overwriteArtifact
-            tempAndMove true
-        }
+	if (!file(destinationFile).exists() || overwriteArtifact) {
+		download.run {
+			src url
+			dest destinationFile
+			overwrite overwriteArtifact
+			tempAndMove true
+		}
 
-        downloaded = true
-    }
+		downloaded = true
+	}
 
-    if (verifyArtifact && downloaded) {
-        download.run {
-            src url + "." + checksumAlgorithm
-            dest destinationFile + "." + checksumAlgorithm
-            overwrite true
-            tempAndMove true
-        }
+	if (verifyArtifact && downloaded) {
+		download.run {
+			src url + "." + checksumAlgorithm
+			dest destinationFile + "." + checksumAlgorithm
+			overwrite true
+			tempAndMove true
+		}
 
-        def algorithm = ""
-        if (checksumAlgorithm == "sha512")
-            algorithm = "SHA-512"
-        else if (checksumAlgorithm == "md5")
-            algorithm = "MD5"
-        else if (checksumAlgorithm == "sha256")
-            algorithm = "SHA-256"
-        else {
-            // The file can't be validated, delete it
-            file(destinationFile).delete()
-            file(destinationFile + "." + checksumAlgorithm).delete()
-            throw GradleException("Unknown digest algorithm: \"" + checksumAlgorithm + "\"")
-        }
+		def algorithm = ""
+		if (checksumAlgorithm == "sha512")
+			algorithm = "SHA-512"
+		else if (checksumAlgorithm == "md5")
+			algorithm = "MD5"
+		else if (checksumAlgorithm == "sha256")
+			algorithm = "SHA-256"
+		else {
+			// The file can't be validated, delete it
+			file(destinationFile).delete()
+			file(destinationFile + "." + checksumAlgorithm).delete()
+			throw GradleException("Unknown digest algorithm: \"" + checksumAlgorithm + "\"")
+		}
 
-        // TODO: Use verifyFile from Gradle Download Task
-        def calculatedHash = checksumFile(destinationFile, algorithm)
-        def downloadedHash = new File(destinationFile + "." + checksumAlgorithm).getText('UTF-8').split(" ")[0]
+		// TODO: Use verifyFile from Gradle Download Task
+		def calculatedHash = checksumFile(destinationFile, algorithm)
+		def downloadedHash = new File(destinationFile + "." + checksumAlgorithm).getText('UTF-8').split(" ")[0]
 
-        assert calculatedHash == downloadedHash
-    }
+		assert calculatedHash == downloadedHash
+	}
 
-    if (expandArtifact && downloaded) {
-        extractArtifact(destinationFile, expandFolder)
-    }
+	if (expandArtifact && downloaded) {
+		extractArtifact(destinationFile, expandFolder)
+	}
 }

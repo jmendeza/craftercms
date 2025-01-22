@@ -24,45 +24,45 @@ import static java.nio.file.StandardCopyOption.*
 
 class NioUtils {
 
-    /**
-     * Read file and return it as a string.
-     */
-    static String fileToString(Path file) {
-        return new String(Files.readAllBytes(file), StandardCharsets.UTF_8)
-    }
+	/**
+	 * Read file and return it as a string.
+	 */
+	static String fileToString(Path file) {
+		return new String(Files.readAllBytes(file), StandardCharsets.UTF_8)
+	}
 
-    /**
-     * Writes the string to the specified file, truncating existing content.
-     */
-    static void stringToFile(String str, Path file) {
-        Files.write(file, str.getBytes(StandardCharsets.UTF_8))
-    }
+	/**
+	 * Writes the string to the specified file, truncating existing content.
+	 */
+	static void stringToFile(String str, Path file) {
+		Files.write(file, str.getBytes(StandardCharsets.UTF_8))
+	}
 
-    /**
-     * Does simple string replacement in a directory, recursively
-     */
-    static void findAndReplaceInDir(String target, String replacement, Path directory) {
-        Files.walk(directory).withCloseable { files ->
-            files.filter { file ->
-                return !Files.isDirectory(file)
-            }.each { file ->
-                String content = fileToString(file).replace(target, replacement)
-                stringToFile(content, file)
-            }
-        }
-    }
+	/**
+	 * Does simple string replacement in a directory, recursively
+	 */
+	static void findAndReplaceInDir(String target, String replacement, Path directory) {
+		Files.walk(directory).withCloseable { files ->
+			files.filter { file ->
+				return !Files.isDirectory(file)
+			}.each { file ->
+				String content = fileToString(file).replace(target, replacement)
+				stringToFile(content, file)
+			}
+		}
+	}
 
-    /**
-     * Recursively copies a directory to another path, preserving the file attributes.
-     */
-    static void copyDirectory(Path srcDir, Path destDir) {
-        Files.walk(srcDir).withCloseable { files ->
-            files.each { srcFile ->
-                def destFile = destDir.resolve(srcDir.relativize(srcFile))
+	/**
+	 * Recursively copies a directory to another path, preserving the file attributes.
+	 */
+	static void copyDirectory(Path srcDir, Path destDir) {
+		Files.walk(srcDir).withCloseable { files ->
+			files.each { srcFile ->
+				def destFile = destDir.resolve(srcDir.relativize(srcFile))
 
-                Files.copy(srcFile, destFile, COPY_ATTRIBUTES)
-            }
-        }       
-    }
+				Files.copy(srcFile, destFile, COPY_ATTRIBUTES)
+			}
+		}
+	}
 
 }

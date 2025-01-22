@@ -22,19 +22,19 @@ import static utils.EnvironmentUtils.getEnv
 
 
 class RemoveOldSearchIndexesDirHook implements PostUpgradeHook {
-    @Override
-    void execute(Path binFolder, Path dataFolder, String environment) {
-        println "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-        println "Remove old search indexes directory"
-        println "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-        String indexesDir = getEnv('SEARCH_INDEXES_DIR')
-        Path indexesDirPath = Path.of(indexesDir)
-        println "SEARCH_INDEXES_DIR: ${indexesDirPath}"
-        if (!Files.exists(indexesDirPath)) {
-            println "Directory does not exist."
-            return
-        }
-        FileUtils.deleteDirectory(indexesDirPath.toFile())
-        println "Removed directory: ${indexesDirPath}"
-    }
+	@Override
+	void execute(Path binFolder, Path dataFolder, String environment) {
+		println "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+		println "Remove old search indexes directory"
+		println "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+		String indexesDir = getEnv('SEARCH_INDEXES_DIR')
+		Path indexesDirPath = Path.of(indexesDir)
+		println "SEARCH_INDEXES_DIR: ${indexesDirPath}"
+		if (!Files.exists(indexesDirPath)) {
+			println "Directory does not exist."
+			return
+		}
+		FileUtils.deleteDirectory(indexesDirPath.toFile())
+		println "Removed directory: ${indexesDirPath}"
+	}
 }

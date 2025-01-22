@@ -44,7 +44,7 @@ ext.splash = { ->
 ext {
 	srcFolder = getPropertySafelyWithDefaults("projectDir", ".") + "/src/"
 	commandTimeout = getPropertySafelyWithDefaults("commandTimeout", 1000000).toInteger()
-	mavenCmd = getPropertySafelyWithDefaults("quietBuild", "true").toBoolean()? ["mvn", "-q"] : ["mvn"]
+	mavenCmd = getPropertySafelyWithDefaults("quietBuild", "true").toBoolean() ? ["mvn", "-q"] : ["mvn"]
 }
 
 ext.execCommand = { command, dir ->
@@ -80,32 +80,32 @@ ext.copyFile = { workingDir, source, destination ->
 }
 
 ext.syncFolder = { workingDir, source, destination, exclude, overwriteChangedFiles, deleteNonExisting ->
-    def command = ["rsync", "-ar"]
+	def command = ["rsync", "-ar"]
 
 	if (!overwriteChangedFiles) {
-        command += ["--update"]
-    }
+		command += ["--update"]
+	}
 
-    if (deleteNonExisting) {
-        command += ["--delete"]
-    }
+	if (deleteNonExisting) {
+		command += ["--delete"]
+	}
 
 	if (!exclude.isEmpty()) {
 		command += ["--exclude", exclude]
 	}
 
-    // Make sure the destination exists
-    file(destination).mkdirs()
+	// Make sure the destination exists
+	file(destination).mkdirs()
 
-    // Rsync the source to the destination
+	// Rsync the source to the destination
 	command += [source, destination]
 
 	try {
 		execCommand(command, workingDir)
 	} catch (e) {
 		logger.error("Failed to sync folders workingDir: {}, source: {}, destination: {}," +
-				"exclude: {}, overwriteChangedFiles: {}, exception: {}", workingDir, source,
-				destination, exclude, overwriteChangedFiles, e)
+			"exclude: {}, overwriteChangedFiles: {}, exception: {}", workingDir, source,
+			destination, exclude, overwriteChangedFiles, e)
 		throw new GradleException("Failed to sync folders.", e)
 	}
 }
@@ -233,24 +233,24 @@ ext.aggregateBoms = { dir ->
 }
 
 ext.checksumFile = { filePath, algorithm ->
-    // Set your algorithm
-    // "MD2","MD5","SHA","SHA-1","SHA-256","SHA-384","SHA-512"
-    MessageDigest md = MessageDigest.getInstance(algorithm);
-    FileInputStream fis = new FileInputStream(new File(filePath));
-    byte[] dataBytes = new byte[1024];
+	// Set your algorithm
+	// "MD2","MD5","SHA","SHA-1","SHA-256","SHA-384","SHA-512"
+	MessageDigest md = MessageDigest.getInstance(algorithm);
+	FileInputStream fis = new FileInputStream(new File(filePath));
+	byte[] dataBytes = new byte[1024];
 
-    int nread = 0;
-    while ((nread = fis.read(dataBytes)) != -1) {
-        md.update(dataBytes, 0, nread);
-    }
+	int nread = 0;
+	while ((nread = fis.read(dataBytes)) != -1) {
+		md.update(dataBytes, 0, nread);
+	}
 
-    byte[] mdbytes = md.digest();
+	byte[] mdbytes = md.digest();
 
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < mdbytes.length; i++) {
-        sb.append(Integer.toString((mdbytes[i] & 0xff) + 0x100, 16).substring(1));
-    }
-    return sb.toString();
+	StringBuilder sb = new StringBuilder();
+	for (int i = 0; i < mdbytes.length; i++) {
+		sb.append(Integer.toString((mdbytes[i] & 0xff) + 0x100, 16).substring(1));
+	}
+	return sb.toString();
 }
 
 ext.bundleEnvironment = { env, bundlesDir /*, fresh*/ ->

@@ -23,44 +23,44 @@ import static utils.ScriptUtils.executeCommand
 
 class StartCrafterHook implements PostUpgradeHook {
 
-    private List<String> flags
+	private List<String> flags
 
-    StartCrafterHook() {
-        this.flags = []
-    }
+	StartCrafterHook() {
+		this.flags = []
+	}
 
-    StartCrafterHook(List<String> flags) {
-        this.flags = flags
-    }
+	StartCrafterHook(List<String> flags) {
+		this.flags = flags
+	}
 
-    @Override
-    void execute(Path binFolder, Path dataFolder, String environment) {
-        println "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-        println "Starting up Crafter"
-        println "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+	@Override
+	void execute(Path binFolder, Path dataFolder, String environment) {
+		println "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+		println "Starting up Crafter"
+		println "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 
-        def setupCallback = { pb ->
-            def env = pb.environment()
-                env.remove("CRAFTER_HOME")
-                env.remove("DEPLOYER_HOME")
-                env.remove("CRAFTER_BIN_DIR")
-                env.remove("CRAFTER_DATA_DIR")
-                env.remove("CRAFTER_LOGS_DIR")
-        }
+		def setupCallback = { pb ->
+			def env = pb.environment()
+			env.remove("CRAFTER_HOME")
+			env.remove("DEPLOYER_HOME")
+			env.remove("CRAFTER_BIN_DIR")
+			env.remove("CRAFTER_DATA_DIR")
+			env.remove("CRAFTER_LOGS_DIR")
+		}
 
-        executeCommand(["./startup.sh"] + flags, binFolder, setupCallback)
+		executeCommand(["./startup.sh"] + flags, binFolder, setupCallback)
 
-        // Wait for OpenSearch to start so its output don't get mixed with this script's
-        sleep 5000
-        println ''
-        println 'Please make sure Crafter has started successfully before continuing'
+		// Wait for OpenSearch to start so its output don't get mixed with this script's
+		sleep 5000
+		println ''
+		println 'Please make sure Crafter has started successfully before continuing'
 
-        def cont = System.console().readLine '> Continue? [(Y)es/(N)o]: '
-            cont = BooleanUtils.toBoolean(cont)
+		def cont = System.console().readLine '> Continue? [(Y)es/(N)o]: '
+		cont = BooleanUtils.toBoolean(cont)
 
-        if (!cont) {
-            System.exit(0)
-        }
-    }
+		if (!cont) {
+			System.exit(0)
+		}
+	}
 
 }

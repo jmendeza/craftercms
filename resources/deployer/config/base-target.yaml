@@ -1,51 +1,51 @@
 target:
-  localRepoPath: ${deployer.main.deployments.folderPath}/${target.siteName}
-  engineUrl: ${env:ENGINE_URL}
-  engineManagementToken: ${env:ENGINE_MANAGEMENT_TOKEN}
-  studioUrl: ${env:STUDIO_URL}
-  studioManagementToken: ${env:STUDIO_MANAGEMENT_TOKEN}
-  translation:
-    # Indicates if the translation features should be enabled for the target
-    enable: false
-  search:
-    openSearch:
-      # Single Cluster
-      urls:
-        - ${env:SEARCH_URL}
-      username: ${env:SEARCH_USERNAME}
-      password: ${env:SEARCH_PASSWORD}
-      timeout:
-        # The connection timeout in milliseconds, if set to -1 the default will be used
-        connect: -1
-        # The socket timeout in milliseconds, if set to -1 the default will be used
-        socket: -1
-      # The number of threads to use, if set to -1 the default will be used
-      threads: -1
-      # Indicates if keep alive should be enabled for sockets used by the search client, defaults to false
-      keepAlive: false
+    localRepoPath: ${deployer.main.deployments.folderPath}/${target.siteName}
+    engineUrl: ${env:ENGINE_URL}
+    engineManagementToken: ${env:ENGINE_MANAGEMENT_TOKEN}
+    studioUrl: ${env:STUDIO_URL}
+    studioManagementToken: ${env:STUDIO_MANAGEMENT_TOKEN}
+    translation:
+        # Indicates if the translation features should be enabled for the target
+        enable: false
+    search:
+        openSearch:
+            # Single Cluster
+            urls:
+                - ${env:SEARCH_URL}
+            username: ${env:SEARCH_USERNAME}
+            password: ${env:SEARCH_PASSWORD}
+            timeout:
+                # The connection timeout in milliseconds, if set to -1 the default will be used
+                connect: -1
+                # The socket timeout in milliseconds, if set to -1 the default will be used
+                socket: -1
+            # The number of threads to use, if set to -1 the default will be used
+            threads: -1
+            # Indicates if keep alive should be enabled for sockets used by the search client, defaults to false
+            keepAlive: false
 
-      # Multiple Clusters
-#      readCluster:
-#        urls:
-#        username:
-#        password:
-#      writeClusters:
-#        - urls:
-#          username:
-#          password:
-#        - urls:
-#          username:
-#          password:
+            # Multiple Clusters
+            #      readCluster:
+            #        urls:
+            #        username:
+            #        password:
+            #      writeClusters:
+            #        - urls:
+            #          username:
+            #          password:
+            #        - urls:
+            #          username:
+            #          password:
 
-      # Settings used for all indices
-      indexSettings:
-        - key: "index.mapping.total_fields.limit"
-          value : 3000
-        - key: "index.mapping.depth.limit"
-          value: 40
+            # Settings used for all indices
+            indexSettings:
+                -   key: "index.mapping.total_fields.limit"
+                    value: 3000
+                -   key: "index.mapping.depth.limit"
+                    value: 40
 
-  notifications:
-    mail:
-      server:
-        host: ${env:MAIL_HOST}
-        port: ${env:MAIL_PORT}
+    notifications:
+        mail:
+            server:
+                host: ${env:MAIL_HOST}
+                port: ${env:MAIL_PORT}

@@ -70,20 +70,20 @@ ext {
 	if (!dockerDeliveryBundle.isEmpty()) {
 		deliveryBundleSource = ""
 		if (dockerDeliveryBundle ==~ /^https?:\/\/.+$/) {
-				deliveryBundleUrl = dockerDeliveryBundle
-				deliveryBundleFile = "${tempDir}/" + FilenameUtils.getName(deliveryBundleUrl)
-				deliveryBundleRoot = "${tempDir}/" + FilenameUtils.getBaseName(deliveryBundleUrl) + "/crafter"
+			deliveryBundleUrl = dockerDeliveryBundle
+			deliveryBundleFile = "${tempDir}/" + FilenameUtils.getName(deliveryBundleUrl)
+			deliveryBundleRoot = "${tempDir}/" + FilenameUtils.getBaseName(deliveryBundleUrl) + "/crafter"
 		} else {
-				deliveryBundleUrl = ""
-				deliveryBundleFile = dockerDeliveryBundle
-				deliveryBundleRoot = "${tempDir}/" + FilenameUtils.getBaseName(deliveryBundleFile) + "/crafter"
+			deliveryBundleUrl = ""
+			deliveryBundleFile = dockerDeliveryBundle
+			deliveryBundleRoot = "${tempDir}/" + FilenameUtils.getBaseName(deliveryBundleFile) + "/crafter"
 		}
 	} else {
-			// Delivery bundle
-			deliveryBundleUrl = ""
-			deliveryBundleSource = "${projectDir}/bundles/crafter-cms-delivery-${project.version}-linux-x86_64.tar.gz"
-			deliveryBundleFile = "${tempDir}/" + FilenameUtils.getName(deliveryBundleSource)
-			deliveryBundleRoot = "${tempDir}/" + FilenameUtils.getBaseName(deliveryBundleSource) + "/crafter"
+		// Delivery bundle
+		deliveryBundleUrl = ""
+		deliveryBundleSource = "${projectDir}/bundles/crafter-cms-delivery-${project.version}-linux-x86_64.tar.gz"
+		deliveryBundleFile = "${tempDir}/" + FilenameUtils.getName(deliveryBundleSource)
+		deliveryBundleRoot = "${tempDir}/" + FilenameUtils.getBaseName(deliveryBundleSource) + "/crafter"
 	}
 
 	defaultTomcatBinExcludes = [
@@ -160,7 +160,7 @@ task downloadDeliveryBundle(type: Download) {
 
 task expandAuthoringBundle(type: Copy) {
 	if (authoringBundleSource) {
-		dependsOn = [ "bundle" ]
+		dependsOn = ["bundle"]
 		from tarTree(authoringBundleSource)
 		into "${tempDir}/" + FilenameUtils.getBaseName(authoringBundleFile)
 	} else {
@@ -172,7 +172,7 @@ task expandAuthoringBundle(type: Copy) {
 
 task expandDeliveryBundle(type: Copy) {
 	if (deliveryBundleSource) {
-		dependsOn = [ "bundle" ]
+		dependsOn = ["bundle"]
 		from tarTree(deliveryBundleSource)
 		into "${tempDir}/" + FilenameUtils.getBaseName(deliveryBundleFile)
 	} else {
@@ -436,7 +436,7 @@ task buildGitSshServer(group: "Build", description: "Builds the Git SSH Server D
 		}
 
 		exec {
-			commandLine 'docker', 'buildx', 'build', '--sbom=true', '--provenance=true', '-t', "${project.gitSshServerImageName }:${project.version}", imageBuildDir
+			commandLine 'docker', 'buildx', 'build', '--sbom=true', '--provenance=true', '-t', "${project.gitSshServerImageName}:${project.version}", imageBuildDir
 		}
 
 		pushTagDockerImage(project.gitSshServerImageName)

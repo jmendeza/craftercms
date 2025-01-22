@@ -25,43 +25,43 @@ import java.nio.file.Path
 
 abstract class AbstractTargetConfigUpdatingHook implements PostUpgradeHook {
 
-    @Override
-    void execute(Path binFolder, Path dataFolder, String environment) {
-        Path targetsFolder = dataFolder.resolve("deployer/targets")
+	@Override
+	void execute(Path binFolder, Path dataFolder, String environment) {
+		Path targetsFolder = dataFolder.resolve("deployer/targets")
 
-        if (Files.exists(targetsFolder)) {
-            Files.walk(targetsFolder).withCloseable { files ->
-                files.filter { file -> shouldBeUpdated(file) }
-                     .each { file -> updateTargetConfigFile(file) }
-            }
-        }
-    }
+		if (Files.exists(targetsFolder)) {
+			Files.walk(targetsFolder).withCloseable { files ->
+				files.filter { file -> shouldBeUpdated(file) }
+					.each { file -> updateTargetConfigFile(file) }
+			}
+		}
+	}
 
-    protected void updateTargetConfigFile(Path configFile) {
-        Parameters params = new Parameters()
-        FileBasedConfigurationBuilder<YAMLConfiguration> builder = new FileBasedConfigurationBuilder<>(
-                YAMLConfiguration.class).configure(params.hierarchical().setFile(configFile.toFile()))
-        YAMLConfiguration config
+	protected void updateTargetConfigFile(Path configFile) {
+		Parameters params = new Parameters()
+		FileBasedConfigurationBuilder<YAMLConfiguration> builder = new FileBasedConfigurationBuilder<>(
+			YAMLConfiguration.class).configure(params.hierarchical().setFile(configFile.toFile()))
+		YAMLConfiguration config
 
-        try {
-            config = builder.getConfiguration()
-        } catch (e) {
-            throw new UpgradeException("Unable to read target config ${configFile}", e)
-        }
+		try {
+			config = builder.getConfiguration()
+		} catch (e) {
+			throw new UpgradeException("Unable to read target config ${configFile}", e)
+		}
 
-        println "Updating target config ${configFile}"
+		println "Updating target config ${configFile}"
 
-        doTargetConfigUpdate(config)
+		doTargetConfigUpdate(config)
 
-        try {
-            builder.save()
-        } catch(e) {
-            throw new UpgradeException("Unable to save target config ${configFile}", e)
-        }
-    }
+		try {
+			builder.save()
+		} catch (e) {
+			throw new UpgradeException("Unable to save target config ${configFile}", e)
+		}
+	}
 
-    protected abstract shouldBeUpdated(Path configFile)
+	protected abstract shouldBeUpdated(Path configFile)
 
-    protected abstract void doTargetConfigUpdate(YAMLConfiguration config)
+	protected abstract void doTargetConfigUpdate(YAMLConfiguration config)
 
 }

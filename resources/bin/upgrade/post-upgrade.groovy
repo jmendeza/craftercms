@@ -16,13 +16,13 @@
 package upgrade
 
 @Grapes([
-    @Grab(group = 'org.slf4j', module = 'slf4j-nop', version = '1.7.36'),
-    @Grab(group = 'org.apache.commons', module = 'commons-lang3', version = '3.17.0'),
-    @Grab(group = 'org.apache.commons', module = 'commons-collections4', version = '4.4'),
-    @Grab(group = 'org.apache.commons', module = 'commons-configuration2', version = '2.11.0'),
-    @Grab(group = 'org.apache.commons', module = 'commons-text', version = '1.12.0'),
-    @Grab(group = 'commons-beanutils', module = 'commons-beanutils', version = '1.10.0'),
-    @Grab(group = 'org.yaml', module = 'snakeyaml', version = '2.3')
+	@Grab(group = 'org.slf4j', module = 'slf4j-nop', version = '1.7.36'),
+	@Grab(group = 'org.apache.commons', module = 'commons-lang3', version = '3.17.0'),
+	@Grab(group = 'org.apache.commons', module = 'commons-collections4', version = '4.4'),
+	@Grab(group = 'org.apache.commons', module = 'commons-configuration2', version = '2.11.0'),
+	@Grab(group = 'org.apache.commons', module = 'commons-text', version = '1.12.0'),
+	@Grab(group = 'commons-beanutils', module = 'commons-beanutils', version = '1.10.0'),
+	@Grab(group = 'org.yaml', module = 'snakeyaml', version = '2.3')
 ])
 
 import groovy.cli.commons.CliBuilder
@@ -39,38 +39,38 @@ import static utils.ScriptUtils.*
  * Builds the CLI and adds the possible options
  */
 def buildCli(CliBuilder cli) {
-    cli.h(longOpt: 'help', 'Show usage information')
+	cli.h(longOpt: 'help', 'Show usage information')
 }
 
 /**
  * Prints the help info
  */
 def printHelp(CliBuilder cli) {
-    cli.usage()
+	cli.usage()
 }
 
 /**
  * Exits the script with an error message, the usage and an error status.
  */
 def exitWithError(CliBuilder cli, String msg) {
-    println msg
-    println ''
+	println msg
+	println ''
 
-    printHelp(cli)
+	printHelp(cli)
 
-    System.exit(1)
+	System.exit(1)
 }
 
 def postUpgrade(String oldVersion, String newVersion, String environment) {
-    println "========================================================================"
-    println "Post-upgrade ${oldVersion} -> ${newVersion}"
-    println "========================================================================"
+	println "========================================================================"
+	println "Post-upgrade ${oldVersion} -> ${newVersion}"
+	println "========================================================================"
 
-    Path binFolder = getCrafterBinFolder()
-    Path dataFolder = getCrafterDataFolder()
-    PostUpgradeHooks hooks = new PostUpgradeHooks(binFolder, dataFolder, oldVersion, newVersion, environment)
+	Path binFolder = getCrafterBinFolder()
+	Path dataFolder = getCrafterDataFolder()
+	PostUpgradeHooks hooks = new PostUpgradeHooks(binFolder, dataFolder, oldVersion, newVersion, environment)
 
-    hooks.execute()
+	hooks.execute()
 }
 
 checkDownloadGrapesOnlyMode(getClass())
@@ -80,22 +80,22 @@ buildCli(cli)
 
 def options = cli.parse(args)
 if (options) {
-    // Show usage text when -h or --help option is used.
-    if (options.help) {
-        printHelp(cli)
-        return
-    }
+	// Show usage text when -h or --help option is used.
+	if (options.help) {
+		printHelp(cli)
+		return
+	}
 
-    // Parse the options and arguments
-    def extraArguments = options.arguments()
-    if (CollectionUtils.isNotEmpty(extraArguments) && extraArguments.size() == 3) {
-        def oldVersion = extraArguments[0]
-        def newVersion = extraArguments[1]
-        def environment = extraArguments[2]
+	// Parse the options and arguments
+	def extraArguments = options.arguments()
+	if (CollectionUtils.isNotEmpty(extraArguments) && extraArguments.size() == 3) {
+		def oldVersion = extraArguments[0]
+		def newVersion = extraArguments[1]
+		def environment = extraArguments[2]
 
-        postUpgrade(oldVersion, newVersion, environment)
-    } else {
-        exitWithError(cli, 'Invalid list of arguments')
-    }
+		postUpgrade(oldVersion, newVersion, environment)
+	} else {
+		exitWithError(cli, 'Invalid list of arguments')
+	}
 }
 

@@ -31,16 +31,16 @@ studio.configuration.management.previewAuthorizationToken: ${env:ENGINE_MANAGEME
 # Protected URLs with preview engine management authorization token.
 # Comma separated list of preview engine urls
 studio.configuration.management.previewProtectedUrls: >-
-  /api/1/monitoring/log.json,
-  /api/1/monitoring/memory.json,
-  /api/1/monitoring/status.json,
-  /api/1/monitoring/version.json,
-  /api/1/site/context/id,
-  /api/1/site/context/destroy,
-  /api/1/site/context/rebuild,
-  /api/1/site/context/graphql/rebuild,
-  /api/1/site/cache/clear,
-  /api/1/site/cache/statistics
+    /api/1/monitoring/log.json,
+    /api/1/monitoring/memory.json,
+    /api/1/monitoring/status.json,
+    /api/1/monitoring/version.json,
+    /api/1/site/context/id,
+    /api/1/site/context/destroy,
+    /api/1/site/context/rebuild,
+    /api/1/site/context/graphql/rebuild,
+    /api/1/site/cache/clear,
+    /api/1/site/cache/statistics
 
 ############################################################
 ##                    Preview Deployer                    ##

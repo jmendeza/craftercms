@@ -17,33 +17,33 @@
 apply from: "commons.gradle"
 
 ext.runAuthoringEnvironment = { command, profileRequired, socialRequired ->
-    if (file("${authoringEnvDir}/bin/crafter.sh").exists()) {
-        // Run authoring tasks
-        execCommand(command, "${authoringEnvDir}/bin")
-    } else {
-        throw new GradleException("Authoring environment not deployed correctly. Please redeploy.")
-    }
+	if (file("${authoringEnvDir}/bin/crafter.sh").exists()) {
+		// Run authoring tasks
+		execCommand(command, "${authoringEnvDir}/bin")
+	} else {
+		throw new GradleException("Authoring environment not deployed correctly. Please redeploy.")
+	}
 }
 
 ext.runDeliveryEnvironment = { command, profileRequired, socialRequired ->
-    if (file("${deliveryEnvDir}/bin/crafter.sh").exists()) {
-        // Run delivery tasks
-        execCommand(command, "${deliveryEnvDir}/bin")
-    } else {
-        throw new GradleException("Delivery environment not deployed correctly. Please redeploy.")
-    }
+	if (file("${deliveryEnvDir}/bin/crafter.sh").exists()) {
+		// Run delivery tasks
+		execCommand(command, "${deliveryEnvDir}/bin")
+	} else {
+		throw new GradleException("Delivery environment not deployed correctly. Please redeploy.")
+	}
 }
 
 ext.runEnvironment = { environment, command, profileRequired, socialRequired ->
-    def cmd = ["${crafterCmd}"] + command
+	def cmd = ["${crafterCmd}"] + command
 
-    // Run tasks per environment
-    if (environment == "authoring") {
-        runAuthoringEnvironment(cmd, profileRequired, socialRequired)
-    } else if (environment == "delivery") {
-        runDeliveryEnvironment(cmd, profileRequired, socialRequired)
-    } else {
-        logger.error("Unknown environment \"" + environment + "\"")
-        throw new GradleException("Unknown environment \"" + environment + "\"")
-    }
+	// Run tasks per environment
+	if (environment == "authoring") {
+		runAuthoringEnvironment(cmd, profileRequired, socialRequired)
+	} else if (environment == "delivery") {
+		runDeliveryEnvironment(cmd, profileRequired, socialRequired)
+	} else {
+		logger.error("Unknown environment \"" + environment + "\"")
+		throw new GradleException("Unknown environment \"" + environment + "\"")
+	}
 }

@@ -19,23 +19,23 @@ import java.nio.file.Path
 
 class PostUpgradeCompletedHook implements PostUpgradeHook {
 
-    private boolean crafterStarted
+	private boolean crafterStarted
 
-    PostUpgradeCompletedHook(boolean crafterStarted) {
-        this.crafterStarted = crafterStarted
-    }
+	PostUpgradeCompletedHook(boolean crafterStarted) {
+		this.crafterStarted = crafterStarted
+	}
 
-    @Override
-    void execute(Path binFolder, Path dataFolder, String environment) {
-        println "========================================================================"
-        println "Post-upgrade completed"
-        println "========================================================================"
+	@Override
+	void execute(Path binFolder, Path dataFolder, String environment) {
+		println "========================================================================"
+		println "Post-upgrade completed"
+		println "========================================================================"
 
-        if (crafterStarted) {
-            println 'Crafter has already been started, you can use the system again'
-        } else {
-            println "!!! Crafter has not been started, please run ${binFolder.resolve('startup.sh')} to start it !!!"
-        }
-    }
+		if (crafterStarted) {
+			println 'Crafter has already been started, you can use the system again'
+		} else {
+			println "!!! Crafter has not been started, please run ${binFolder.resolve('startup.sh')} to start it !!!"
+		}
+	}
 
 }

@@ -14,59 +14,59 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-ext.allModules = [  "groovy-sandbox", "script-security-plugin", "commons",
-                    "core", "search", "profile", "engine", "deployer", "studio-ui",
-                    "studio", "social", "cli", "js-sdk" ]
+ext.allModules = ["groovy-sandbox", "script-security-plugin", "commons",
+		  "core", "search", "profile", "engine", "deployer", "studio-ui",
+		  "studio", "social", "cli", "js-sdk"]
 ext.buildModules = ["groovy-sandbox", "script-security-plugin", "commons",
-                    "core", "search", "profile", "engine", "deployer", "studio-ui", "studio",
-                    "social", "cli"]
+		    "core", "search", "profile", "engine", "deployer", "studio-ui", "studio",
+		    "social", "cli"]
 ext.deployModules = ["groovy-sandbox", "script-security-plugin", "commons",
-                    "core", "search", "profile", "profile-admin", "engine", "deployer", "studio-ui", "studio",
-                    "social", "social-admin","cli"]
+		     "core", "search", "profile", "profile-admin", "engine", "deployer", "studio-ui", "studio",
+		     "social", "social-admin", "cli"]
 ext.deployToMavenModules = ["craftercms", "groovy-sandbox", "script-security-plugin", "commons",
-                     "core", "search", "profile", "engine", "deployer", "studio",
-                     "social", "cli"]
+			    "core", "search", "profile", "engine", "deployer", "studio",
+			    "social", "cli"]
 
 ext.getAllModules = { ->
-    String[] result
+	String[] result
 
-    if (project.hasProperty("modules"))
-        result = project.property("modules").toLowerCase().split(",")
-    else
-        result = allModules
+	if (project.hasProperty("modules"))
+		result = project.property("modules").toLowerCase().split(",")
+	else
+		result = allModules
 
-    return result
+	return result
 }
 
 ext.getBuildModules = { ->
-    String[] result
+	String[] result
 
-    if (project.hasProperty("modules"))
-        result = project.property("modules").toLowerCase().split(",")
-    else
-        result = buildModules
+	if (project.hasProperty("modules"))
+		result = project.property("modules").toLowerCase().split(",")
+	else
+		result = buildModules
 
-    return result
+	return result
 }
 
 ext.getDeployModules = { ->
-    String[] result
+	String[] result
 
-    if (project.hasProperty("modules"))
-        result = project.property("modules").toLowerCase().split(",")
-    else
-        result = deployModules
+	if (project.hasProperty("modules"))
+		result = project.property("modules").toLowerCase().split(",")
+	else
+		result = deployModules
 
-    return result
+	return result
 }
 
 ext.getDeployToMavenModules = { ->
-    String[] result
+	String[] result
 
-    if (project.hasProperty("modules"))
-        result = project.property("modules").toLowerCase().split(",")
-    else
-        result = deployToMavenModules
+	if (project.hasProperty("modules"))
+		result = project.property("modules").toLowerCase().split(",")
+	else
+		result = deployToMavenModules
 
-    return result
+	return result
 }

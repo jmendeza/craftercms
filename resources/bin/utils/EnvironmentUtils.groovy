@@ -21,103 +21,103 @@ import java.nio.file.Paths
 
 class EnvironmentUtils {
 
-    /**
-     * Returns the value of an environment variable.
-     */
-    static String getEnv(varName) {
-        def env = System.getenv()
+	/**
+	 * Returns the value of an environment variable.
+	 */
+	static String getEnv(varName) {
+		def env = System.getenv()
 
-        return env[varName]
-    }
+		return env[varName]
+	}
 
-    /**
-     * Returns the URL of the Tomcat.
-     */
-    static String getTomcatUrl() {
-        def host = getEnv('TOMCAT_HOST')
-        def port = getEnv('TOMCAT_HTTP_PORT')
-        def url = "http://${host}:${port}"
+	/**
+	 * Returns the URL of the Tomcat.
+	 */
+	static String getTomcatUrl() {
+		def host = getEnv('TOMCAT_HOST')
+		def port = getEnv('TOMCAT_HTTP_PORT')
+		def url = "http://${host}:${port}"
 
-        return url
-    }
+		return url
+	}
 
-    /**
-     * Returns the URL of the Deployer.
-     */
-    static String getDeployerUrl() {
-        def host = getEnv('DEPLOYER_HOST')
-        def port = getEnv('DEPLOYER_PORT')
-        def url = "http://${host}:${port}"
+	/**
+	 * Returns the URL of the Deployer.
+	 */
+	static String getDeployerUrl() {
+		def host = getEnv('DEPLOYER_HOST')
+		def port = getEnv('DEPLOYER_PORT')
+		def url = "http://${host}:${port}"
 
-        return url
-    }
+		return url
+	}
 
-    /**
-     * Returns the environment name (either authoring or delivery).
-     */
-    static String getEnvironmentName() {
-        return getEnv("ENVIRONMENT_NAME")
-    }
+	/**
+	 * Returns the environment name (either authoring or delivery).
+	 */
+	static String getEnvironmentName() {
+		return getEnv("ENVIRONMENT_NAME")
+	}
 
-    /**
-     * Returns the home folder for the Crafter installation.
-     */
-    static Path getCrafterHomeFolder() {
-        return Paths.get(getEnv("CRAFTER_HOME"))
-    }
+	/**
+	 * Returns the home folder for the Crafter installation.
+	 */
+	static Path getCrafterHomeFolder() {
+		return Paths.get(getEnv("CRAFTER_HOME"))
+	}
 
-    /**
-     * Returns the bin folder for the Crafter installation.
-     */
-    static Path getCrafterBinFolder() {
-        return Paths.get(getEnv("CRAFTER_BIN_DIR"))
-    }
+	/**
+	 * Returns the bin folder for the Crafter installation.
+	 */
+	static Path getCrafterBinFolder() {
+		return Paths.get(getEnv("CRAFTER_BIN_DIR"))
+	}
 
-    /**
-     * Returns the data folder for the Crafter installation.
-     */
-    static Path getCrafterDataFolder() {
-        return Paths.get(getEnv("CRAFTER_DATA_DIR"))
-    }
+	/**
+	 * Returns the data folder for the Crafter installation.
+	 */
+	static Path getCrafterDataFolder() {
+		return Paths.get(getEnv("CRAFTER_DATA_DIR"))
+	}
 
-    /**
-     * Returns the data folder for the embedded MariaDB.
-     */
-    static Path getMariaDbDataFolder() {
-        return Paths.get(getEnv("MARIADB_DATA_DIR"))
-    }
+	/**
+	 * Returns the data folder for the embedded MariaDB.
+	 */
+	static Path getMariaDbDataFolder() {
+		return Paths.get(getEnv("MARIADB_DATA_DIR"))
+	}
 
-    /**
-     * Returns the backups folder for the Crafter installation.
-     */
-    static Path getCrafterBackupsFolder() {
-        return getCrafterHomeFolder().resolve("backups")
-    }
+	/**
+	 * Returns the backups folder for the Crafter installation.
+	 */
+	static Path getCrafterBackupsFolder() {
+		return getCrafterHomeFolder().resolve("backups")
+	}
 
-    /**
-     * Returns the home folder for the upgrade
-     */
-    static Path getUpgradeHomeFolder() {
-        return Paths.get(getEnv("UPGRADE_HOME"))
-    }
+	/**
+	 * Returns the home folder for the upgrade
+	 */
+	static Path getUpgradeHomeFolder() {
+		return Paths.get(getEnv("UPGRADE_HOME"))
+	}
 
-    /**
-     * Returns the tmp folder used for the upgrade
-     */
-    static Path getUpgradeTmpFolder() {
-        return Paths.get(getEnv("UPGRADE_TMP_DIR"))
-    }
+	/**
+	 * Returns the tmp folder used for the upgrade
+	 */
+	static Path getUpgradeTmpFolder() {
+		return Paths.get(getEnv("UPGRADE_TMP_DIR"))
+	}
 
-    /**
-     * Return true if the script should run in download grapes only mode.
-     */
-    static boolean isDownloadGrapesOnlyMode() {
-        def downloadGrapesOnly = System.getProperty("mode.downloadGrapesOnly")
-        if (downloadGrapesOnly) {
-            return Boolean.parseBoolean(downloadGrapesOnly)
-        } else {
-            return false
-        }
-    }
+	/**
+	 * Return true if the script should run in download grapes only mode.
+	 */
+	static boolean isDownloadGrapesOnlyMode() {
+		def downloadGrapesOnly = System.getProperty("mode.downloadGrapesOnly")
+		if (downloadGrapesOnly) {
+			return Boolean.parseBoolean(downloadGrapesOnly)
+		} else {
+			return false
+		}
+	}
 
 }
