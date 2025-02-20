@@ -72,7 +72,7 @@
 		<!-- Main -->
 		<!-- Spring -->
 		<spring.version>6.2.3</spring.version>
-		<spring-security.version>6.4.2</spring-security.version>
+		<spring-security.version>6.4.3</spring-security.version>
 		<spring-data-commons.version>3.4.3</spring-data-commons.version>
 		<spring-ldap-core.version>3.2.11</spring-ldap-core.version>
 		<spring-social-web.version>1.1.6.RELEASE</spring-social-web.version>
@@ -175,7 +175,7 @@
 		<maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
 		<buildnumber-maven-plugin.version>3.2.1</buildnumber-maven-plugin.version>
 		<maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
-		<maven-clean-plugin.version>3.4.0</maven-clean-plugin.version>
+		<maven-clean-plugin.version>3.4.1</maven-clean-plugin.version>
 		<maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
 		<maven-failsafe-plugin.version>3.5.2</maven-failsafe-plugin.version>
 		<gmavenplus-plugin.version>4.1.1</gmavenplus-plugin.version>
