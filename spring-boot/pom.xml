@@ -58,7 +58,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.4.3</version>
+		<version>3.4.4</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
@@ -67,12 +67,12 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
 		<!-- Version Numbers -->
-		<tomcat.version>10.1.35</tomcat.version>
+		<tomcat.version>10.1.36</tomcat.version>
 		<java.version>21</java.version>
 		<handlebars.version>4.4.0</handlebars.version>
 		<script.security.version>${project.version}</script.security.version>
 		<jakarta.json.version>2.0.1</jakarta.json.version>
-		<spring-boot.version>3.4.3</spring-boot.version>
+		<spring-boot.version>3.4.4</spring-boot.version>
 
 		<!-- Override property setup by Spring Boot Parent -->
 		<netty.version>4.1.118.Final</netty.version>
