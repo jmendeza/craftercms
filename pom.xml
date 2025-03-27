@@ -90,7 +90,7 @@
 		<commons-compress.version>1.27.1</commons-compress.version>
 
 		<httpmime.version>4.5.14</httpmime.version>
-		<httpclient5.version>5.4.2</httpclient5.version>
+		<httpclient5.version>5.4.3</httpclient5.version>
 
 		<mongo.version>5.2.1</mongo.version>
 		<jongo.version>1.5.1</jongo.version>
@@ -137,7 +137,7 @@
 		<poi-scratchpad.version>5.4.0</poi-scratchpad.version>
 		<metadata-extractor.version>2.19.0</metadata-extractor.version>
 		<jsoup.version>1.19.1</jsoup.version>
-		<protobuf-java.version>4.30.1</protobuf-java.version>
+		<protobuf-java.version>4.30.2</protobuf-java.version>
 		<unit-api.version>2.2</unit-api.version>
 		<javax.inject.version>1</javax.inject.version>
 		<semver4j.version>3.1.0</semver4j.version>
