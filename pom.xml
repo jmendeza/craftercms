@@ -90,7 +90,7 @@
 		<commons-compress.version>1.27.1</commons-compress.version>
 
 		<httpmime.version>4.5.14</httpmime.version>
-		<httpclient5.version>5.4.2</httpclient5.version>
+		<httpclient5.version>5.4.3</httpclient5.version>
 
 		<mongo.version>5.4.0</mongo.version>
 		<jongo.version>1.5.1</jongo.version>
@@ -124,10 +124,10 @@
 		<ibatis-sqlmap.version>2.3.4.726</ibatis-sqlmap.version>
 		<mybatis-spring.version>3.0.4</mybatis-spring.version>
 		<mybatis.version>3.5.19</mybatis.version>
-		<mariadb-java-client.version>3.5.2</mariadb-java-client.version>
+		<mariadb-java-client.version>3.5.3</mariadb-java-client.version>
 		<greenmail.version>2.1.3</greenmail.version>
 		<stax2-api.version>4.2.2</stax2-api.version>
-		<joda-time.version>2.13.1</joda-time.version>
+		<joda-time.version>2.14.0</joda-time.version>
 		<hibernate-validator.version>8.0.2.Final</hibernate-validator.version>
 		<jakarta.validation-api.version>3.1.1</jakarta.validation-api.version>
 		<opensearch-rest-high-level-client.version>2.19.1</opensearch-rest-high-level-client.version>
@@ -137,7 +137,7 @@
 		<poi-scratchpad.version>5.4.0</poi-scratchpad.version>
 		<metadata-extractor.version>2.19.0</metadata-extractor.version>
 		<jsoup.version>1.19.1</jsoup.version>
-		<protobuf-java.version>4.30.1</protobuf-java.version>
+		<protobuf-java.version>4.30.2</protobuf-java.version>
 		<unit-api.version>2.2</unit-api.version>
 		<javax.inject.version>1</javax.inject.version>
 		<semver4j.version>3.1.0</semver4j.version>
@@ -158,7 +158,7 @@
 		<testng.version>7.11.0</testng.version>
 		<junit.version>4.13.2</junit.version>
 		<junit-jupiter-engine.version>5.12.1</junit-jupiter-engine.version>
-		<testng-engine.version>1.0.5</testng-engine.version>
+		<testng-engine.version>1.0.6</testng-engine.version>
 		<mockito-core.version>5.16.1</mockito-core.version>
 		<embedmongo-maven-plugin.version>0.4.2</embedmongo-maven-plugin.version>
 		<de.flapdoodle.embed.mongo.version>4.20.0</de.flapdoodle.embed.mongo.version>
@@ -178,8 +178,8 @@
 		<buildnumber-maven-plugin.version>3.2.1</buildnumber-maven-plugin.version>
 		<maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
 		<maven-clean-plugin.version>3.4.1</maven-clean-plugin.version>
-		<maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
-		<maven-failsafe-plugin.version>3.5.2</maven-failsafe-plugin.version>
+		<maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
+		<maven-failsafe-plugin.version>3.5.3</maven-failsafe-plugin.version>
 		<gmavenplus-plugin.version>4.1.1</gmavenplus-plugin.version>
 		<appassembler-maven-plugin.version>2.1.0</appassembler-maven-plugin.version>
 		<maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
