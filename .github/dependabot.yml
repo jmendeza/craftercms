@@ -5,21 +5,53 @@ updates:
         schedule:
             interval: "daily"
             time: "04:00"
+        target-branch: "develop"
+
+    -   package-ecosystem: "maven"
+        directory: "/"
+        schedule:
+            interval: "daily"
+            time: "04:00"
+        target-branch: "support/4.x"
 
     -   package-ecosystem: "maven"
         directory: "/spring-boot"
         schedule:
             interval: "daily"
             time: "04:30"
+        target-branch: "develop"
+
+    -   package-ecosystem: "maven"
+        directory: "/spring-boot"
+        schedule:
+            interval: "daily"
+            time: "04:30"
+        target-branch: "support/4.x"
 
     -   package-ecosystem: "maven"
         directory: "/shared-dependencies"
         schedule:
             interval: "daily"
             time: "05:00"
+        target-branch: "develop"
+
+    -   package-ecosystem: "maven"
+        directory: "/shared-dependencies"
+        schedule:
+            interval: "daily"
+            time: "05:00"
+        target-branch: "support/4.x"
 
     -   package-ecosystem: "gradle"
         directory: "/"
         schedule:
             interval: "daily"
             time: "05:30"
+        target-branch: "develop"
+
+    -   package-ecosystem: "gradle"
+        directory: "/"
+        schedule:
+            interval: "daily"
+            time: "05:30"
+        target-branch: "support/4.x"
