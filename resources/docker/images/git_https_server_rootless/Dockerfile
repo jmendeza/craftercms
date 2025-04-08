@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2023 Crafter Software Corporation. All Rights Reserved.
+# Copyright (C) 2007-2025 Crafter Software Corporation. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 3 as published by
@@ -19,7 +19,8 @@ ENV APACHE_HOME='/home/crafter/apache2'
 RUN apk update && apk upgrade
 
 # Install dependencies
-RUN apk add --no-cache bash shadow git git-daemon su-exec vim nano
+RUN apk add --no-cache bash shadow git git-daemon su-exec vim nano; \
+    apk add --no-cache tini;
 
 # Create folders for crafter user
 RUN mkdir -p /opt/crafter/data; \
@@ -53,4 +54,5 @@ USER crafter
 EXPOSE 443
 
 # Entrypoint
-ENTRYPOINT [ "./docker-entrypoint.sh" ]
+# tini will reap zombie processes
+ENTRYPOINT [ "/sbin/tini", "--", "./docker-entrypoint.sh" ]
