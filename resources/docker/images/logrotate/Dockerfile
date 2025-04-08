@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2023 Crafter Software Corporation. All Rights Reserved.
+# Copyright (C) 2007-2025 Crafter Software Corporation. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 3 as published by
@@ -23,7 +23,8 @@ ENV CRON_SCHEDULE='0 * * * *' \
 RUN apk update && apk upgrade
 
 # Install dependencies
-RUN apk add --no-cache bash shadow logrotate tini gettext libintl vim nano
+RUN apk add --no-cache bash shadow logrotate tini gettext libintl vim nano; \
+    apk add --no-cache tini;
 
 # Add the Crafter user
 RUN addgroup -S -g 1000 crafter && adduser -S -D -u 1000 -G crafter crafter;
@@ -36,5 +37,6 @@ RUN chmod +x docker-entrypoint.sh
 COPY logrotate.tpl.conf .
 
 # Entrypoint and command
-ENTRYPOINT [ "./docker-entrypoint.sh" ]
+# tini will reap zombie processes
+ENTRYPOINT ["/sbin/tini", "--", "./docker-entrypoint.sh"]
 CMD ["/usr/sbin/crond", "-f", "-L", "/dev/stdout"]

@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2024 Crafter Software Corporation. All Rights Reserved.
+# Copyright (C) 2007-2025 Crafter Software Corporation. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 3 as published by
@@ -56,7 +56,8 @@ RUN set -eux; \
     apk add --no-cache iproute2; \
     apk add --no-cache procps; \
 #    apk add --no-cache vim; \
-    apk add --no-cache nano;
+    apk add --no-cache nano; \
+    apk add --no-cache tini;
 
 # Install MariaDB depdendencies
 RUN apk add --update --no-cache -t .mariadb-run-deps \
@@ -135,7 +136,8 @@ USER root
 EXPOSE 8000
 
 # Entrypoint and command (run by default)
-ENTRYPOINT [ "./docker-entrypoint.sh" ]
+# tini will reap zombie processes
+ENTRYPOINT ["/sbin/tini", "--", "./docker-entrypoint.sh"]
 CMD [ "run" ]
 
 FROM main AS enterprise
