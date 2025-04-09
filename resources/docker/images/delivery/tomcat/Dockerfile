@@ -114,5 +114,6 @@ RUN chmod +x docker-entrypoint.sh
 USER root
 
 # Entrypoint and command (run by default)
-ENTRYPOINT [ "./docker-entrypoint.sh" ]
+# tini will reap zombie processes
+ENTRYPOINT ["/sbin/tini", "--", "./docker-entrypoint.sh"]
 CMD [ "run" ]
