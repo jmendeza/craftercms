@@ -132,7 +132,8 @@ USER root
 EXPOSE 8000
 
 # Entrypoint and command (run by default)
-ENTRYPOINT [ "./docker-entrypoint.sh" ]
+# tini will reap zombie processes
+ENTRYPOINT ["/sbin/tini", "--", "./docker-entrypoint.sh"]
 CMD [ "run" ]
 
 FROM main AS enterprise
