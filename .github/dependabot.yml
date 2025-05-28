@@ -35,10 +35,6 @@ updates:
               versions: [">=3.0.0"]
             - dependency-name: "org.codelibs.opensearch:opensearch-runner"
               versions: [">=3.0.0"]
-            - dependency-name: "org.apache.tomcat:tomcat-jasper-el"
-              versions: [">=11.0.0"]
-            - dependency-name: "com.graphql-java:graphql-java"
-              versions: [">=24.0"]
 
     -   package-ecosystem: "maven"
         directory: "/spring-boot"
