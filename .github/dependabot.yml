@@ -6,6 +6,17 @@ updates:
             interval: "daily"
             time: "04:00"
         target-branch: "develop"
+        groups:
+            all-maven-deps:
+                patterns:
+                    - "*"
+        ignore:
+            - dependency-name: "org.opensearch.client:opensearch-java"
+              versions: [">=3.0.0"]
+            - dependency-name: "org.opensearch:opensearch"
+              versions: [">=3.0.0"]
+            - dependency-name: "org.opensearch.client:opensearch-rest-client"
+              versions: [">=3.0.0"]
 
     -   package-ecosystem: "maven"
         directory: "/"
@@ -13,6 +24,17 @@ updates:
             interval: "daily"
             time: "04:00"
         target-branch: "support/4.x"
+        groups:
+            all-maven-deps:
+                patterns:
+                    - "*"
+        ignore:
+            - dependency-name: "org.opensearch.client:opensearch-java"
+              versions: [">=3.0.0"]
+            - dependency-name: "org.opensearch:opensearch"
+              versions: [">=3.0.0"]
+            - dependency-name: "org.opensearch.client:opensearch-rest-client"
+              versions: [">=3.0.0"]
 
     -   package-ecosystem: "maven"
         directory: "/spring-boot"
@@ -20,6 +42,17 @@ updates:
             interval: "daily"
             time: "04:30"
         target-branch: "develop"
+        groups:
+            all-maven-deps:
+                patterns:
+                    - "*"
+        ignore:
+            - dependency-name: "org.opensearch.client:opensearch-java"
+              versions: [">=3.0.0"]
+            - dependency-name: "org.opensearch:opensearch"
+              versions: [">=3.0.0"]
+            - dependency-name: "org.opensearch.client:opensearch-rest-client"
+              versions: [">=3.0.0"]
 
     -   package-ecosystem: "maven"
         directory: "/spring-boot"
@@ -27,6 +60,17 @@ updates:
             interval: "daily"
             time: "04:30"
         target-branch: "support/4.x"
+        groups:
+            all-maven-deps:
+                patterns:
+                    - "*"
+        ignore:
+            - dependency-name: "org.opensearch.client:opensearch-java"
+              versions: [">=3.0.0"]
+            - dependency-name: "org.opensearch:opensearch"
+              versions: [">=3.0.0"]
+            - dependency-name: "org.opensearch.client:opensearch-rest-client"
+              versions: [">=3.0.0"]
 
     -   package-ecosystem: "maven"
         directory: "/shared-dependencies"
@@ -34,6 +78,17 @@ updates:
             interval: "daily"
             time: "05:00"
         target-branch: "develop"
+        groups:
+            all-maven-deps:
+                patterns:
+                    - "*"
+        ignore:
+            - dependency-name: "org.opensearch.client:opensearch-java"
+              versions: [">=3.0.0"]
+            - dependency-name: "org.opensearch:opensearch"
+              versions: [">=3.0.0"]
+            - dependency-name: "org.opensearch.client:opensearch-rest-client"
+              versions: [">=3.0.0"]
 
     -   package-ecosystem: "maven"
         directory: "/shared-dependencies"
@@ -41,6 +96,17 @@ updates:
             interval: "daily"
             time: "05:00"
         target-branch: "support/4.x"
+        groups:
+            all-maven-deps:
+                patterns:
+                    - "*"
+        ignore:
+            - dependency-name: "org.opensearch.client:opensearch-java"
+              versions: [">=3.0.0"]
+            - dependency-name: "org.opensearch:opensearch"
+              versions: [">=3.0.0"]
+            - dependency-name: "org.opensearch.client:opensearch-rest-client"
+              versions: [">=3.0.0"]
 
     -   package-ecosystem: "gradle"
         directory: "/"
@@ -48,6 +114,17 @@ updates:
             interval: "daily"
             time: "05:30"
         target-branch: "develop"
+        groups:
+            all-maven-deps:
+                patterns:
+                    - "*"
+        ignore:
+            - dependency-name: "org.opensearch.client:opensearch-java"
+              versions: [">=3.0.0"]
+            - dependency-name: "org.opensearch:opensearch"
+              versions: [">=3.0.0"]
+            - dependency-name: "org.opensearch.client:opensearch-rest-client"
+              versions: [">=3.0.0"]
 
     -   package-ecosystem: "gradle"
         directory: "/"
@@ -55,3 +132,14 @@ updates:
             interval: "daily"
             time: "05:30"
         target-branch: "support/4.x"
+        groups:
+            all-maven-deps:
+                patterns:
+                    - "*"
+        ignore:
+            - dependency-name: "org.opensearch.client:opensearch-java"
+              versions: [">=3.0.0"]
+            - dependency-name: "org.opensearch:opensearch"
+              versions: [">=3.0.0"]
+            - dependency-name: "org.opensearch.client:opensearch-rest-client"
+              versions: [">=3.0.0"]
