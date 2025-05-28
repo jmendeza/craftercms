@@ -107,6 +107,9 @@ updates:
               versions: [">=3.0.0"]
             - dependency-name: "org.codelibs.opensearch:opensearch-runner"
               versions: [">=3.0.0"]
+            - dependency-name: "org.eclipse.jgit:org.eclipse.jgit"
+              versions: [">=7.0.0.202409031743-r"]
+
 
     -   package-ecosystem: "gradle"
         directory: "/"
