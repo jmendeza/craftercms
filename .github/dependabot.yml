@@ -37,6 +37,12 @@ updates:
               versions: [">=3.0.0"]
             - dependency-name: "org.eclipse.jgit:org.eclipse.jgit"
               versions: [">=7.0.0"]
+            - dependency-name: "org.eclipse.jgit:org.eclipse.jgit.archive"
+              versions: [">=7.0.0"]
+            - dependency-name: "org.eclipse.jgit:org.eclipse.jgit.ssh.apache"
+              versions: [">=7.0.0"]
+            - dependency-name: "org.eclipse.jgit:org.eclipse.jgit.junit"
+              versions: [">=7.0.0"]
 
     -   package-ecosystem: "maven"
         directory: "/spring-boot"
@@ -74,6 +80,12 @@ updates:
             - dependency-name: "org.codelibs.opensearch:opensearch-runner"
               versions: [">=3.0.0"]
             - dependency-name: "org.eclipse.jgit:org.eclipse.jgit"
+              versions: [">=7.0.0"]
+            - dependency-name: "org.eclipse.jgit:org.eclipse.jgit.archive"
+              versions: [">=7.0.0"]
+            - dependency-name: "org.eclipse.jgit:org.eclipse.jgit.ssh.apache"
+              versions: [">=7.0.0"]
+            - dependency-name: "org.eclipse.jgit:org.eclipse.jgit.junit"
               versions: [">=7.0.0"]
 
     -   package-ecosystem: "maven"
@@ -113,6 +125,12 @@ updates:
               versions: [">=3.0.0"]
             - dependency-name: "org.eclipse.jgit:org.eclipse.jgit"
               versions: [">=7.0.0"]
+            - dependency-name: "org.eclipse.jgit:org.eclipse.jgit.archive"
+              versions: [">=7.0.0"]
+            - dependency-name: "org.eclipse.jgit:org.eclipse.jgit.ssh.apache"
+              versions: [">=7.0.0"]
+            - dependency-name: "org.eclipse.jgit:org.eclipse.jgit.junit"
+              versions: [">=7.0.0"]
 
     -   package-ecosystem: "gradle"
         directory: "/"
@@ -150,4 +168,10 @@ updates:
             - dependency-name: "org.codelibs.opensearch:opensearch-runner"
               versions: [">=3.0.0"]
             - dependency-name: "org.eclipse.jgit:org.eclipse.jgit"
+              versions: [">=7.0.0"]
+            - dependency-name: "org.eclipse.jgit:org.eclipse.jgit.archive"
+              versions: [">=7.0.0"]
+            - dependency-name: "org.eclipse.jgit:org.eclipse.jgit.ssh.apache"
+              versions: [">=7.0.0"]
+            - dependency-name: "org.eclipse.jgit:org.eclipse.jgit.junit"
               versions: [">=7.0.0"]
