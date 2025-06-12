@@ -428,7 +428,7 @@ function doBackup() {
   fi
 
   # MySQL Dump
-  if [[ $SPRING_PROFILES_ACTIVE = *crafter.studio.externalDb* ]]; then
+  if [[ $SPRING_PROFILES_ACTIVE = *crafter_studio_externalDb* ]]; then
     banner "Backing up external DB"
 
     # Check that the mariadb-dump is in the path
@@ -670,7 +670,7 @@ function doRestore() {
 
   # Restore DB
   if [ -f "$tempFolder/crafter.sql" ]; then
-    if [[ $SPRING_PROFILES_ACTIVE = *crafter.studio.externalDb* ]]; then
+    if [[ $SPRING_PROFILES_ACTIVE = *crafter_studio_externalDb* ]]; then
       banner "Restoring external DB"
 
       # Check that the mariadb is in the path
@@ -967,7 +967,7 @@ function searchStatus() {
 
 function startTomcat() {
   cd $CRAFTER_BIN_DIR
-  if [[ ! -d "$CRAFTER_BIN_DIR/dbms" ]] || [[ -z $(getPidByPort "$MARIADB_PORT") ]] || [[ $SPRING_PROFILES_ACTIVE = *crafter.studio.externalDb* ]]; then
+  if [[ ! -d "$CRAFTER_BIN_DIR/dbms" ]] || [[ -z $(getPidByPort "$MARIADB_PORT") ]] || [[ $SPRING_PROFILES_ACTIVE = *crafter_studio_externalDb* ]]; then
     module="Tomcat"
     executable="$CRAFTER_BIN_DIR/apache-tomcat/bin/catalina.sh start"
     port=$TOMCAT_HTTP_PORT
