@@ -428,20 +428,7 @@ function doBackup() {
   fi
 
   # MySQL Dump
-  if [[ $SPRING_PROFILES_ACTIVE = *crafter.studio.externalDb* ]]; then
-    banner "Backing up external DB"
-
-    # Check that the mariadb-dump is in the path
-    if type "mariadb-dump" >/dev/null 2>&1; then
-      export MYSQL_PWD=$MARIADB_PASSWD
-      mariadb-dump --databases crafter --user=$MARIADB_USER --host=$MARIADB_HOST --port=$MARIADB_PORT --protocol=tcp --routines > "$tempFolder/crafter.sql"
-      mariadb-dump --user=$MARIADB_ROOT_USER --password=$MARIADB_ROOT_PASSWD --host=$MARIADB_HOST --port=$MARIADB_PORT --protocol=tcp --skip-add-drop-table --no-create-info --insert-ignore --complete-insert mysql user db global_priv -r $tempFolder/users.sql
-      abortOnError
-    else
-      cecho "External DB backup failed, unable to find mariadb-dump in the PATH. Please make sure you have a proper MariaDB/MySQL client installed\n" "error"
-      exit 13
-    fi
-  elif [ -d "$MARIADB_DATA_DIR" ]; then
+  if [ -d "$MARIADB_DATA_DIR" ]; then
     # Start DB if necessary
     DB_STARTED=false
     if [ -z $(getPidByPort "$MARIADB_PORT") ]; then
@@ -670,46 +657,27 @@ function doRestore() {
 
   # Restore DB
   if [ -f "$tempFolder/crafter.sql" ]; then
-    if [[ $SPRING_PROFILES_ACTIVE = *crafter.studio.externalDb* ]]; then
-      banner "Restoring external DB"
+    mkdir -p "$MARIADB_DATA_DIR"
+    #Start DB
+    banner "Starting DB"
+    java -jar -DmariaDB4j.port=$MARIADB_PORT -DmariaDB4j.baseDir="$CRAFTER_BIN_DIR/dbms" -DmariaDB4j.dataDir="$MARIADB_DATA_DIR" $CRAFTER_BIN_DIR/mariaDB4j-app.jar &
+    $CRAFTER_BIN_DIR/wait-for-it.sh -h "$MARIADB_HOST" -p "$MARIADB_PORT" -t $MARIADB_TCP_TIMEOUT
 
-      # Check that the mariadb is in the path
-      if type "mariadb" >/dev/null 2>&1; then
-        export MYSQL_PWD=$MARIADB_PASSWD
-        mariadb --user=$MARIADB_USER --host=$MARIADB_HOST --port=$MARIADB_PORT --protocol=tcp --binary-mode < "$tempFolder/crafter.sql"
-        if [ -f "$tempFolder/users.sql" ]; then
-          mariadb --user=$MARIADB_USER --host=$MARIADB_HOST --port=$MARIADB_PORT --protocol=tcp --binary-mode mysql < "$tempFolder/users.sql"
-        else
-          cecho "Users backup does not exists. Skipping restore users\n" "warning"
-        fi
-        abortOnError
-      else
-        cecho "External DB restore failed, unable to find mariadb in the PATH. Please make sure you have a proper MariaDB/MySQL client installed\n" "error"
-        exit 17
-      fi
+    # Import
+    banner "Restoring embedded DB"
+    export MYSQL_PWD=$MARIADB_ROOT_PASSWD
+    $CRAFTER_BIN_DIR/dbms/bin/mariadb --user=$MARIADB_ROOT_USER --host=$MARIADB_HOST --port=$MARIADB_PORT --protocol=tcp --binary-mode < "$tempFolder/crafter.sql"
+    if [ -f "$tempFolder/users.sql" ]; then
+      $CRAFTER_BIN_DIR/dbms/bin/mariadb --user=$MARIADB_ROOT_USER --host=$MARIADB_HOST --port=$MARIADB_PORT --protocol=tcp --binary-mode mysql < "$tempFolder/users.sql"
     else
-      mkdir -p "$MARIADB_DATA_DIR"
-      #Start DB
-      banner "Starting DB"
-      java -jar -DmariaDB4j.port=$MARIADB_PORT -DmariaDB4j.baseDir="$CRAFTER_BIN_DIR/dbms" -DmariaDB4j.dataDir="$MARIADB_DATA_DIR" $CRAFTER_BIN_DIR/mariaDB4j-app.jar &
-      $CRAFTER_BIN_DIR/wait-for-it.sh -h "$MARIADB_HOST" -p "$MARIADB_PORT" -t $MARIADB_TCP_TIMEOUT
-
-      # Import
-      banner "Restoring embedded DB"
-      export MYSQL_PWD=$MARIADB_ROOT_PASSWD
-      $CRAFTER_BIN_DIR/dbms/bin/mariadb --user=$MARIADB_ROOT_USER --host=$MARIADB_HOST --port=$MARIADB_PORT --protocol=tcp --binary-mode < "$tempFolder/crafter.sql"
-      if [ -f "$tempFolder/users.sql" ]; then
-        $CRAFTER_BIN_DIR/dbms/bin/mariadb --user=$MARIADB_ROOT_USER --host=$MARIADB_HOST --port=$MARIADB_PORT --protocol=tcp --binary-mode mysql < "$tempFolder/users.sql"
-      else
-        cecho "Users backup does not exists. Skipping restore users\n" "warning"
-      fi
-      abortOnError
-
-      # Stop DB
-      banner "Stopping DB"
-      kill $(cat mariadb4j.pid)
-      sleep 10
+      cecho "Users backup does not exists. Skipping restore users\n" "warning"
     fi
+    abortOnError
+
+    # Stop DB
+    banner "Stopping DB"
+    kill $(cat mariadb4j.pid)
+    sleep 10
   fi
 
   rm -r "$tempFolder"
@@ -967,7 +935,7 @@ function searchStatus() {
 
 function startTomcat() {
   cd $CRAFTER_BIN_DIR
-  if [[ ! -d "$CRAFTER_BIN_DIR/dbms" ]] || [[ -z $(getPidByPort "$MARIADB_PORT") ]] || [[ $SPRING_PROFILES_ACTIVE = *crafter.studio.externalDb* ]]; then
+  if [[ ! -d "$CRAFTER_BIN_DIR/dbms" ]] || [[ -z $(getPidByPort "$MARIADB_PORT") ]]; then
     module="Tomcat"
     executable="$CRAFTER_BIN_DIR/apache-tomcat/bin/catalina.sh start"
     port=$TOMCAT_HTTP_PORT
