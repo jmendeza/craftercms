@@ -27,12 +27,13 @@ Security Analysts
 
 | Name                               | URL                                  | Contribution                                                                              |
 |------------------------------------|--------------------------------------|-------------------------------------------------------------------------------------------|
+| Matei "Mal" Badanoiu               | https://github.com/mbadanoiu         | [CV-2022091301](https://craftercms.com/docs/current/security/advisory.html#cv-2022091301) |
+|                                    |                                      | [CV-2022091302](https://craftercms.com/docs/current/security/advisory.html#cv-2022091302) |
+|                                    |                                      | [CV-2025061901](https://craftercms.com/docs/current/security/advisory.html#cv-2025061901) |
 | Carlos Ortiz                       | https://github.com/cortiz            | [CV-2021120106](https://craftercms.com/docs/current/security/advisory.html#cv-2021120106) |
 |                                    |                                      | [CV-2025011501](https://craftercms.com/docs/current/security/advisory.html#cv-2025011501) |
 | Egidio Romano                      | egidio.romano@mindedsecurity.com     | [CV-2023080301](https://craftercms.com/docs/current/security/advisory.html#cv-2023080301) |
 | Gil Correia                        | gil.correia@devoteam.com             | [CV-2023021701](https://craftercms.com/docs/current/security/advisory.html#cv-2023021701) |
-| Matei "Mal" Badanoiu               | https://github.com/mbadanoiu         | [CV-2022091301](https://craftercms.com/docs/current/security/advisory.html#cv-2022091301) |
-|                                    |                                      | [CV-2022091302](https://craftercms.com/docs/current/security/advisory.html#cv-2022091302) |
 | Kai Zhao <br> (ToTU Security Team) | https://github.com/happyhacking-k    | [CV-2020080101](https://craftercms.com/docs/current/security/advisory.html#cv-2020080101) |
 |                                    |                                      | [CV-2021120101](https://craftercms.com/docs/current/security/advisory.html#cv-2021120101) |
 |                                    |                                      | [CV-2021120102](https://craftercms.com/docs/current/security/advisory.html#cv-2021120102) |
