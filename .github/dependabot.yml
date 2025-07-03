@@ -2,9 +2,9 @@ version: 2
 updates:
     -   package-ecosystem: "maven"
         directories:
-          - "/"
-          - "/spring-boot"
-          - "/shared-dependencies"
+            - "/"
+            - "/spring-boot"
+            - "/shared-dependencies"
         schedule:
             interval: "daily"
             time: "04:00"
@@ -14,18 +14,18 @@ updates:
                 patterns:
                     - "*"
         ignore:
-            - dependency-name: "org.opensearch.client:opensearch-rest-high-level-client"
-              versions: [">=3.0.0"]
-            - dependency-name: "org.opensearch.client:opensearch-java"
-              versions: [">=3.0.0"]
-            - dependency-name: "org.codelibs.opensearch:opensearch-runner"
-              versions: [">=3.0.0"]
+            -   dependency-name: "org.opensearch.client:opensearch-rest-high-level-client"
+                versions: [ ">=3.0.0" ]
+            -   dependency-name: "org.opensearch.client:opensearch-java"
+                versions: [ ">=3.0.0" ]
+            -   dependency-name: "org.codelibs.opensearch:opensearch-runner"
+                versions: [ ">=3.0.0" ]
 
     -   package-ecosystem: "maven"
         directories:
-          - "/"
-          - "/spring-boot"
-          - "/shared-dependencies"
+            - "/"
+            - "/spring-boot"
+            - "/shared-dependencies"
         schedule:
             interval: "daily"
             time: "04:00"
@@ -35,20 +35,20 @@ updates:
                 patterns:
                     - "*"
         ignore:
-            - dependency-name: "org.opensearch.client:opensearch-rest-high-level-client"
-              versions: [">=3.0.0"]
-            - dependency-name: "org.opensearch.client:opensearch-java"
-              versions: [">=3.0.0"]
-            - dependency-name: "org.codelibs.opensearch:opensearch-runner"
-              versions: [">=3.0.0"]
-            - dependency-name: "org.eclipse.jgit:org.eclipse.jgit"
-              versions: [">=7.0.0"]
+            -   dependency-name: "org.opensearch.client:opensearch-rest-high-level-client"
+                versions: [ ">=3.0.0" ]
+            -   dependency-name: "org.opensearch.client:opensearch-java"
+                versions: [ ">=3.0.0" ]
+            -   dependency-name: "org.codelibs.opensearch:opensearch-runner"
+                versions: [ ">=3.0.0" ]
+            -   dependency-name: "org.eclipse.jgit:org.eclipse.jgit"
+                versions: [ ">=7.0.0" ]
 
     -   package-ecosystem: "gradle"
         directories:
-          - "/"
-          - "/spring-boot"
-          - "/shared-dependencies"
+            - "/"
+            - "/spring-boot"
+            - "/shared-dependencies"
         schedule:
             interval: "daily"
             time: "05:30"
@@ -58,18 +58,18 @@ updates:
                 patterns:
                     - "*"
         ignore:
-            - dependency-name: "org.opensearch.client:opensearch-rest-high-level-client"
-              versions: [">=3.0.0"]
-            - dependency-name: "org.opensearch.client:opensearch-java"
-              versions: [">=3.0.0"]
-            - dependency-name: "org.codelibs.opensearch:opensearch-runner"
-              versions: [">=3.0.0"]
+            -   dependency-name: "org.opensearch.client:opensearch-rest-high-level-client"
+                versions: [ ">=3.0.0" ]
+            -   dependency-name: "org.opensearch.client:opensearch-java"
+                versions: [ ">=3.0.0" ]
+            -   dependency-name: "org.codelibs.opensearch:opensearch-runner"
+                versions: [ ">=3.0.0" ]
 
     -   package-ecosystem: "gradle"
         directories:
-          - "/"
-          - "/spring-boot"
-          - "/shared-dependencies"
+            - "/"
+            - "/spring-boot"
+            - "/shared-dependencies"
         schedule:
             interval: "daily"
             time: "05:30"
@@ -79,11 +79,11 @@ updates:
                 patterns:
                     - "*"
         ignore:
-            - dependency-name: "org.opensearch.client:opensearch-rest-high-level-client"
-              versions: [">=3.0.0"]
-            - dependency-name: "org.opensearch.client:opensearch-java"
-              versions: [">=3.0.0"]
-            - dependency-name: "org.codelibs.opensearch:opensearch-runner"
-              versions: [">=3.0.0"]
-            - dependency-name: "org.eclipse.jgit:org.eclipse.jgit"
-              versions: [">=7.0.0"]
+            -   dependency-name: "org.opensearch.client:opensearch-rest-high-level-client"
+                versions: [ ">=3.0.0" ]
+            -   dependency-name: "org.opensearch.client:opensearch-java"
+                versions: [ ">=3.0.0" ]
+            -   dependency-name: "org.codelibs.opensearch:opensearch-runner"
+                versions: [ ">=3.0.0" ]
+            -   dependency-name: "org.eclipse.jgit:org.eclipse.jgit"
+                versions: [ ">=7.0.0" ]
