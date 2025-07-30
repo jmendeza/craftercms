@@ -16,7 +16,6 @@
 package upgrade.hooks
 
 @Grapes([
-	@Grab(group='com.squareup.okhttp3', module='okhttp', version='5.1.0'),
 	@Grab(group='com.squareup.okhttp3', module='okhttp-jvm', version='5.1.0')
 ])
 

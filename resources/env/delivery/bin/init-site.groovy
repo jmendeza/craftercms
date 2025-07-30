@@ -20,7 +20,6 @@
     @Grab(group='org.apache.commons', module='commons-collections4', version='4.5.0'),
     @Grab(group='commons-io', module='commons-io', version='2.20.0'),
     @Grab(group='commons-io', module='commons-io', version='2.19.0'),
-	@Grab(group='com.squareup.okhttp3', module='okhttp', version='5.1.0'),
 	@Grab(group='com.squareup.okhttp3', module='okhttp-jvm', version='5.1.0')
 ])
 
