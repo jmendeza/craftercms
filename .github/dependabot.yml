@@ -6,8 +6,9 @@ updates:
           - "/spring-boot"
           - "/shared-dependencies"
         schedule:
-            interval: "daily"
-            time: "04:00"
+            interval: "weekly"
+            day: "tuesday"
+            time: "09:00"
         target-branch: "develop"
         groups:
             all-maven-deps:
@@ -27,8 +28,9 @@ updates:
           - "/spring-boot"
           - "/shared-dependencies"
         schedule:
-            interval: "daily"
-            time: "04:00"
+            interval: "weekly"
+            day: "tuesday"
+            time: "09:00"
         target-branch: "support/4.x"
         groups:
             all-maven-deps:
@@ -50,8 +52,9 @@ updates:
           - "/spring-boot"
           - "/shared-dependencies"
         schedule:
-            interval: "daily"
-            time: "05:30"
+            interval: "weekly"
+            day: "tuesday"
+            time: "09:00"
         target-branch: "develop"
         groups:
             all-maven-deps:
@@ -71,8 +74,9 @@ updates:
           - "/spring-boot"
           - "/shared-dependencies"
         schedule:
-            interval: "daily"
-            time: "05:30"
+            interval: "weekly"
+            day: "tuesday"
+            time: "09:00"
         target-branch: "support/4.x"
         groups:
             all-maven-deps:
