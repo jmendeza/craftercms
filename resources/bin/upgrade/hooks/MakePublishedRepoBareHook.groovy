@@ -36,8 +36,13 @@ class MakePublishedRepoBareHook implements PostUpgradeHook {
 		println "Make published repo bare for all sites"
 		println "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 
-		Files.list(dataFolder.resolve(REPOS_DIR)).forEach {
-			upgradeRepo(it)
+		Path sitesRoot = dataFolder.resolve(REPOS_DIR)
+		if (!Files.isDirectory(sitesRoot)) {
+			println "No sites directory at ${sitesRoot}. Skipping published repo conversion."
+			return
+		}
+		Files.list(sitesRoot).withCloseable { stream ->
+			stream.filter(Files.&isDirectory).forEach { upgradeRepo(it) }
 		}
 
 		println "\nAll published repositories are now bare"
