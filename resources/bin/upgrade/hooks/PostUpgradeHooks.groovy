@@ -45,19 +45,30 @@ class PostUpgradeHooks {
 	]
 
 	private static final List<PostUpgradeHooks> AUTHORING_4_0_X = [
+		new MakePublishedRepoBareHook(),
 		new RemoveOldSearchIndexesDirHook(),
 		new StartCrafterHook(),
 		new ReindexAllTargetsHook(),
 		new PostUpgradeCompletedHook(true)
 	]
 
-	private static final List<PostUpgradeHooks> DELIVERY_4_0_X = AUTHORING_4_0_X
+	private static final List<PostUpgradeHooks> DELIVERY_4_0_X = [
+		new RemoveOldSearchIndexesDirHook(),
+		new StartCrafterHook(),
+		new ReindexAllTargetsHook(),
+		new PostUpgradeCompletedHook(true)
+	]
 
+	// Notice this applies to any version >= 4.1.0
 	private static final List<PostUpgradeHooks> AUTHORING_4_1_x = [
+		new MakePublishedRepoBareHook(),
 		new PostUpgradeCompletedHook(false)
 	]
 
-	private static final List<PostUpgradeHooks> DELIVERY_4_1_x = AUTHORING_4_1_x
+	// Notice this applies to any version >= 4.1.0
+	private static final List<PostUpgradeHooks> DELIVERY_4_1_x =  [
+		new PostUpgradeCompletedHook(false)
+	]
 
 	private static final Map ALL_HOOKS = [
 		'authoring': [
