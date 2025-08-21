@@ -67,7 +67,8 @@ class MakePublishedRepoBareHook implements PostUpgradeHook {
 		// Configure git to make the repository bare
 		// git config --bool core.bare true
 		ProcessBuilder pb = new ProcessBuilder("git", "config", "--bool", "core.bare", "true")
-		pb.directory(repositoryPath.toFile())
+		pb.directory(publishedPath.toFile())
+		pb.inheritIO()
 		Process process = pb.start()
 		int exitCode = process.waitFor()
 		if (exitCode != 0) {
