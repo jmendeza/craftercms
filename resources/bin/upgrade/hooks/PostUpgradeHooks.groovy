@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2024 Crafter Software Corporation. All Rights Reserved.
+ * Copyright (C) 2007-2025 Crafter Software Corporation. All Rights Reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as published by
@@ -25,26 +25,26 @@ import upgrade.exceptions.UpgradeException
 
 class PostUpgradeHooks {
 
-	private static final List<PostUpgradeHooks> AUTHORING_3_1_X_NO_DB_HOOKS = [
+	private static final List<PostUpgradeHook> AUTHORING_3_1_X_NO_DB_HOOKS = [
 		new StartCrafterHook(),
 		new RecreateIndexesHook(),
 		new PostUpgradeCompletedHook(true)
 	]
 
-	private static final List<PostUpgradeHooks> AUTHORING_3_1_X_WITH_DB_HOOKS = [
+	private static final List<PostUpgradeHook> AUTHORING_3_1_X_WITH_DB_HOOKS = [
 		new UpgradeEmbeddedDbHook(),
 		new StartCrafterHook(),
 		new RecreateIndexesHook(),
 		new PostUpgradeCompletedHook(true)
 	]
 
-	private static final List<PostUpgradeHooks> DELIVERY_3_1_X_HOOKS = [
+	private static final List<PostUpgradeHook> DELIVERY_3_1_X_HOOKS = [
 		new StartCrafterHook(),
 		new RecreateIndexesHook(),
 		new PostUpgradeCompletedHook(true)
 	]
 
-	private static final List<PostUpgradeHooks> AUTHORING_4_0_X = [
+	private static final List<PostUpgradeHook> AUTHORING_4_0_X = [
 		new MakePublishedRepoBareHook(),
 		new RemoveOldSearchIndexesDirHook(),
 		new StartCrafterHook(),
@@ -52,7 +52,7 @@ class PostUpgradeHooks {
 		new PostUpgradeCompletedHook(true)
 	]
 
-	private static final List<PostUpgradeHooks> DELIVERY_4_0_X = [
+	private static final List<PostUpgradeHook> DELIVERY_4_0_X = [
 		new RemoveOldSearchIndexesDirHook(),
 		new StartCrafterHook(),
 		new ReindexAllTargetsHook(),
@@ -60,13 +60,13 @@ class PostUpgradeHooks {
 	]
 
 	// Notice this applies to any version >= 4.1.0
-	private static final List<PostUpgradeHooks> AUTHORING_4_1_x = [
+	private static final List<PostUpgradeHook> AUTHORING_4_1_x = [
 		new MakePublishedRepoBareHook(),
 		new PostUpgradeCompletedHook(false)
 	]
 
 	// Notice this applies to any version >= 4.1.0
-	private static final List<PostUpgradeHooks> DELIVERY_4_1_x =  [
+	private static final List<PostUpgradeHook> DELIVERY_4_1_x =  [
 		new PostUpgradeCompletedHook(false)
 	]
 
