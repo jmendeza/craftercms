@@ -87,6 +87,9 @@
 		<buildnumber-maven-plugin.version>3.2.1</buildnumber-maven-plugin.version>
 		<central-publishing-maven-plugin.version>0.7.0</central-publishing-maven-plugin.version>
 		<cyclonedx-maven-plugin.version>2.9.1</cyclonedx-maven-plugin.version>
+
+		<!-- overrides -->
+		<netty-bom.version>4.1.124.Final</netty-bom.version>
 	</properties>
 
 	<dependencyManagement>
@@ -123,6 +126,13 @@
 				<groupId>com.github.jknack</groupId>
 				<artifactId>handlebars-springmvc</artifactId>
 				<version>${handlebars.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.netty</groupId>
+				<artifactId>netty-bom</artifactId>
+				<version>${netty-bom.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
