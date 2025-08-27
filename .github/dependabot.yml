@@ -45,6 +45,12 @@ updates:
                 versions: [ ">=3.0.0" ]
             -   dependency-name: "org.eclipse.jgit:org.eclipse.jgit"
                 versions: [ ">7.0.1.202505221510-r" ]
+            -   dependency-name: "org.apache.groovy:groovy"
+                versions: [ ">=5.0.0" ]
+            -   dependency-name: "org.apache.groovy:groovy-all"
+                versions: [ ">=5.0.0" ]
+            -   dependency-name: "org.apache.groovy:groovy-sql"
+                versions: [ ">=5.0.0" ]
 
     -   package-ecosystem: "gradle"
         directories:
@@ -91,3 +97,9 @@ updates:
                 versions: [ ">=3.0.0" ]
             -   dependency-name: "org.eclipse.jgit:org.eclipse.jgit"
                 versions: [ ">7.0.1.202505221510-r" ]
+            -   dependency-name: "org.apache.groovy:groovy"
+                versions: [ ">=5.0.0" ]
+            -   dependency-name: "org.apache.groovy:groovy-all"
+                versions: [ ">=5.0.0" ]
+            -   dependency-name: "org.apache.groovy:groovy-sql"
+                versions: [ ">=5.0.0" ]
