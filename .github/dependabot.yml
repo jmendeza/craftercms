@@ -1,93 +1,105 @@
 version: 2
 updates:
-    -   package-ecosystem: "maven"
-        directories:
-          - "/"
-          - "/spring-boot"
-          - "/shared-dependencies"
-        schedule:
-            interval: "weekly"
-            day: "tuesday"
-            time: "09:00"
-        target-branch: "develop"
-        groups:
-            all-maven-deps:
-                patterns:
-                    - "*"
-        ignore:
-            - dependency-name: "org.opensearch.client:opensearch-rest-high-level-client"
-              versions: [">=3.0.0"]
-            - dependency-name: "org.opensearch.client:opensearch-java"
-              versions: [">=3.0.0"]
-            - dependency-name: "org.codelibs.opensearch:opensearch-runner"
-              versions: [">=3.0.0"]
+  -   package-ecosystem: "maven"
+      directories:
+        - "/"
+        - "/spring-boot"
+        - "/shared-dependencies"
+      schedule:
+        interval: "weekly"
+        day: "tuesday"
+        time: "09:00"
+      target-branch: "develop"
+      groups:
+        all-maven-deps:
+          patterns:
+            - "*"
+      ignore:
+        -   dependency-name: "org.opensearch.client:opensearch-rest-high-level-client"
+            versions: [ ">=3.0.0" ]
+        -   dependency-name: "org.opensearch.client:opensearch-java"
+            versions: [ ">=3.0.0" ]
+        -   dependency-name: "org.codelibs.opensearch:opensearch-runner"
+            versions: [ ">=3.0.0" ]
 
-    -   package-ecosystem: "maven"
-        directories:
-          - "/"
-          - "/spring-boot"
-          - "/shared-dependencies"
-        schedule:
-            interval: "weekly"
-            day: "tuesday"
-            time: "09:00"
-        target-branch: "support/4.x"
-        groups:
-            all-maven-deps:
-                patterns:
-                    - "*"
-        ignore:
-            - dependency-name: "org.opensearch.client:opensearch-rest-high-level-client"
-              versions: [">=3.0.0"]
-            - dependency-name: "org.opensearch.client:opensearch-java"
-              versions: [">=3.0.0"]
-            - dependency-name: "org.codelibs.opensearch:opensearch-runner"
-              versions: [">=3.0.0"]
-            - dependency-name: "org.eclipse.jgit:org.eclipse.jgit"
-              versions: [">7.0.1.202505221510-r"]
+  -   package-ecosystem: "maven"
+      directories:
+        - "/"
+        - "/spring-boot"
+        - "/shared-dependencies"
+      schedule:
+        interval: "weekly"
+        day: "tuesday"
+        time: "09:00"
+      target-branch: "support/4.x"
+      groups:
+        all-maven-deps:
+          patterns:
+            - "*"
+      ignore:
+        -   dependency-name: "org.opensearch.client:opensearch-rest-high-level-client"
+            versions: [ ">=3.0.0" ]
+        -   dependency-name: "org.opensearch.client:opensearch-java"
+            versions: [ ">=3.0.0" ]
+        -   dependency-name: "org.codelibs.opensearch:opensearch-runner"
+            versions: [ ">=3.0.0" ]
+        -   dependency-name: "org.eclipse.jgit:org.eclipse.jgit"
+            versions: [ ">7.0.1.202505221510-r" ]
+        -   dependency-name: "org.apache.groovy:groovy"
+            versions: [ ">=5.0.0" ]
+        -   dependency-name: "org.apache.groovy:groovy-all"
+            versions: [ ">=5.0.0" ]
+        -   dependency-name: "org.apache.groovy:groovy-sql"
+            versions: [ ">=5.0.0" ]
 
-    -   package-ecosystem: "gradle"
-        directories:
-          - "/"
-          - "/spring-boot"
-          - "/shared-dependencies"
-        schedule:
-            interval: "weekly"
-            day: "tuesday"
-            time: "09:00"
-        target-branch: "develop"
-        groups:
-            all-maven-deps:
-                patterns:
-                    - "*"
-        ignore:
-            - dependency-name: "org.opensearch.client:opensearch-rest-high-level-client"
-              versions: [">=3.0.0"]
-            - dependency-name: "org.opensearch.client:opensearch-java"
-              versions: [">=3.0.0"]
-            - dependency-name: "org.codelibs.opensearch:opensearch-runner"
-              versions: [">=3.0.0"]
+  -   package-ecosystem: "gradle"
+      directories:
+        - "/"
+        - "/spring-boot"
+        - "/shared-dependencies"
+      schedule:
+        interval: "weekly"
+        day: "tuesday"
+        time: "09:00"
+      target-branch: "develop"
+      groups:
+        all-maven-deps:
+          patterns:
+            - "*"
+      ignore:
+        -   dependency-name: "org.opensearch.client:opensearch-rest-high-level-client"
+            versions: [ ">=3.0.0" ]
+        -   dependency-name: "org.opensearch.client:opensearch-java"
+            versions: [ ">=3.0.0" ]
+        -   dependency-name: "org.codelibs.opensearch:opensearch-runner"
+            versions: [ ">=3.0.0" ]
 
-    -   package-ecosystem: "gradle"
-        directories:
-          - "/"
-          - "/spring-boot"
-          - "/shared-dependencies"
-        schedule:
-            interval: "weekly"
-            day: "tuesday"
-            time: "09:00"
-        target-branch: "support/4.x"
-        groups:
-            all-maven-deps:
-                patterns:
-                    - "*"
-        ignore:
-            - dependency-name: "org.opensearch.client:opensearch-rest-high-level-client"
-              versions: [">=3.0.0"]
-            - dependency-name: "org.opensearch.client:opensearch-java"
-              versions: [">=3.0.0"]
-            - dependency-name: "org.codelibs.opensearch:opensearch-runner"
-              versions: [">=3.0.0"]
-            - dependency-name: "org.eclipse.jgit:org.eclipse.jgit"
-              versions: [">7.0.1.202505221510-r"]
+  -   package-ecosystem: "gradle"
+      directories:
+        - "/"
+        - "/spring-boot"
+        - "/shared-dependencies"
+      schedule:
+        interval: "weekly"
+        day: "tuesday"
+        time: "09:00"
+      target-branch: "support/4.x"
+      groups:
+        all-maven-deps:
+          patterns:
+            - "*"
+      ignore:
+        -   dependency-name: "org.opensearch.client:opensearch-rest-high-level-client"
+            versions: [ ">=3.0.0" ]
+        -   dependency-name: "org.opensearch.client:opensearch-java"
+            versions: [ ">=3.0.0" ]
+        -   dependency-name: "org.codelibs.opensearch:opensearch-runner"
+            versions: [ ">=3.0.0" ]
+        -   dependency-name: "org.eclipse.jgit:org.eclipse.jgit"
+            versions: [ ">7.0.1.202505221510-r" ]
+        -   dependency-name: "org.apache.groovy:groovy"
+            versions: [ ">=5.0.0" ]
+        -   dependency-name: "org.apache.groovy:groovy-all"
+            versions: [ ">=5.0.0" ]
+        -   dependency-name: "org.apache.groovy:groovy-sql"
+            versions: [ ">=5.0.0" ]
