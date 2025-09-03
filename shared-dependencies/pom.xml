@@ -72,7 +72,8 @@
 		<sardine.version>5.13</sardine.version>
 		<okio.version>3.16.0</okio.version>
 		<bouncycastle.version>1.81</bouncycastle.version>
-		<jackson.version>2.20</jackson.version>
+		<jackson.version>2.20.0</jackson.version>
+		<jackson-annotations.version>2.20</jackson-annotations.version>
 		<aws.sdk.version>2.33.0</aws.sdk.version>
 		<jose4j.version>0.9.6</jose4j.version>
 		<groovy.version>4.0.28</groovy.version>
@@ -205,7 +206,7 @@
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
 				<artifactId>jackson-annotations</artifactId>
-				<version>${jackson.version}</version>
+				<version>${jackson-annotations.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
