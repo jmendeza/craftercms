@@ -1402,9 +1402,6 @@ staticMethod org.codehaus.groovy.runtime.StringGroovyMethods unexpand java.lang.
 staticMethod org.codehaus.groovy.runtime.StringGroovyMethods unexpand java.lang.CharSequence int
 staticMethod org.codehaus.groovy.runtime.StringGroovyMethods unexpandLine java.lang.CharSequence int
 
-# Needed for normal Pipeline script instantiation. TODO: Add @Whitelisted annotation to the constructor and remove this entry.
-new org.jenkinsci.plugins.workflow.cps.CpsScript
-
 
 # CrafterCMS:
 # Crafter Engine
