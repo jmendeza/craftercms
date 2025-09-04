@@ -1403,3 +1403,11 @@ staticMethod org.codehaus.groovy.runtime.StringGroovyMethods unexpand java.lang.
 staticMethod org.codehaus.groovy.runtime.StringGroovyMethods unexpandLine java.lang.CharSequence int
 
 
+# Crafter Studio
+new scripts.libs.CommonLifecycleApi java.lang.Object
+staticMethod org.slf4j.LoggerFactory getLogger java.lang.Class
+method org.slf4j.Logger debug java.lang.String java.lang.Object java.lang.Object
+method scripts.libs.CommonLifecycleApi execute
+method scripts.libs.CommonLifecycleApi getContentLifecycleParams
+method scripts.libs.CommonLifecycleApi * java.lang.Object java.lang.Object
+method scripts.libs.CommonLifecycleApi getLogger
