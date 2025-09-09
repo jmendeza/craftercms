@@ -1445,3 +1445,26 @@ staticField org.craftercms.studio.api.v1.service.content.DmContentLifeCycleServi
 staticField org.craftercms.studio.api.v1.service.content.DmContentLifeCycleService$ContentLifeCycleOperation REVERT
 staticField org.craftercms.studio.api.v1.service.content.DmContentLifeCycleService$ContentLifeCycleOperation UPDATE
 staticMethod org.craftercms.studio.api.v1.service.content.DmContentLifeCycleService$ContentLifeCycleOperation getOperation java.lang.String
+
+# Chat GPT plugin
+method org.apache.commons.configuration2.ImmutableConfiguration getString java.lang.String
+staticMethod org.opensearch.client.opensearch.core.SearchRequest of java.util.function.Function
+
+method org.opensearch.client.opensearch.core.SearchRequest$Builder query java.util.function.Function
+method org.opensearch.client.opensearch._types.query_dsl.Query$Builder bool java.util.function.Function
+method org.opensearch.client.opensearch._types.query_dsl.BoolQuery$Builder should java.util.function.Function
+method org.opensearch.client.opensearch._types.query_dsl.Query$Builder prefix java.util.function.Function
+method org.opensearch.client.opensearch._types.query_dsl.PrefixQuery$Builder field java.lang.String
+method org.opensearch.client.opensearch._types.query_dsl.PrefixQuery$Builder value java.lang.String
+method org.opensearch.client.opensearch.core.SearchRequest$Builder from java.lang.Integer
+method org.opensearch.client.opensearch.core.SearchRequest$Builder size java.lang.Integer
+method org.craftercms.commons.spring.context.ApplicationContextAccessor get java.lang.String
+method org.craftercms.studio.impl.v2.service.search.PermissionAwareSearchService search java.lang.String org.opensearch.client.opensearch.core.SearchRequest java.lang.Class
+method org.opensearch.client.opensearch.core.search.SearchResult hits
+method org.opensearch.client.opensearch._types.query_dsl.Query$Builder match java.util.function.Function
+method org.opensearch.client.opensearch.core.search.HitsMetadata hits
+method org.opensearch.client.opensearch._types.query_dsl.MatchQuery$Builder field java.lang.String
+method org.opensearch.client.opensearch.core.search.Hit source
+staticMethod org.opensearch.client.opensearch._types.FieldValue of java.util.function.Consumer
+staticMethod org.opensearch.client.opensearch._types.FieldValue of java.lang.String
+method org.opensearch.client.opensearch._types.query_dsl.MatchQuery$Builder query org.opensearch.client.opensearch._types.FieldValue
