@@ -28,8 +28,7 @@ updates:
         - "/spring-boot"
         - "/shared-dependencies"
       schedule:
-        interval: "weekly"
-        day: "tuesday"
+        interval: "daily"
         time: "09:00"
       target-branch: "support/4.x"
       groups:
@@ -80,8 +79,7 @@ updates:
         - "/spring-boot"
         - "/shared-dependencies"
       schedule:
-        interval: "weekly"
-        day: "tuesday"
+        interval: "daily"
         time: "09:00"
       target-branch: "support/4.x"
       groups:
