@@ -22,7 +22,7 @@ package upgrade
     @Grab(group = 'org.apache.commons', module = 'commons-configuration2', version = '2.12.0'),
     @Grab(group = 'org.apache.commons', module = 'commons-text', version = '1.14.0'),
     @Grab(group = 'commons-beanutils', module = 'commons-beanutils', version = '1.11.0'),
-    @Grab(group = 'org.yaml', module = 'snakeyaml', version = '2.4')
+    @Grab(group = 'org.yaml', module = 'snakeyaml', version = '2.5')
 ])
 
 import groovy.cli.commons.CliBuilder
