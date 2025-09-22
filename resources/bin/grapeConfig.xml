@@ -1,10 +1,13 @@
 <?xml version="1.0"?>
 <ivysettings>
-  <settings defaultResolver="downloadGrapes"/>
-  <resolvers>
-    <chain name="downloadGrapes" returnFirst="true">
-      <!-- no local m2 repo or cached grapes are defined to avoid conflicst with depedencies -->
-      <ibiblio name="ibiblio" m2compatible="true"/>
-    </chain>
-  </resolvers>
+	<settings defaultResolver="downloadGrapes"/>
+	<resolvers>
+		<chain name="downloadGrapes" returnFirst="true">
+			<!-- no local m2 repo or cached grapes are defined to avoid conflicts with dependencies -->
+			<ibiblio name="ibiblio" m2compatible="true"/>
+		</chain>
+		<chain name="cachedGrapes">
+			<filesystem name="files" m2compatible="true"/>
+		</chain>
+	</resolvers>
 </ivysettings>
