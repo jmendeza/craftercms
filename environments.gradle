@@ -76,7 +76,7 @@ ext.commonItemsToCopy = [
         name: "tomcat",
         from:"${downloadDir}/apache-tomcat-${tomcatVersion}/",
         into: "/bin/apache-tomcat/",
-        exclude: "**/webapps/**"
+        exclude: "webapps/*"
     ],
     [
         name: "tomcat_info",
