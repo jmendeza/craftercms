@@ -26,6 +26,8 @@ buildscript {
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.ajoberstar.grgit.Grgit
 
+import java.nio.file.Files
+
 apply from: "commons.gradle"
 
 ext.environments = ["authoring", "delivery"]
@@ -88,7 +90,13 @@ ext.commonItemsToCopy = [
         name: "opensearch",
         from: "${downloadDir}/opensearch-${openSearchVersion}/",
         into: "/bin/opensearch/",
-        exclude: ""
+        exclude: "",
+        postCopy: (envFolder) -> {
+            if (Files.exists(file("${envFolder}/bin/opensearch/plugins/opensearch-security-analytics").toPath())) {
+                println 'Removing opensearch-security-analytics plugin...'
+                execCommand(['./bin/opensearch/bin/opensearch-plugin', 'remove', 'opensearch-security-analytics'], envFolder)
+            }
+        }
     ],
     [
         name: "mongodb",
@@ -648,6 +656,10 @@ ext.prepareBaseEnvironment = { envFolder, overwriteChangedFiles, downloadGrapes,
 
         if (performSync) {
             syncFolder("${projectDir}", from, envFolder + into, exclude, overwriteChangedFiles, !mongoSync)
+        }
+        if (item.postCopy) {
+            println "Executing postCopy for ${name}"
+            item.postCopy(envFolder)
         }
     }
 
