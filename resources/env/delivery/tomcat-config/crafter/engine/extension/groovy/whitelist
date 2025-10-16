@@ -1404,7 +1404,6 @@ staticMethod org.codehaus.groovy.runtime.StringGroovyMethods unexpandLine java.l
 method org.craftercms.engine.model.SiteItem get java.lang.String
 method org.craftercms.engine.service.SiteItemService getSiteTree java.lang.String int
 method org.craftercms.engine.service.SiteItemService getSiteItem java.lang.String
-method org.craftercms.engine.service.SiteItemService getSiteItem java.lang.Stringmethod org.craftercms.engine.model.SiteItem getChildItems
 method org.craftercms.engine.model.SiteItem getChildItems
 method org.craftercms.engine.model.SiteItem getStoreName
 method org.craftercms.engine.service.UrlTransformationService transform java.lang.String java.lang.String
