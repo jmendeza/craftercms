@@ -1404,7 +1404,6 @@ staticMethod org.codehaus.groovy.runtime.StringGroovyMethods unexpandLine java.l
 method org.craftercms.engine.model.SiteItem get java.lang.String
 method org.craftercms.engine.service.SiteItemService getSiteTree java.lang.String int
 method org.craftercms.engine.service.SiteItemService getSiteItem java.lang.String
-method org.craftercms.engine.service.SiteItemService getSiteItem java.lang.Stringmethod org.craftercms.engine.model.SiteItem getChildItems
 method org.craftercms.engine.model.SiteItem getChildItems
 method org.craftercms.engine.model.SiteItem getStoreName
 method org.craftercms.engine.service.UrlTransformationService transform java.lang.String java.lang.String
@@ -1483,6 +1482,13 @@ method org.craftercms.sites.editorial.SearchHelper searchArticles java.lang.Obje
 method org.craftercms.sites.editorial.SearchHelper searchArticles java.lang.Object java.lang.Object java.lang.Object java.lang.Object java.lang.Object java.lang.Object
 new org.craftercms.sites.editorial.SearchHelper org.craftercms.search.opensearch.client.OpenSearchClientWrapper org.craftercms.engine.service.UrlTransformationService
 staticMethod org.craftercms.sites.editorial.ProfileUtils getSegment java.lang.Object java.lang.Object
+new org.craftercms.sites.editorial.TaxonomyHelper java.lang.Object
+method org.craftercms.sites.editorial.TaxonomyHelper getValues java.lang.String
+field org.craftercms.sites.editorial.TaxonomyHelper TAXONOMY_PATH
+field org.craftercms.sites.editorial.TaxonomyHelper siteItemService
+method org.craftercms.profile.api.Profile getAttributes
+method org.springframework.security.core.Authentication getPrincipal
+method org.craftercms.engine.util.spring.security.CustomUser getAttributes
 
 # Arts Showcase Blueprint
 method mail_post getToMails java.lang.Object
@@ -1648,3 +1654,16 @@ method jakarta.servlet.ServletRequest getReader
 staticMethod org.codehaus.groovy.runtime.IOGroovyMethods getText java.io.BufferedReader
 method java.util.logging.Logger info java.lang.String
 
+# Sitemap plugin
+method jakarta.servlet.ServletResponse setContentType java.lang.String
+method jakarta.servlet.ServletResponse setCharacterEncoding java.lang.String
+field org.craftercms.engine.navigation.impl.NavTreeBuilderImpl defaultItemConverter
+new plugins.org.craftercms.plugin.sitemap.SitemapItemConverter org.craftercms.commons.converters.Converter org.craftercms.engine.service.UrlTransformationService
+method org.craftercms.engine.navigation.NavTreeBuilder getNavTree java.lang.String int java.lang.String org.craftercms.commons.converters.Converter
+field plugins.org.craftercms.plugin.sitemap.SitemapItemConverter converter
+method org.craftercms.commons.converters.Converter convert java.lang.Object
+method org.craftercms.engine.navigation.NavItem getAttributes
+field plugins.org.craftercms.plugin.sitemap.SitemapItemConverter urlTransformationService
+method org.craftercms.engine.model.SiteItem getStoreUrl
+method org.craftercms.engine.navigation.NavItem getSubItems
+staticMethod org.codehaus.groovy.runtime.DefaultGroovyMethods collect java.lang.Iterable groovy.lang.Closure
