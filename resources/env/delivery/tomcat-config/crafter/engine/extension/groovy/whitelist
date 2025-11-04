@@ -1426,7 +1426,7 @@ method org.opensearch.client.opensearch._types.query_dsl.MatchQuery$Builder quer
 method org.opensearch.client.opensearch._types.query_dsl.Query$Builder bool java.util.function.Function
 method org.opensearch.client.opensearch._types.query_dsl.Query$Builder match java.util.function.Function
 method org.opensearch.client.opensearch._types.query_dsl.Query$Builder term java.util.function.Function
-method org.opensearch.client.opensearch._types.query_dsl.QueryVariant _toQuery
+method org.opensearch.client.opensearch._types.query_dsl.QueryVariant toQuery
 method org.opensearch.client.opensearch.core.SearchRequest$Builder from java.lang.Integer
 method org.opensearch.client.opensearch.core.SearchRequest$Builder highlight org.opensearch.client.opensearch.core.search.Highlight
 method org.opensearch.client.opensearch.core.SearchRequest$Builder query java.util.function.Function
