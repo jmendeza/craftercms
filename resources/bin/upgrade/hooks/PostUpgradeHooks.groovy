@@ -25,25 +25,6 @@ import upgrade.exceptions.UpgradeException
 
 class PostUpgradeHooks {
 
-	private static final List<PostUpgradeHook> AUTHORING_3_1_X_NO_DB_HOOKS = [
-		new StartCrafterHook(),
-		new RecreateIndexesHook(),
-		new PostUpgradeCompletedHook(true)
-	]
-
-	private static final List<PostUpgradeHook> AUTHORING_3_1_X_WITH_DB_HOOKS = [
-		new UpgradeEmbeddedDbHook(),
-		new StartCrafterHook(),
-		new RecreateIndexesHook(),
-		new PostUpgradeCompletedHook(true)
-	]
-
-	private static final List<PostUpgradeHook> DELIVERY_3_1_X_HOOKS = [
-		new StartCrafterHook(),
-		new RecreateIndexesHook(),
-		new PostUpgradeCompletedHook(true)
-	]
-
 	private static final List<PostUpgradeHook> AUTHORING_4_0_X = [
 		new MakePublishedRepoBareHook(),
 		new RemoveOldSearchIndexesDirHook(),
@@ -73,19 +54,11 @@ class PostUpgradeHooks {
 	private static final Map ALL_HOOKS = [
 		'authoring': [
 			'>=4.1.0'     : AUTHORING_4_1_x,
-			'4.0'         : AUTHORING_4_0_X,
-			'3.1.9'       : AUTHORING_3_1_X_WITH_DB_HOOKS,
-			'3.1.12'      : AUTHORING_3_1_X_WITH_DB_HOOKS,
-			'3.1.13'      : AUTHORING_3_1_X_WITH_DB_HOOKS,
-			'3.1 >=3.1.17': AUTHORING_3_1_X_NO_DB_HOOKS
+			'4.0'         : AUTHORING_4_0_X
 		],
 		'delivery' : [
 			'>=4.1.0'     : DELIVERY_4_1_x,
-			'4.0'         : DELIVERY_4_0_X,
-			'3.1.9'       : DELIVERY_3_1_X_HOOKS,
-			'3.1.12'      : DELIVERY_3_1_X_HOOKS,
-			'3.1.13'      : DELIVERY_3_1_X_HOOKS,
-			'3.1 >=3.1.17': DELIVERY_3_1_X_HOOKS
+			'4.0'         : DELIVERY_4_0_X
 		]
 	]
 
