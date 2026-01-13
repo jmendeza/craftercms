@@ -1,5 +1,5 @@
 # Global owners
-*		@sumerjabri
+*		@jmendeza
 
 # Specific ownership
 README.md	@sumerjabri
@@ -7,6 +7,6 @@ CONTRIBUTING.md	@sumerjabri
 CODE_OF_CONDUCT.md @sumerjabri
 CODEOWNERS @sumerjabri
 LICENSE @sumerjabri
-pom.xml @sumerjabri
+pom.xml @jmendeza
 .travis.yml	@sumerjabri
 .gitignore	@sumerjabri
