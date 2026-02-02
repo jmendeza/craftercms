@@ -30,6 +30,7 @@ Security Analysts
 | Matei "Mal" Badanoiu               | https://github.com/mbadanoiu         | [CV-2022091301](https://craftercms.com/docs/current/security/advisory.html#cv-2022091301) |
 |                                    |                                      | [CV-2022091302](https://craftercms.com/docs/current/security/advisory.html#cv-2022091302) |
 |                                    |                                      | [CV-2025061901](https://craftercms.com/docs/current/security/advisory.html#cv-2025061901) |
+|                                    |                                      | [CV-2026020201](https://craftercms.com/docs/current/security/advisory.html#cv-2026020201) |
 | Carlos Ortiz                       | https://github.com/cortiz            | [CV-2021120106](https://craftercms.com/docs/current/security/advisory.html#cv-2021120106) |
 |                                    |                                      | [CV-2025011501](https://craftercms.com/docs/current/security/advisory.html#cv-2025011501) |
 | Egidio Romano                      | egidio.romano@mindedsecurity.com     | [CV-2023080301](https://craftercms.com/docs/current/security/advisory.html#cv-2023080301) |
