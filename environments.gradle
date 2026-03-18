@@ -263,6 +263,10 @@ ext.commonConfUpdatePatterns = [
 			[
 				match  : 'logs',
 				replace: '${catalina.logs}'
+			],
+			[
+				match  : "<!-- SingleSignOn valve, share authentication between web applications",
+				replace: '<Valve className="org.apache.catalina.valves.ErrorReportValve" showReport="true" showServerInfo="false" />\n        <!-- SingleSignOn valve, share authentication between web applications'
 			]
 		]
 	],
