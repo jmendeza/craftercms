@@ -60,7 +60,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<project.test.sourceEncoding>UTF-8</project.test.sourceEncoding>
-		<tomcat.version>11.0.15</tomcat.version>
+		<tomcat.version>11.0.20</tomcat.version>
 		<java.version>21</java.version>
 		<groovy.version>4.0.29</groovy.version>
 		<jakarta.servlet-api.version>6.1.0</jakarta.servlet-api.version>
@@ -72,7 +72,7 @@
 		<!-- Main -->
 		<!-- Spring -->
 		<spring.version>6.2.15</spring.version>
-		<spring-security.version>6.5.7</spring-security.version>
+		<spring-security.version>6.5.9</spring-security.version>
 		<spring-data-commons.version>3.5.7</spring-data-commons.version>
 		<spring-ldap-core.version>3.3.5</spring-ldap-core.version>
 		<spring-social-web.version>1.1.6.RELEASE</spring-social-web.version>
