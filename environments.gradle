@@ -634,6 +634,10 @@ ext.authoringConfUpdatePatterns = [
             [
                 match: "8000",
                 replace: "${authoringTomcatDebugPort}"
+            ],
+            [// Setting startStopThreads to 0 so Tomcat will determine the number of threads to use based on the number of available processors and start the apps in parallel
+                match: 'unpackWARs="true" autoDeploy="true"',
+                replace: 'unpackWARs="true" autoDeploy="true" startStopThreads="0"'
             ]
         ]
     ]
