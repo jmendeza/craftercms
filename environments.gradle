@@ -277,6 +277,13 @@ ext.commonConfUpdatePatterns = [
 				match  : '<WatchedResource>${catalina.base}/conf/web.xml</WatchedResource>',
 				replace: '<WatchedResource>${catalina.base}/conf/web.xml</WatchedResource>' + System.lineSeparator() +
 					'    <Resources cachingAllowed="true" cacheMaxSize="100000"/>'
+						],
+						[   // defaultTldScan=false so only jars listed in jarsToScan and NOT listed in jarsToSkip are scanned for tld
+							match  : '</Context>',
+							replace: '  <JarScanner>\n' +
+									'    <JarScanFilter tldScan="" defaultTldScan="false" />\n' +
+									'  </JarScanner>\n' +
+									'</Context>'
 			]
 		]
 	],
@@ -292,14 +299,26 @@ ext.commonConfUpdatePatterns = [
 				replace: 'tomcat.util.scan.StandardJarScanFilter.jarsToSkip=\\\n' +
 					'activation-*.jar,\\\n' +
 					'aggs-matrix-stats-client-*.jar,\\\n' +
+					'angus-activation-*.jar,\\\n' +
+					'angus-mail-*.jar,\\\n' +
 					'annotations-*.jar,\\\n' +
+					'apache-client-*.jar,\\\n' +
 					'apache-mime4j-core-*.jar,\\\n' +
 					'apache-mime4j-dom-*.jar,\\\n' +
+					'apiguardian-api-*.jar,\\\n' +
 					'AppleJavaExtensions-*.jar,\\\n' +
+					'arns-*.jar,\\\n' +
+					'auth-*.jar,\\\n' +
+					'aws-core-*.jar,\\\n' +
 					'aws-java-sdk-*.jar,\\\n' +
+					'aws-json-protocol-*.jar,\\\n' +
+					'aws-query-protocol-*.jar,\\\n' +
+					'aws-xml-protocol-*.jar,\\\n' +
 					'batik-*.jar,\\\n' +
+					'bcjmail-jdk18on-*.jar,\\\n' +
 					'bcmail-*.jar,\\\n' +
 					'bcpg-jdk15on-*.jar,\\\n' +
+					'bcpg-jdk18on-*.jar,\\\n' +
 					'bcpkix-*.jar,\\\n' +
 					'bcprov-*.jar,\\\n' +
 					'bcutil-*.jar,\\\n' +
@@ -309,6 +328,8 @@ ext.commonConfUpdatePatterns = [
 					'c3p0-*.jar,\\\n' +
 					'caffeine-*.jar,\\\n' +
 					'checker-qual-*.jar,\\\n' +
+					'checksums-*.jar,\\\n' +
+					'checksums-spi-*.jar,\\\n' +
 					'classmate-*.jar,\\\n' +
 					'commons-configuration2-*.jar,\\\n' +
 					'commons-configuration-*.jar,\\\n' +
@@ -317,14 +338,19 @@ ext.commonConfUpdatePatterns = [
 					'commons-text-*.jar,\\\n' +
 					'compiler-*.jar,\\\n' +
 					'crafter-*.jar,\\\n' +
+					'crt-core-*.jar,\\\n' +
 					'curvesapi-*.jar,\\\n' +
 					'cxf-*.jar,\\\n' +
 					'daisydiff.jar,\\\n' +
 					'dd-plist-*.jar,\\\n' +
 					'dec-*.jar,\\\n' +
+					'directory-watcher-0.19.1.jar,\\\n' +
 					'eddsa-*.jar,\\\n' +
+					'elastictranscoder-*.jar,\\\n' +
+					'endpoints-spi-*.jar,\\\n' +
 					'error_prone_annotations-*.jar,\\\n' +
 					'esapi-*.jar,\\\n' +
+					'eventstream-1.0.1.jar,\\\n' +
 					'exec-*.jar,\\\n' +
 					'ezmorph-*.jar,\\\n' +
 					'failureaccess-*.jar,\\\n' +
@@ -342,9 +368,15 @@ ext.commonConfUpdatePatterns = [
 					'HikariCP-java7-*.jar,\\\n' +
 					'hppc-*.jar,\\\n' +
 					'httpasyncclient-*.jar,\\\n' +
+					'http-auth-*.jar,\\\n' +
+					'http-auth-aws-*.jar,\\\n' +
+					'http-auth-aws-eventstream-*.jar,\\\n' +
+					'http-auth-spi-*.jar,\\\n' +
+					'http-client-spi-*.jar,\\\n' +
 					'httpcore5-*.jar,\\\n' +
 					'httpcore-*.jar,\\\n' +
 					'httpcore-nio-*.jar,\\\n' +
+					'identity-spi-*.jar,\\\n' +
 					'ion-java-*.jar,\\\n' +
 					'istack-commons-runtime-*.jar,\\\n' +
 					'ivy-*.jar,\\\n' +
@@ -354,16 +386,19 @@ ext.commonConfUpdatePatterns = [
 					'jackson-annotations-*.jar,\\\n' +
 					'jackson-*.jar,\\\n' +
 					'jai-imageio-core-*.jar,\\\n' +
+					'jakarta.activation-*.jar,\\\n' +
+					'jakarta.inject-*.jar,\\\n' +
 					'jakarta.*.jar,\\\n' +
+					'jakarta.mail-*.jar,\\\n' +
 					'java-dataloader-*.jar,\\\n' +
 					'JavaEWAH-*.jar,\\\n' +
 					'java-libpst-*.jar,\\\n' +
 					'javaparser-core-*.jar,\\\n' +
-					'jakarta.activation-*.jar,\\\n' +
-					'jakarta.inject-*.jar,\\\n' +
-					'jakarta.mail-*.jar,\\\n' +
+					'javax.activation-api-1.2.0.jar,\\\n' +
+					'javax.inject-1.jar,\\\n' +
 					'jbig2-imageio-*.jar,\\\n' +
 					'jboss-logging-3.4.1.Final.jar,\\\n' +
+					'jboss-logging-3.6.1.Final.jar,\\\n' +
 					'jcip-annotations-*.jar,\\\n' +
 					'jcl-over-slf4j-*.jar,\\\n' +
 					'jcommander-*.jar,\\\n' +
@@ -381,20 +416,31 @@ ext.commonConfUpdatePatterns = [
 					'jose4j-*.jar,\\\n' +
 					'jquery-*.jar,\\\n' +
 					'json-lib-2.4-jdk15.jar,\\\n' +
+					'json-utils-*.jar,\\\n' +
 					'jsoup-*.jar,\\\n' +
+					'jspecify-1.0.0.jar,\\\n' +
 					'jsr305-*.jar,\\\n' +
 					'juniversalchardet-*.jar,\\\n' +
 					'junrar-*.jar,\\\n' +
 					'jwarc-*.jar,\\\n' +
+					'jzlib-1.1.3.jar,\\\n' +
 					'kotlin-stdlib-*.jar,\\\n' +
 					'lang-mustache-client-*.jar,\\\n' +
+					'LatencyUtils-2.0.3.jar,\\\n' +
 					'listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar,\\\n' +
+					'log4j-jakarta-web-*.jar,\\\n' +
+					'log4j-*.jar,\\\n' +
 					'lucene-*.jar,\\\n' +
 					'mapper-extras-client-*.jar,\\\n' +
 					'mariaDB4j-*.jar,\\\n' +
 					'mariadb-java-client-*.jar,\\\n' +
 					'mchange-commons-java-*.jar,\\\n' +
+					'mediaconvert-*.jar,\\\n' +
 					'metadata-extractor-*.jar,\\\n' +
+					'metrics-spi-*.jar,\\\n' +
+					'micrometer-commons-*.jar,\\\n' +
+					'micrometer-core-*.jar,\\\n' +
+					'micrometer-observation-*.jar,\\\n' +
 					'minimal-json-*.jar,\\\n' +
 					'mongodb-*.jar,\\\n' +
 					'mongo-java-driver-*.jar,\\\n' +
@@ -402,27 +448,50 @@ ext.commonConfUpdatePatterns = [
 					'mybatis-*.jar,\\\n' +
 					'neethi-*.jar,\\\n' +
 					'neko-htmlunit-*.jar,\\\n' +
+					'netty-buffer-*.jar,\\\n' +
+					'netty-codec-*.jar,\\\n' +
+					'netty-codec-http2-*.jar,\\\n' +
+					'netty-codec-http-*.jar,\\\n' +
+					'netty-common-*.jar,\\\n' +
+					'netty-handler-*.jar,\\\n' +
+					'netty-nio-client-*.jar,\\\n' +
+					'netty-resolver-*.jar,\\\n' +
+					'netty-transport-*.jar,\\\n' +
+					'netty-transport-classes-epoll-*.jar,\\\n' +
+					'netty-transport-native-unix-common-*.jar,\\\n' +
 					'okhttp-*.jar,\\\n' +
 					'okio-*.jar,\\\n' +
 					'opensearch-*.jar,\\\n' +
 					'opentest4j-*.jar,\\\n' +
+					'org.abego.treelayout.core-*.jar,\\\n' +
 					'org.eclipse.jgit-*.jar,\\\n' +
+					'org.eclipse.jgit.ssh.apache-*.jar,\\\n' +
 					'parent-join-client-*.jar,\\\n' +
 					'parso-*.jar,\\\n' +
 					'parsson-*.jar,\\\n' +
 					'pdfbox-*.jar,\\\n' +
 					'picocli-*.jar,\\\n' +
 					'poi-*.jar,\\\n' +
+					'profiles-*.jar,\\\n' +
 					'protobuf-java-*.jar,\\\n' +
+					'protocol-core-*.jar,\\\n' +
 					'qdox-*.jar,\\\n' +
 					'quartz-*.jar,\\\n' +
 					'rank-eval-client-*.jar,\\\n' +
 					'reactive-streams-*.jar,\\\n' +
+					'reactor-core-*.jar,\\\n' +
+					'regions-*.jar,\\\n' +
+					'retries-*.jar,\\\n' +
+					'retries-spi-*.jar,\\\n' +
+					'RoaringBitmap-*.jar,\\\n' +
 					'rome-*.jar,\\\n' +
+					's3-*.jar,\\\n' +
+					's3-transfer-manager-*.jar,\\\n' +
 					'saaj-impl-*.jar,\\\n' +
 					'sardine-*.jar,\\\n' +
 					'Saxon-HE-*.jar,\\\n' +
 					'script-security-*.jar,\\\n' +
+					'sdk-core-*.jar,\\\n' +
 					'semver4j-*.jar,\\\n' +
 					'smiley-http-proxy-servlet-*.jar,\\\n' +
 					'snakeyaml-*.jar,\\\n' +
@@ -452,17 +521,24 @@ ext.commonConfUpdatePatterns = [
 					'spring-webmvc-*.jar,\\\n' +
 					'spring-websocket-*.jar,\\\n' +
 					'sshd-*.jar,\\\n' +
+					'sso-*.jar,\\\n' +
+					'ssooidc-*.jar,\\\n' +
 					'stax2-api-*.jar,\\\n' +
 					'stax-ex-*.jar,\\\n' +
+					'sts-*.jar,\\\n' +
 					't-digest-*.jar,\\\n' +
 					'testng-*.jar,\\\n' +
+					'third-party-jackson-core-*.jar,\\\n' +
 					'tika-core-*.jar,\\\n' +
 					'tika-parser-*.jar,\\\n' +
+					'tika-parsers-standard-package-*.jar,\\\n' +
 					'tinify-*.jar,\\\n' +
 					'txw2-*.jar,\\\n' +
 					'unit-api-*.jar,\\\n' +
 					'urlrewritefilter-*.jar,\\\n' +
-					'validation-api-2.0.1.Final.jar,\\\n' +
+					'utils-*.jar,\\\n' +
+					'utils-lite-*.jar,\\\n' +
+					'validation-api-*.jar,\\\n' +
 					'vorbis-java-*.jar,\\\n' +
 					'woodstox-core-*.jar,\\\n' +
 					'xercesImpl-*.jar,\\\n' +
@@ -470,7 +546,7 @@ ext.commonConfUpdatePatterns = [
 					'xmlbeans-*.jar,\\\n' +
 					'xmlgraphics-commons-*.jar,\\\n' +
 					'xmlpull-*.jar,\\\n' +
-					'xmlresolver-5.1.2-data.jar,\\\n' +
+					'xmlresolver-*-data.jar,\\\n' +
 					'xml-resolver-*.jar,\\\n' +
 					'xmlresolver-*.jar,\\\n' +
 					'xmlschema-core-*.jar,\\\n' +
@@ -479,6 +555,7 @@ ext.commonConfUpdatePatterns = [
 					'xstream-*.jar,\\\n' +
 					'xz-*.jar,\\\n' +
 					'yasson-*.jar,\\\n' +
+					'zstd-jni-*.jar,\\\n' +
 					'zxcvbn-*.jar,\\'
 			]
 		]
@@ -559,6 +636,10 @@ ext.authoringConfUpdatePatterns = [
 			[
 				match  : "8000",
 				replace: "${authoringTomcatDebugPort}"
+			],
+			[// Setting startStopThreads to 0 so Tomcat will determine the number of threads to use based on the number of available processors and start the apps in parallel
+				match: 'unpackWARs="true" autoDeploy="true"',
+				replace: 'unpackWARs="true" autoDeploy="true" startStopThreads="0"'
 			]
 		]
 	]
