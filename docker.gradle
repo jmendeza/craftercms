@@ -371,7 +371,7 @@ tasks.register('buildDeliveryTomcat') {
 tasks.register('buildDeployer') {
     group = "Build"
     description = "Builds the Deployer Docker image"
-    dependsOn prepareDeliveryBundle
+    dependsOn prepareAuthoringBundle
 	def injected = project.objects.newInstance(InjectedExecOps)
     def imageBuildDir = "${imagesBuildDir}/deployer"
 
@@ -387,7 +387,7 @@ tasks.register('buildDeployer') {
         updateDockerfileUser("${imageBuildDir}/Dockerfile")
 
         copy {
-            from "${deliveryBundleRoot}/bin/"
+            from "${authoringBundleRoot}/bin/"
             into "${imageBuildDir}/bin"
             exclude "migration"
             exclude "upgrade"
