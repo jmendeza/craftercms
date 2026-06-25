@@ -120,7 +120,6 @@
 		<tinify.version>1.8.9</tinify.version>
 		<mariadb4j.version>3.3.0.2</mariadb4j.version>
 		<Saxon-HE.version>13.0</Saxon-HE.version>
-		<cxf-rt.version>4.2.2</cxf-rt.version>
 		<ibatis-sqlmap.version>2.3.4.726</ibatis-sqlmap.version>
 		<mybatis-spring.version>3.0.5</mybatis-spring.version>
 		<mybatis.version>3.5.19</mybatis.version>
@@ -405,21 +404,6 @@
 				<groupId>jakarta.validation</groupId>
 				<artifactId>jakarta.validation-api</artifactId>
 				<version>${jakarta.validation-api.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.cxf</groupId>
-				<artifactId>cxf-rt-frontend-jaxws</artifactId>
-				<version>${cxf-rt.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.cxf</groupId>
-				<artifactId>cxf-rt-transports-http</artifactId>
-				<version>${cxf-rt.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.cxf</groupId>
-				<artifactId>cxf-rt-ws-policy</artifactId>
-				<version>${cxf-rt.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>commons-cli</groupId>
