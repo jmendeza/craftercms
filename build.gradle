@@ -49,12 +49,6 @@ task preFlightCheck() {
 			throw new GradleException("The java version used ${JavaVersion.current()} is not the expected version ${project.targetCompatibility}.")
 		}
 
-		def proc = "./gradlew -v".execute(null, file(projectDir))
-		proc.waitFor()
-		if (proc.exitValue() != 0) {
-			throw new GradleException("Gradle wrapper ('./gradlew') not working. Please ensure it is available and executable.")
-		}
-
 		def lsofCheck = "lsof -v"
 		if (!lsofCheck.execute()) {
 			throw new GradleException("'lsof' command not found, please make sure it is installed and accessible.")
@@ -90,19 +84,9 @@ task download() {
 	}
 }
 
-task clone() {
-	description = 'Clones the modules if required.'
-	dependsOn = ["preFlightCheck"]
-	doFirst {
-		getAllModules().each { module ->
-			cloneModule(module, gitUrl, shallowClone, gitBranch, gitRemote)
-		}
-	}
-}
-
 task selfUpdate() {
 	description = 'Updates the CrafterCMS parent project.'
-	dependsOn = ["clone"]
+	dependsOn = ["preFlightCheck"]
 	doFirst {
 		execCommand(["git", "pull", gitRemote, gitBranch], "${projectDir}")
 	}
@@ -110,7 +94,7 @@ task selfUpdate() {
 
 clean() {
 	description = 'Cleans the modules.'
-	dependsOn = ["clone"]
+	dependsOn = ["preFlightCheck"]
 	doFirst {
 		getBuildModules().each { module ->
 			println "Cleaning $module"
@@ -123,7 +107,7 @@ clean() {
 build() {
 	description = 'Builds the modules and prepares the binaries for deployment.'
 	mustRunAfter clean
-	dependsOn = ["clone"]
+	dependsOn = ["preFlightCheck"]
 	doFirst {
 		getBuildModules().each { module ->
 			println "Building $module"
@@ -135,7 +119,7 @@ build() {
 
 task deployToMaven() {
 	description = 'Builds and publishes modules to the local Maven repository (publishToMavenLocal).'
-	dependsOn = ["clone"]
+	dependsOn = ["preFlightCheck"]
 	doFirst {
 		getDeployToMavenModules().each { module ->
 			println "Deploying $module"
@@ -147,7 +131,7 @@ task deployToMaven() {
 
 task buildBaseEnvs() {
 	description = 'Build base target environments.'
-	dependsOn = ["clone", "download"]
+	dependsOn = ["download"]
 	doFirst {
 		getEnvironments().each { environment ->
 			println "Deploying the foundation of $environment"
@@ -159,7 +143,7 @@ task buildBaseEnvs() {
 
 task buildBom() {
 	description = 'Builds the Software Bill of Materials (BOM).'
-	dependsOn = ["clone"]
+	dependsOn = ["preFlightCheck"]
 	doFirst {
 		println "Build the Software Bill of Materials (BOM)"
 
