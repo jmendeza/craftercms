@@ -49,12 +49,6 @@ task preFlightCheck() {
 			throw new GradleException("The java version used ${JavaVersion.current()} is not the expected version ${project.targetCompatibility}.")
 		}
 
-		def proc = "./gradlew -v".execute(null, file(projectDir))
-		proc.waitFor()
-		if (proc.exitValue() != 0) {
-			throw new GradleException("Gradle wrapper ('./gradlew') not working. Please ensure it is available and executable.")
-		}
-
 		def lsofCheck = "lsof -v"
 		if (!lsofCheck.execute()) {
 			throw new GradleException("'lsof' command not found, please make sure it is installed and accessible.")
