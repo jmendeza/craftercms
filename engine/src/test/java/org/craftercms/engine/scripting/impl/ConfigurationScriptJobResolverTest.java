@@ -1,0 +1,116 @@
+/*
+ * Copyright (C) 2007-2024 Crafter Software Corporation. All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package org.craftercms.engine.scripting.impl;
+
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.XMLConfiguration;
+import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
+import org.craftercms.commons.config.ConfigUtils;
+import org.craftercms.core.service.ContentStoreService;
+import org.craftercms.core.service.Context;
+import org.craftercms.engine.service.context.SiteContext;
+import org.craftercms.engine.test.utils.ContentStoreServiceMockUtils;
+import org.craftercms.engine.util.quartz.JobContext;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.quartz.CronTrigger;
+import org.quartz.impl.JobDetailImpl;
+import org.springframework.core.io.ClassPathResource;
+
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+/**
+ * Unit tests for {@link ConfigurationScriptJobResolver}.
+ *
+ * @author avasquez
+ */
+public class ConfigurationScriptJobResolverTest {
+	private static final String CONFIG_MACRO_TEST_PROPERTY = "test-property";
+	private static final String CONFIG_TEST_PROPERTY_VALUE = "This one supports macro for site crafter-test";
+	private static final String CONTEXT_NAME = "contextName";
+	private static final String CONTEXT_NAME_VALUE = "crafter-test";
+	@Mock
+	private ContentStoreService storeService;
+	@Mock
+	private SiteContext siteContext;
+	private ConfigurationScriptJobResolver resolver;
+
+	@Before
+	public void setUp() throws Exception {
+		MockitoAnnotations.initMocks(this);
+
+		setUpStoreService(storeService);
+		setUpSiteContext(siteContext, storeService);
+
+		resolver = new ConfigurationScriptJobResolver(".groovy");
+	}
+
+	@Test
+	public void testResolveJobs() throws Exception {
+		List<JobContext> jobContexts = resolver.resolveJobs(siteContext);
+
+		assertNotNull(jobContexts);
+		assertEquals(2, jobContexts.size());
+
+		JobDetailImpl jobDetail = (JobDetailImpl) jobContexts.get(0).getDetail();
+		CronTrigger trigger = (CronTrigger) jobContexts.get(0).getTrigger();
+
+		assertEquals(ScriptJob.class, jobDetail.getJobClass());
+		assertEquals("/scripts/jobs/morejobs/testJob2.groovy",
+			jobDetail.getJobDataMap().getString(ScriptJob.SCRIPT_URL_DATA_KEY));
+		assertEquals("0 0/15 * * * ?", trigger.getCronExpression());
+
+		jobDetail = (JobDetailImpl) jobContexts.get(1).getDetail();
+		trigger = (CronTrigger) jobContexts.get(1).getTrigger();
+
+		assertEquals(ScriptJob.class, jobDetail.getJobClass());
+		assertEquals("/scripts/jobs/testJob.groovy",
+			jobDetail.getJobDataMap().getString(ScriptJob.SCRIPT_URL_DATA_KEY));
+		assertEquals("0 0/15 * * * ?", trigger.getCronExpression());
+	}
+
+	@Test
+	public void testMacrosInConfig() {
+		HierarchicalConfiguration config = siteContext.getConfig();
+		assertEquals(CONFIG_TEST_PROPERTY_VALUE, config.getString(CONFIG_MACRO_TEST_PROPERTY));
+	}
+
+	private void setUpStoreService(ContentStoreService storeService) {
+		ContentStoreServiceMockUtils.setUpGetContentFromClassPath(storeService);
+	}
+
+	private void setUpSiteContext(SiteContext siteContext, ContentStoreService storeService) throws Exception {
+		Map<String, String> contextConfigVariables = Map.of(CONTEXT_NAME, CONTEXT_NAME_VALUE);
+		XMLConfiguration config =
+			ConfigUtils.readXmlConfiguration(new ClassPathResource("config/site-config.xml"), ',', null, contextConfigVariables);
+		config.setListDelimiterHandler(new DefaultListDelimiterHandler(','));
+
+		when(siteContext.getSiteName()).thenReturn("default");
+		when(siteContext.getContext()).thenReturn(mock(Context.class));
+		when(siteContext.getStoreService()).thenReturn(storeService);
+		when(siteContext.getConfig()).thenReturn(config);
+	}
+
+}

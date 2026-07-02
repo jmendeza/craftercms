@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (C) 2007-2026 Crafter Software Corporation. All Rights Reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License version 3 as published by
+  ~ the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.craftercms.studio.api.v2.dal.SiteDAO">
+	<resultMap id="SiteMap" type="org.craftercms.studio.api.v2.dal.Site">
+		<id property="id" column="id"/>
+		<result property="siteUuid" column="site_uuid"/>
+		<result property="siteId" column="site_id"/>
+		<result property="name" column="name"/>
+		<result property="description" column="description"/>
+		<result property="deleted" column="deleted" javaType="Boolean" jdbcType="INTEGER"/>
+		<result property="lastCommitId" column="last_commit_id" jdbcType="VARCHAR" javaType="String"/>
+		<result property="publishingEnabled" column="publishing_enabled" javaType="Boolean" jdbcType="INTEGER"/>
+		<result property="publishingStatus" column="publishing_status" jdbcType="VARCHAR" javaType="String"/>
+		<result property="sandboxBranch" column="sandbox_branch"/>
+		<result property="publishedRepoCreated" column="published_repo_created" javaType="Boolean" jdbcType="INTEGER"/>
+		<result property="state" column="state"/>
+	</resultMap>
+
+	<select id="getByNumericId" resultMap="SiteMap" parameterType="java.lang.Long">
+		SELECT *
+		FROM site
+		WHERE id = #{id}
+	</select>
+
+	<select id="getSite" resultMap="SiteMap" parameterType="java.lang.String">
+		SELECT *
+		FROM site
+		WHERE site_id = #{siteId}
+		  and deleted = 0
+	</select>
+
+	<select id="getSitesByState" resultMap="SiteMap" parameterType="java.lang.String">
+		SELECT *
+		FROM site
+		WHERE state = #{state}
+		  and deleted = 0
+		  AND system = 0
+	</select>
+
+	<select id="getAllSites" resultMap="SiteMap">
+		SELECT *
+		FROM site
+		WHERE deleted = 0
+		AND system = 0
+	</select>
+
+	<select id="getLastCommitId" resultType="java.lang.String">
+		SELECT s.last_commit_id
+		FROM site s
+		WHERE s.site_id = #{siteId}
+		  AND s.deleted = 0
+	</select>
+
+	<update id="updateLastCommitId" parameterType="java.util.Map">
+		UPDATE site
+		SET last_commit_id = #{commitId}
+		WHERE site_id = #{siteId}
+		  AND deleted = 0
+	</update>
+
+	<select id="deleteSiteRelatedItems" statementType="CALLABLE">
+		{call deleteSiteRelatedItems(#{siteId,jdbcType=VARCHAR,mode=IN})}
+	</select>
+
+	<update id="startSiteDelete" parameterType="java.lang.String">
+		UPDATE site
+		SET state = 'DELETING'
+		WHERE site_id = #{siteId}
+		  AND deleted = 0
+	</update>
+
+	<update id="completeSiteDelete" parameterType="java.lang.String">
+		UPDATE site
+		SET state   = 'DELETED',
+		    deleted = 1
+		WHERE site_id = #{siteId}
+		  AND deleted = 0
+		;
+	</update>
+
+	<select id="exists" parameterType="java.lang.String" resultType="boolean">
+		SELECT count(1)
+		FROM site
+		WHERE site_id = #{siteId}
+		  AND deleted = 0
+	</select>
+
+	<select id="existsByName" parameterType="java.lang.String" resultType="boolean">
+		SELECT count(1)
+		FROM site
+		WHERE name = #{name}
+		AND deleted = 0
+	</select>
+
+	<insert id="createSite" parameterType="org.craftercms.studio.api.v2.dal.Site" flushCache="true" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO site (site_uuid, site_id, name, description, publishing_status, sandbox_branch)
+		VALUES (#{siteUuid}, #{siteId}, #{name}, #{description}, #{publishingStatus}, #{sandboxBranch})
+	</insert>
+
+	<update id="setSiteState">
+		UPDATE site
+		SET state = #{state}
+		WHERE site_id = #{siteId}
+		  AND deleted = 0
+	</update>
+
+	<update id="enablePublishing" parameterType="java.util.Map">
+		UPDATE site
+		SET publishing_enabled = #{enabled}
+		WHERE site_id = #{siteId}
+		  AND deleted = 0
+	</update>
+
+	<update id="setPublishedRepoCreated">
+		UPDATE site
+		SET published_repo_created = 1
+		WHERE site_id = #{siteId}
+		  AND deleted = 0
+	</update>
+
+	<update id="updatePublishingStatus">
+		UPDATE site
+		SET publishing_status = #{publishingStatus}
+		WHERE site_id = #{siteId}
+		  AND deleted = 0
+	</update>
+
+	<insert id="duplicate" parameterType="java.util.Map" statementType="CALLABLE">
+		{call duplicate_site(#{sourceSiteId, mode=IN, jdbcType=VARCHAR},
+		#{siteId, mode=IN, jdbcType=VARCHAR},
+		#{name, mode=IN, jdbcType=VARCHAR},
+		#{description, mode=IN, jdbcType=VARCHAR},
+		#{sandboxBranch, mode=IN, jdbcType=VARCHAR},
+		#{uuid, mode=IN, jdbcType=VARCHAR}
+		)}
+	</insert>
+
+	<select id="isNameUsed" resultType="boolean">
+		SELECT count(1)
+		FROM site
+		WHERE name = #{name}
+		AND site_id &lt;&gt; #{siteId}
+		AND deleted = 0
+	</select>
+
+	<update id="updateSite">
+		UPDATE site
+		<set>
+			<if test="name != null">name = #{name},</if>
+			<if test="description != null">description = #{description}</if>
+		</set>
+		WHERE site_id = #{siteId} AND deleted = 0
+	</update>
+
+</mapper>

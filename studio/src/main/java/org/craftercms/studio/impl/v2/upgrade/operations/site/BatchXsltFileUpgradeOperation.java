@@ -1,0 +1,117 @@
+/*
+ * Copyright (C) 2007-2026 Crafter Software Corporation. All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package org.craftercms.studio.impl.v2.upgrade.operations.site;
+
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.craftercms.commons.upgrade.exception.UpgradeException;
+import org.craftercms.studio.api.v2.utils.StudioConfiguration;
+import org.craftercms.studio.impl.v2.upgrade.StudioUpgradeContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.stream.Stream;
+
+import static org.craftercms.studio.api.v2.utils.StudioUtils.getStudioTemporaryFilesRoot;
+
+/**
+ * Implementation of {@link org.craftercms.commons.upgrade.UpgradeOperation} that updates multiple files using
+ * an XSLT template.
+ *
+ * <p>Supported YAML properties:</p>
+ * <ul>
+ *     <li><strong>regex</strong>: (required) the regex used to find files to update</li>
+ * </ul>
+ *
+ * @author joseross
+ * @since 3.1.1
+ */
+public class BatchXsltFileUpgradeOperation extends AbstractXsltFileUpgradeOperation {
+
+	private static final Logger logger = LoggerFactory.getLogger(BatchXsltFileUpgradeOperation.class);
+
+	public static final String CONFIG_KEY_REGEX = "regex";
+
+	protected String regex;
+
+	public BatchXsltFileUpgradeOperation(StudioConfiguration studioConfiguration) {
+		super(studioConfiguration);
+	}
+
+	@Override
+	protected void doInit(final HierarchicalConfiguration config) {
+		super.doInit(config);
+		regex = config.getString(CONFIG_KEY_REGEX);
+	}
+
+	/**
+	 * Finds all files in the repository that match the regex.
+	 *
+	 * @param repository the repository path
+	 * @return a stream of paths that match the regex
+	 * @throws IOException if an error occurs while searching for files
+	 */
+	public Stream<Path> getPaths(Path repository) throws IOException {
+		return Files.find(repository, Integer.MAX_VALUE,
+				(path, attrs) -> repository.relativize(path).toString().matches(regex));
+	}
+
+	@Override
+	public void doExecute(final StudioUpgradeContext context) throws UpgradeException {
+		var site = context.getTarget();
+		logger.debug("Find files that match the regex '{}' in site '{}'", regex, site);
+		Path repository = context.getRepositoryPath();
+		try (Stream<Path> paths = getPaths(repository)) {
+			paths.forEach(path -> {
+				logger.debug("Execute the XSLT template against site '{}' path '{}'", site, path);
+				try {
+					Path temp = Files.createTempFile(getStudioTemporaryFilesRoot(), "upgrade-manager", ".xslt");
+					try {
+						OutputStream os = Files.newOutputStream(temp);
+						executeTemplate(context, repository.relativize(path).toString(), os);
+						os.close();
+						replaceFile(path, temp);
+					} finally {
+						Files.deleteIfExists(temp);
+					}
+				} catch (Exception e) {
+					logger.error("Failed to upgrade site '{}' path '{}'", site, path, e);
+				}
+			});
+		} catch (IOException e) {
+			throw new UpgradeException("Error searching for files in site " + site, e);
+		}
+	}
+
+	/**
+	 * Replaces the original file with the transformed file if the transformed file is not empty.
+	 *
+	 * @param path the original file path
+	 * @param temp the transformed file path
+	 * @throws IOException if an error occurs while replacing the file
+	 */
+	protected void replaceFile(Path path, Path temp) throws IOException {
+		if (Files.size(temp) > 0) {
+			Files.move(temp, path, StandardCopyOption.REPLACE_EXISTING);
+		}
+	}
+
+}

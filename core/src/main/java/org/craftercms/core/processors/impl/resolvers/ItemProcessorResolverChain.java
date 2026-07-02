@@ -1,0 +1,69 @@
+/*
+ * Copyright (C) 2007-2022 Crafter Software Corporation. All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.craftercms.core.processors.impl.resolvers;
+
+import java.util.List;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.craftercms.core.processors.ItemProcessor;
+import org.craftercms.core.processors.ItemProcessorResolver;
+import org.craftercms.core.service.Item;
+
+/**
+ * Composite {@link org.craftercms.core.processors.ItemProcessorResolver}, that iterates through a list of resolvers
+ * until one of them provides a non-null {@link org.craftercms.core.processors.ItemProcessor}.
+ *
+ * @author Sumer Jabri
+ * @author Alfonso Vásquez
+ */
+public class ItemProcessorResolverChain implements ItemProcessorResolver {
+
+	/**
+	 * The default processor to use if no resolver returns a processor.
+	 */
+	protected ItemProcessor defaultProcessor;
+	/**
+	 * The chain of resolvers.
+	 */
+	protected List<ItemProcessorResolver> resolvers;
+
+	public ItemProcessorResolverChain(ItemProcessor defaultProcessor, List<ItemProcessorResolver> resolvers) {
+		this.defaultProcessor = defaultProcessor;
+		this.resolvers = resolvers;
+	}
+
+	/**
+	 * Returns the {@link ItemProcessor} to use for the given item. Iterates through the chain of resolvers until one
+	 * of them returns a non-null processor. If non of them returns a processor, the {@code defaultProcessor} will be
+	 * returned.
+	 */
+	@Override
+	public ItemProcessor getProcessor(Item item) {
+		ItemProcessor processor;
+
+		if (CollectionUtils.isNotEmpty(resolvers)) {
+			for (ItemProcessorResolver resolver : resolvers) {
+				processor = resolver.getProcessor(item);
+				if (processor != null) {
+					return processor;
+				}
+			}
+		}
+
+		return defaultProcessor;
+	}
+
+}

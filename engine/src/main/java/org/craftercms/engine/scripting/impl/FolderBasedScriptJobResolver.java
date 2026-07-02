@@ -1,0 +1,85 @@
+/*
+ * Copyright (C) 2007-2022 Crafter Software Corporation. All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package org.craftercms.engine.scripting.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.servlet.ServletContext;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.craftercms.engine.exception.SchedulingException;
+import org.craftercms.engine.scripting.ScriptJobResolver;
+import org.craftercms.engine.service.context.SiteContext;
+import org.craftercms.engine.util.ContentStoreUtils;
+import org.craftercms.engine.util.SchedulingUtils;
+import org.craftercms.engine.util.quartz.JobContext;
+import org.springframework.web.context.ServletContextAware;
+
+/**
+ * Folder based {@link ScriptJobResolver}, which resolves all scripts under a certain folder, and creates a trigger
+ * to run them using a specific cron expression. For example, a resolver for the folder name daily can return scripts
+ * that need to be run every day at 12:00 am.
+ *
+ * @author avasquez
+ */
+public class FolderBasedScriptJobResolver implements ScriptJobResolver, ServletContextAware {
+
+	protected String folderUrl;
+	protected String cronExpression;
+	protected String scriptSuffix;
+	protected ServletContext servletContext;
+	protected boolean disableVariableRestrictions;
+
+	public FolderBasedScriptJobResolver(String scriptSuffix, String folderUrl, String cronExpression) {
+		this.scriptSuffix = scriptSuffix;
+		this.folderUrl = folderUrl;
+		this.cronExpression = cronExpression;
+	}
+
+	@Override
+	public void setServletContext(ServletContext servletContext) {
+		this.servletContext = servletContext;
+	}
+
+	public void setDisableVariableRestrictions(boolean disableVariableRestrictions) {
+		this.disableVariableRestrictions = disableVariableRestrictions;
+	}
+
+	@Override
+	public List<JobContext> resolveJobs(SiteContext siteContext) throws SchedulingException {
+		List<String> scriptUrls = ContentStoreUtils.findChildrenUrl(siteContext.getStoreService(),
+			siteContext.getContext(), folderUrl);
+		List<JobContext> jobContexts = null;
+
+		if (CollectionUtils.isNotEmpty(scriptUrls)) {
+			for (String scriptUrl : scriptUrls) {
+				if (scriptUrl.endsWith(scriptSuffix)) {
+					if (jobContexts == null) {
+						jobContexts = new ArrayList<>();
+					}
+
+					jobContexts.add(SchedulingUtils.createJobContext(siteContext, scriptUrl, cronExpression,
+						disableVariableRestrictions ? servletContext : null));
+				}
+			}
+		}
+
+		return jobContexts;
+	}
+
+}

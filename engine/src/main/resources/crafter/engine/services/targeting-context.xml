@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (C) 2007-2022 Crafter Software Corporation. All Rights Reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License version 3 as published by
+  ~ the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<bean id="crafter.targetedUrlStrategyBase"
+	      class="org.craftercms.engine.targeting.impl.AbstractTargetedUrlStrategy"
+	      abstract="true">
+		<constructor-arg name="targetIdManager" ref="crafter.proxyTargetIdManager"/>
+	</bean>
+
+	<bean id="crafter.targetedUrlStrategy"
+	      class="org.craftercms.engine.targeting.impl.TargetedUrlByFolderStrategy"
+	      parent="crafter.targetedUrlStrategyBase"/>
+
+	<bean id="crafter.proxyTargetedUrlStrategy"
+	      class="org.craftercms.engine.targeting.impl.ProxyTargetedUrlStrategy">
+		<constructor-arg name="applicationContext" ref="crafter.applicationContextAccessor"/>
+		<constructor-arg name="beanName" value="crafter.targetedUrlStrategy"/>
+	</bean>
+
+	<bean id="crafter.targetIdManager" class="org.craftercms.engine.targeting.impl.LocaleTargetIdManager"/>
+
+	<bean id="crafter.proxyTargetIdManager" class="org.craftercms.engine.targeting.impl.ProxyTargetIdManager">
+		<constructor-arg name="applicationContext" ref="crafter.applicationContextAccessor"/>
+		<constructor-arg name="beanName" value="crafter.targetIdManager"/>
+	</bean>
+
+	<bean id="crafter.candidateTargetIdsResolver"
+	      class="org.craftercms.engine.targeting.impl.CandidateTargetIdsResolverImpl"/>
+
+	<bean id="crafter.candidateTargetedUrlsResolver"
+	      class="org.craftercms.engine.targeting.impl.CandidateTargetedUrlsResolverImpl">
+		<constructor-arg name="targetIdManager" ref="crafter.proxyTargetIdManager"/>
+		<constructor-arg name="targetedUrlStrategy" ref="crafter.proxyTargetedUrlStrategy"/>
+		<constructor-arg name="candidateTargetIdsResolver" ref="crafter.candidateTargetIdsResolver"/>
+	</bean>
+
+	<bean id="crafter.targetedContentStoreAdapterDecorator"
+	      class="org.craftercms.engine.targeting.impl.TargetedContentStoreAdapterDecorator" scope="prototype">
+		<constructor-arg name="candidateTargetedUrlsResolver" ref="crafter.candidateTargetedUrlsResolver"/>
+	</bean>
+
+</beans>
