@@ -1,0 +1,146 @@
+##################################################
+##################################################
+##       Studio Core Configuration File         ##
+##################################################
+##################################################
+
+# About this file:
+#
+# - This file overrides the core configuration of Crafter Studio, please be careful.
+# - Changes made to this file will spread to all nodes in a Studio cluster automatically.
+# - Not all changes to this file can/will take effect without a restart,
+#   so expect to have to restart Studio for most changes to take effect
+#   - If in a cluster, you'll need a rolling restart for all nodes to pick up the changes
+#
+#  Happy Crafting!
+
+##################################################
+##        SMTP Configuration (Email)            ##
+##################################################
+# Default value for from header when sending emails.
+# studio.mail.from.default: admin@example.com
+# SMTP server name to send emails.
+# studio.mail.host: ${env:MAIL_HOST}
+# SMTP port number to send emails.
+# studio.mail.port: ${env:MAIL_PORT}
+# SMTP username for authenticated access when sending emails.
+# studio.mail.username:
+# SMTP password for authenticated access when sending emails.
+# studio.mail.password:
+# Turn on/off (value true/false) SMTP authenticated access protocol.
+# studio.mail.smtp.auth: false
+# Enable/disable (value true/false) SMTP TLS protocol when sending emails.
+# studio.mail.smtp.starttls.enable: false
+# Enable/disable (value true/false) SMTP EHLO protocol when sending emails.
+# studio.mail.smtp.ehlo: true
+# Enable/disable (value true/false) debug mode for email service. Enabling debug mode allows tracking/debugging communication between email service and SMTP server.
+# studio.mail.debug: false
+
+##################################################
+##                   Security                   ##
+##################################################
+# HTTP Session timeout for studio (value is in minutes).
+# studio.security.sessionTimeout: 60
+#
+# Password requirements minimum complexity
+# This is based on https://github.com/dropbox/zxcvbn
+# The minimum complexity corresponds to the password score
+# You can try this out here https://lowe.github.io/tryzxcvbn/
+#  score      # Integer from 0-4 (useful for implementing a strength bar)
+#  0 # too guessable: risky password. (guesses < 10^3)
+#  1 # very guessable: protection from throttled online attacks. (guesses < 10^6)
+#  2 # somewhat guessable: protection from unthrottled online attacks. (guesses < 10^8)
+#  3 # safely unguessable: moderate protection from offline slow-hash scenario. (guesses < 10^10)
+#  4 # very unguessable: strong protection from offline slow-hash scenario. (guesses >= 10^10)
+# The default value is 3
+studio.security.passwordRequirements.minimumComplexity: 3
+
+
+################################################################
+##                             CORS                           ##
+################################################################
+# This is configured as permissive by default for ease of deployment
+# Remember to tighten this up for production
+
+# Disable CORS headers completely
+# studio.cors.disable: false
+# Value for the Access-Control-Allow-Origin header
+# studio.cors.origins: '*'
+# Value for the Access-Control-Allow-Headers header
+# studio.cors.headers: '*'
+# Value for the Access-Control-Allow-Methods header
+# studio.cors.methods: '*'
+# Value for the Access-Control-Allow-Credentials header
+# studio.cors.credentials: true
+# Value for the Access-Control-Max-Age header
+# studio.cors.maxage: -1
+
+##################################################
+##              Content Repository              ##
+##################################################
+# Repository commit prologue message
+# studio.repo.commitMessagePrologue:
+# Repository commit postscript message
+# studio.repo.commitMessagePostscript:
+
+##########################################################
+##                 Serverless Delivery                  ##
+##########################################################
+# Indicates if serverless delivery is enabled
+# studio.serverless.delivery.enabled: true
+# The URL for the serverless delivery deployer create URL
+# studio.serverless.delivery.deployer.target.createUrl: ${studio.preview.createTargetUrl}
+# The URL for the serverless delivery deployer delete URL
+# studio.serverless.delivery.deployer.target.deleteUrl: ${studio.preview.deleteTargetUrl}
+# The template name for serverless deployer targets
+# studio.serverless.delivery.deployer.target.template: aws-cloudformed-s3
+# Replace existing target configuration if one exists?
+# studio.serverless.delivery.deployer.target.replace: false
+# The URL the deployer will use to clone/pull the site's published repo. When the deployer is in a separate node
+# (because of clustering), this URL should be an SSH/HTTP URL to the load balancer in front of the Studios
+# studio.serverless.delivery.deployer.target.remoteRepoUrl: ${env:CRAFTER_DATA_DIR}/repos/sites/{siteName}/published
+# The deployer's local path where it will store the clone of the published site. This property is not needed if
+# the deployer is not the preview deployer, so you can leave an empty string ('') instead
+# studio.serverless.delivery.deployer.target.localRepoPath: ${env:CRAFTER_DATA_DIR}/repos/aws/{siteName}
+# Parameters for the target template. Please check the deployer template documentation for the possible parameters.
+# The following parameters will be sent automatically, and you don't need to specify them: env, site_name, replace,
+# disable_deploy_cron, local_repo_path, repo_url
+# studio.serverless.delivery.deployer.target.template.params:
+#   # The delivery search endpoint (optional is authoring is using the same one, specified in the ES_URL env variable)
+#   search_url:
+#   aws:
+#     # AWS region (optional if specified through default AWS chain)
+#     region: us-east-1
+#     # AWS access key (optional if specified through default AWS chain)
+#     default_access_key:
+#     # AWS secret key (optional if specified through default AWS chain)
+#     default_secret_key:
+#     # The S3 configurations, apply to aws-s3 deployer target template (see studio.serverless.delivery.deployer.target.template property)
+#     s3:
+#      # The S3 bucket name (required)
+#      url: s3://mybucketname/sites/{siteName}
+#      # The S3 endpoint (optional)
+#      endpoint: http://localhost:9000
+#      # Indicates if path style access should be used (optional, default is false)
+#      path_style_access: false
+#     cloudformation:
+#       # AWS access key (optional if aws.accessKey is specified)
+#       access_key:
+#       # AWS secret key (optional if aws.secretKey is specified)
+#       secret_key:
+#       # Namespace to use for CloudFormation resources (required when target template is aws-cloudformed-s3)
+#       namespace: myorganization
+#       # A comma-separated string listing the required capabilities for the CloudFormation stack. Ex: CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND (optional)
+#       # stackCapabilities:
+#       # The domain name of the serverless delivery LB (required when target template is aws-cloudformed-s3)
+#       deliveryLBDomainName:
+#       # The SSL certificate ARN the CloudFront CDN should use (optional when target template is aws-cloudformed-s3)
+#       cloudfrontCertificateArn:
+#       # The alternate domains names (besides *.cloudfront.net) for the CloudFront CDN (optional when target template is aws-cloudformed-s3)
+#       alternateCloudFrontDomainNames:
+
+##################################################
+##                   Cookies                    ##
+##################################################
+# Use base domain instead of subdomain for the crafterSite cookie
+studio.cookie.useBaseDomain: false

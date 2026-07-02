@@ -1,0 +1,79 @@
+/*
+ * Copyright (C) 2007-2022 Crafter Software Corporation. All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.craftercms.deployer.impl.lifecycle.aws;
+
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.lang3.ArrayUtils;
+import org.craftercms.commons.config.ConfigurationException;
+import org.craftercms.deployer.api.Target;
+import org.craftercms.deployer.api.exceptions.DeployerException;
+import org.craftercms.deployer.api.lifecycle.TargetLifecycleHook;
+import org.craftercms.deployer.impl.lifecycle.AbstractLifecycleHook;
+import org.craftercms.deployer.utils.aws.AwsClientBuilderConfigurer;
+import org.craftercms.deployer.utils.aws.AwsCloudFormationUtils;
+import software.amazon.awssdk.services.cloudformation.CloudFormationClient;
+import software.amazon.awssdk.services.cloudformation.model.DeleteStackRequest;
+import software.amazon.awssdk.services.cloudformation.model.Stack;
+
+import static org.craftercms.commons.config.ConfigUtils.getRequiredStringProperty;
+
+/**
+ * Implementation of {@link TargetLifecycleHook} that deletes a CloudFormation stack.
+ *
+ * @author avasquez
+ */
+public class DeleteCloudFormationLifecycleHook extends AbstractLifecycleHook {
+
+	protected static final String CONFIG_KEY_STACK_NAME = "stackName";
+
+	protected static final String[] STACK_STATUS_CODES_DELETED = {
+		"DELETE_COMPLETE",
+		"DELETE_FAILED",
+		"DELETE_IN_PROGRESS"
+	};
+
+	// Config properties (populated on init)
+
+	protected AwsClientBuilderConfigurer builderConfigurer;
+	protected String stackName;
+
+	@Override
+	public void doInit(Configuration config) throws ConfigurationException {
+		builderConfigurer = new AwsClientBuilderConfigurer(config);
+		stackName = getRequiredStringProperty(config, CONFIG_KEY_STACK_NAME);
+	}
+
+	@Override
+	public void doExecute(Target target) throws DeployerException {
+		CloudFormationClient cloudFormation = AwsCloudFormationUtils.buildClient(builderConfigurer);
+		Stack stack = AwsCloudFormationUtils.getStack(cloudFormation, stackName);
+
+		if (stack != null && !ArrayUtils.contains(STACK_STATUS_CODES_DELETED, stack.stackStatus())) {
+			logger.info("Deleting CloudFormation stack '{}'", stackName);
+
+			try {
+				cloudFormation.deleteStack(DeleteStackRequest.builder().stackName(stackName).build());
+
+				logger.info("Deletion of CloudFormation stack '{}' started", stackName);
+			} catch (Exception e) {
+				throw new DeployerException("Error while deleting CloudFormation stack '" + stackName + "'", e);
+			}
+		} else {
+			logger.info("CloudFormation stack '{}' doesn't exist or has been deleted. Skipping delete...", stackName);
+		}
+	}
+
+}

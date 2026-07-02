@@ -1,0 +1,110 @@
+/*
+ * Copyright (C) 2007-2022 Crafter Software Corporation. All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.craftercms.studio.impl.v2.security.listener;
+
+import org.apache.commons.lang.StringUtils;
+import org.craftercms.commons.http.RequestContext;
+import org.craftercms.studio.api.v1.exception.SiteNotFoundException;
+import org.craftercms.studio.api.v2.dal.AuditLog;
+import org.craftercms.studio.api.v2.service.audit.AuditService;
+import org.craftercms.studio.api.v2.service.site.SitesService;
+import org.craftercms.studio.api.v2.utils.StudioConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.event.AbstractAuthenticationEvent;
+import org.springframework.security.core.context.SecurityContext;
+
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.craftercms.studio.api.v2.dal.AuditLog.createAuditLogEntry;
+import static org.craftercms.studio.api.v2.dal.AuditLogConstants.TARGET_TYPE_USER;
+import static org.craftercms.studio.api.v2.utils.StudioConfiguration.CONFIGURATION_GLOBAL_SYSTEM_SITE;
+
+/**
+ * Base class for all audit authentication listeners
+ *
+ * @author joseross
+ * @since 4.0
+ */
+public abstract class AbstractAuditListener {
+
+	private static final int MAX_USERNAME_LENGTH = 255;
+
+	protected final Logger logger = LoggerFactory.getLogger(getClass());
+
+	protected final StudioConfiguration studioConfiguration;
+	protected final SitesService siteService;
+	protected final AuditService auditService;
+
+	public AbstractAuditListener(StudioConfiguration studioConfiguration, SitesService siteService,
+				     AuditService auditService) {
+		this.studioConfiguration = studioConfiguration;
+		this.siteService = siteService;
+		this.auditService = auditService;
+	}
+
+	protected void recordAuthenticationEvent(String operation, AbstractAuthenticationEvent event, String message) {
+		String systemSite = studioConfiguration.getProperty(CONFIGURATION_GLOBAL_SYSTEM_SITE);
+		try {
+			var username = StringUtils.substring(event.getAuthentication().getName(), 0, MAX_USERNAME_LENGTH);
+			var site = siteService.getSite(systemSite);
+			AuditLog auditLog = createAuditLogEntry();
+			auditLog.setOperation(operation);
+			auditLog.setActorId(username);
+			auditLog.setSiteId(site.getId());
+			auditLog.setPrimaryTargetId(username);
+			auditLog.setPrimaryTargetType(TARGET_TYPE_USER);
+			auditLog.setPrimaryTargetValue(username);
+			auditService.insertAuditLog(auditLog);
+
+			if (isNotEmpty(message)) {
+				logger.info(message, event.getAuthentication().getName(),
+					RequestContext.getCurrent().getRequest().getRemoteAddr());
+			}
+		} catch (SiteNotFoundException e) {
+			logger.error("Site not found '{}'", systemSite, e);
+		}
+	}
+
+	/**
+	 * Perform audit log for session timeout event
+	 *
+	 * @param operation audit type operation
+	 * @param context   the security context of the timeout session
+	 * @param message   a log message for the event
+	 */
+	protected void recordSessionTimeoutEvent(String operation, SecurityContext context, String message) {
+		String systemSite = studioConfiguration.getProperty(CONFIGURATION_GLOBAL_SYSTEM_SITE);
+		try {
+			var name = context.getAuthentication().getName();
+			var username = StringUtils.substring(name, 0, MAX_USERNAME_LENGTH);
+			var site = siteService.getSite(systemSite);
+			AuditLog auditLog = createAuditLogEntry();
+			auditLog.setOperation(operation);
+			auditLog.setActorId(username);
+			auditLog.setSiteId(site.getId());
+			auditLog.setPrimaryTargetId(username);
+			auditLog.setPrimaryTargetType(TARGET_TYPE_USER);
+			auditLog.setPrimaryTargetValue(username);
+			auditService.insertAuditLog(auditLog);
+
+			if (isNotEmpty(message)) {
+				logger.info(message, name);
+			}
+		} catch (SiteNotFoundException e) {
+			logger.error("Site not found '{}'", systemSite, e);
+		}
+	}
+}

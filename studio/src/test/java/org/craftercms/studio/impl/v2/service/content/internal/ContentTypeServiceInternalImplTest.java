@@ -1,0 +1,159 @@
+/*
+ * Copyright (C) 2007-2026 Crafter Software Corporation. All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package org.craftercms.studio.impl.v2.service.content.internal;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.craftercms.studio.api.v1.exception.ContentNotFoundException;
+import org.craftercms.studio.api.v1.exception.ServiceLayerException;
+import org.craftercms.studio.api.v2.service.config.ConfigurationService;
+import org.craftercms.studio.api.v2.service.content.ContentService;
+import org.craftercms.studio.model.contentType.ContentType;
+import org.dom4j.Document;
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.io.IOException;
+import java.io.InputStream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
+
+@RunWith(MockitoJUnitRunner.class)
+public class ContentTypeServiceInternalImplTest {
+	private static final String SITE_ID = "mySite";
+	private static final String CONTENT_TYPE = "myContentType";
+	private static final String CONTENT_TYPE_WITH_FORM_CONTROLLER = "myTypeWithFormController";
+	private static final String CONTENT_TYPE_DEFINITION_FILENAME = "form-definition.xml";
+	private static final String FORM_DEFINITION_ROOT = "form";
+	private static final String FORM_DEFINITION_IMAGE_THUMBNAIL = "imageThumbnail";
+	private static final String FORM_DEFINITION_PREVIEW_IMAGE = "testImage.png";
+	private static final String CONTENT_TYPE_BASE_PATH = "/config/studio/content-types";
+	private static final String CONTENT_TYPE_BASE_PATH_PATTERN = CONTENT_TYPE_BASE_PATH + "/{content-type}";
+	private static final String CONTENT_TYPE_DEFINITION_PATH = CONTENT_TYPE_BASE_PATH + "/" + CONTENT_TYPE + "/" + CONTENT_TYPE_DEFINITION_FILENAME;
+	private static final String CONTENT_TYPE_WITH_CONTROLLER_DEFINITION_PATH = CONTENT_TYPE_BASE_PATH + "/" + CONTENT_TYPE_WITH_FORM_CONTROLLER + "/" + CONTENT_TYPE_DEFINITION_FILENAME;
+	private static final String CONTENT_TYPE_PREVIEW_IMAGE_PATH = CONTENT_TYPE_BASE_PATH + "/" + CONTENT_TYPE + "/" + FORM_DEFINITION_PREVIEW_IMAGE;
+
+	private static final String CONTENT_TYPE_WITHOUT_IMAGE = "noImageContentType";
+	private static final String CONTENT_TYPE_DEFINITION_PATH_WITHOUT_IMAGE = CONTENT_TYPE_BASE_PATH + "/" + CONTENT_TYPE_WITHOUT_IMAGE +
+		"/" + CONTENT_TYPE_DEFINITION_FILENAME;
+	private static final String CONTENT_TYPE_DEFAULT_PREVIEW_IMAGE_PATH = "crafter/studio/content-type/default-contentType.jpg";
+	private static final String CONTENT_TYPE_FULL_FORM_CONTROLLER_PATH = "/config/studio/content-types/" + CONTENT_TYPE + "/form-controller.js";
+	private static final String CONTENT_TYPE_WITH_FORM_CONTROLLER_FULL_FORM_CONTROLLER_PATH = "/config/studio/content-types/" + CONTENT_TYPE_WITH_FORM_CONTROLLER + "/form-controller.js";
+
+	@Mock
+	private ConfigurationService configurationService;
+	@Mock
+	private ContentService contentService;
+	@Mock
+	Resource resource;
+	@InjectMocks
+	private ContentTypeServiceInternalImpl service;
+
+	@Before
+	public void setUp() throws ServiceLayerException {
+		ReflectionTestUtils.setField(service, "contentTypeDefinitionFilename", CONTENT_TYPE_DEFINITION_FILENAME);
+		ReflectionTestUtils.setField(service, "contentTypeBasePathPattern", CONTENT_TYPE_BASE_PATH_PATTERN);
+		ReflectionTestUtils.setField(service, "previewImageXPath", "/form/imageThumbnail/text()");
+		ReflectionTestUtils.setField(service, "contentService", contentService);
+		ReflectionTestUtils.setField(service, "defaultPreviewImagePath", CONTENT_TYPE_DEFAULT_PREVIEW_IMAGE_PATH);
+		ReflectionTestUtils.setField(service, "formControllerFilePath", "form-controller.js");
+
+		when(configurationService.getConfigurationAsDocument(SITE_ID, null, CONTENT_TYPE_DEFINITION_PATH, null))
+			.thenReturn(getDocumentWithPreviewImage());
+
+		when(contentService.getContentAsResource(SITE_ID, CONTENT_TYPE_PREVIEW_IMAGE_PATH))
+			.thenReturn(resource);
+
+		when(configurationService.getConfigurationAsDocument(SITE_ID, null, CONTENT_TYPE_DEFINITION_PATH_WITHOUT_IMAGE, null))
+			.thenReturn(getDocumentWithoutPreviewImage());
+	}
+
+	private Document getDocumentWithPreviewImage() {
+		Document document = DocumentHelper.createDocument();
+		Element root = document.addElement(FORM_DEFINITION_ROOT);
+		root.addElement(FORM_DEFINITION_IMAGE_THUMBNAIL)
+			.addText(FORM_DEFINITION_PREVIEW_IMAGE);
+
+		return document;
+	}
+
+	private Document getDocumentWithoutPreviewImage() {
+		Document document = DocumentHelper.createDocument();
+		Element root = document.addElement(FORM_DEFINITION_ROOT);
+		root.addElement(FORM_DEFINITION_IMAGE_THUMBNAIL)
+			.addText("undefined");
+		return document;
+	}
+
+	@Test
+	public void getPreviewImageReturnResource() throws ServiceLayerException {
+		ImmutablePair<String, Resource> pair = service.getContentTypePreviewImage(SITE_ID, CONTENT_TYPE);
+		assertEquals(pair.getKey(), CONTENT_TYPE_PREVIEW_IMAGE_PATH);
+		assertEquals(pair.getValue(), resource);
+	}
+
+	@Test
+	public void getDefaultPreviewImage() throws ServiceLayerException {
+		ImmutablePair<String, Resource> pair = service.getContentTypePreviewImage(SITE_ID, CONTENT_TYPE_WITHOUT_IMAGE);
+		assertEquals(pair.getKey(), CONTENT_TYPE_DEFAULT_PREVIEW_IMAGE_PATH);
+	}
+
+	@Test
+	public void getFormControllerContentTypeNotFound() throws ServiceLayerException {
+		when(contentService.contentExists(SITE_ID, CONTENT_TYPE_DEFINITION_PATH)).thenReturn(false);
+
+		assertThrows(ContentNotFoundException.class,
+			() -> service.getContentTypeFormController(SITE_ID, CONTENT_TYPE));
+	}
+
+	@Test
+	public void getFormControllerReturnResource() throws ServiceLayerException {
+
+		when(contentService.contentExists(SITE_ID, CONTENT_TYPE_WITH_CONTROLLER_DEFINITION_PATH)).thenReturn(true);
+		when(contentService.getContentAsResource(SITE_ID, CONTENT_TYPE_WITH_FORM_CONTROLLER_FULL_FORM_CONTROLLER_PATH)).thenReturn(resource);
+
+		ImmutablePair<String, Resource> resultPair = service.getContentTypeFormController(SITE_ID, CONTENT_TYPE_WITH_FORM_CONTROLLER);
+		assertEquals(resultPair.getKey(), CONTENT_TYPE_WITH_FORM_CONTROLLER_FULL_FORM_CONTROLLER_PATH);
+		assertEquals(resultPair.getValue(), resource);
+	}
+
+	@Test
+	public void getContentTypeTest() throws ServiceLayerException, IOException {
+		InputStream inputStream = new ClassPathResource("crafter/studio/content-type/" + CONTENT_TYPE + "/form-definition.xml").getInputStream();
+		when(contentService.getContent(SITE_ID, CONTENT_TYPE_DEFINITION_PATH)).thenReturn(inputStream);
+		ContentType contentType = service.loadContentType(SITE_ID, CONTENT_TYPE);
+
+		String expectedJson = "{\"previewable\":true,\"imageThumbnail\":\"page-test1.png\",\"noThumbnail\":false,\"quickCreate\":true," +
+				"\"quickCreatePath\":\"/site/website/tests/{year}/{month}\",\"type\":\"unknown\",\"pathExcludes\":[\"^/site/website/tests/excluded.*\"," +
+				"\"^/site/website/tests/excluded2.*\"],\"pathIncludes\":[\"^/site/website/tests/.*\"],\"id\":\"myContentType\"," +
+				"\"label\":\"Test Content Type\",\"allowedRoles\":[{\"name\":\"author\"},{\"name\":\"admin\"}]," +
+				"\"deleteDependencies\":[{\"pattern\":\"^/site/website/articles/.*\",\"removeEmptyFolder\":true}]," +
+				"\"copyDependencies\":[{\"pattern\":\"^/site/website/articles/.*\",\"target\":\"/site/website/articles2\"}]}";
+		assertEquals(expectedJson, new ObjectMapper().writeValueAsString(contentType));
+	}
+}

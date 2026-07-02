@@ -1,0 +1,59 @@
+/*
+ * Copyright (C) 2007-2022 Crafter Software Corporation. All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import React from 'react';
+import MenuItem from '@mui/material/MenuItem';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+import InputLabel from '@mui/material/InputLabel';
+import FormControl from '@mui/material/FormControl';
+import { Control } from '../../models/FormsEngine';
+import commonStyles from './styles';
+import usePossibleTranslation from '../../hooks/usePossibleTranslation';
+import { useIntl } from 'react-intl';
+import { getPossibleTranslation } from '../../utils/i18n';
+
+export function Dropdown(props: Control) {
+	const { field, value = '', onChange, disabled } = props;
+	const label = usePossibleTranslation(field.name);
+	const { formatMessage } = useIntl();
+
+	const handleSelectChange = (event: SelectChangeEvent<{ value: unknown }>) => {
+		onChange(event.target.value);
+	};
+
+	return (
+		<FormControl variant="outlined" sx={commonStyles.formControl} fullWidth>
+			<InputLabel id={`labelFor_${field.id}`}>{label}</InputLabel>
+			<Select
+				labelId={`labelFor_${field.id}`}
+				id={`select_${field.id}`}
+				label={label}
+				fullWidth
+				value={value}
+				onChange={handleSelectChange}
+				disabled={disabled}
+			>
+				{field.values?.map((possibleValue: any) => (
+					<MenuItem value={possibleValue.value} key={possibleValue.value}>
+						{getPossibleTranslation(possibleValue.label, formatMessage)}
+					</MenuItem>
+				))}
+			</Select>
+		</FormControl>
+	);
+}
+
+export default Dropdown;

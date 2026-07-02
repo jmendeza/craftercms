@@ -1,0 +1,19 @@
+{
+  "extends": "../tsconfig-build.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": ".",
+    "paths": {
+      "rxjs": ["../../node_modules/rxjs"],
+      "rxjs/*": ["../../node_modules/rxjs/*"],
+      "@craftercms/utils": ["../../dist/packages/utils"],
+      "@craftercms/models": ["../../dist/packages/models"],
+      "@craftercms/classes": ["../../dist/packages/classes"],
+      "@craftercms/search": ["."]
+    },
+    "outDir": "../../dist/packages/search"
+  },
+  "files": [
+    "index.ts"
+  ]
+}

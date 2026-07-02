@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (C) 2007-2025 Crafter Software Corporation. All Rights Reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License version 3 as published by
+  ~ the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+	<bean class="org.craftercms.commons.spring.ListMergingPostProcessor">
+		<property name="order" value="0"/>
+		<property name="beanName" value="crafter.properties"/>
+		<property name="propertyName" value="locations"/>
+		<property name="additionalElements">
+			<list>
+				<value>classpath:crafter/engine/mode/preview/server-config.properties</value>
+			</list>
+		</property>
+	</bean>
+
+	<!-- ////////////////////////////////// -->
+	<!--								 	-->
+	<!--			Contexts				-->
+	<!--									-->
+	<!-- ////////////////////////////////// -->
+
+	<bean id="crafter.headerSiteResolver" class="org.craftercms.engine.service.context.HeaderSiteResolver">
+		<constructor-arg name="headerName" value="${crafter.engine.request.header.siteName}"/>
+	</bean>
+
+	<bean id="crafter.cookieSiteResolver" class="org.craftercms.engine.service.context.CookieSiteResolver">
+		<constructor-arg name="paramOrCookieName" value="${crafter.engine.request.param.siteName}"/>
+	</bean>
+
+	<bean id="crafter.siteResolver" class="org.craftercms.engine.service.context.SiteResolverChain">
+		<constructor-arg name="chain">
+			<list>
+				<ref bean="crafter.headerSiteResolver"/>
+				<ref bean="crafter.cookieSiteResolver"/>
+			</list>
+		</constructor-arg>
+	</bean>
+
+	<bean id="crafter.siteListResolver" class="org.craftercms.engine.service.context.FolderScanningSiteListResolver">
+		<constructor-arg name="siteRootFolderPath" value="${crafter.engine.site.default.rootFolder.path}"/>
+		<constructor-arg name="macroResolver" ref="crafter.macroResolver"/>
+	</bean>
+
+	<bean id="crafter.siteContextManager" class="org.craftercms.engine.service.context.SiteContextManager" parent="crafter.siteContextManagerBase">
+		<constructor-arg name="siteListResolver" ref="crafter.siteListResolver"/>
+	</bean>
+
+	<bean id="crafter.siteContextFactory" class="org.craftercms.engine.service.context.SiteContextFactory"
+	      parent="crafter.siteContextFactoryBase">
+		<constructor-arg name="storeType" value="${crafter.engine.store.type}"/>
+		<constructor-arg name="rootFolderPath" value="${crafter.engine.site.default.rootFolder.path}"/>
+		<constructor-arg name="staticAssetsPath" value="${crafter.engine.site.default.staticAssets.path}"/>
+		<constructor-arg name="templatesPath" value="${crafter.engine.site.default.templates.path}"/>
+		<constructor-arg name="initScriptPath" value="${crafter.engine.site.default.init.script.path}"/>
+		<constructor-arg name="restScriptsPath" value="${crafter.engine.site.default.rest.scripts.path}"/>
+		<constructor-arg name="controllerScriptsPath" value="${crafter.engine.site.default.controller.scripts.path}"/>
+		<constructor-arg name="configPaths" value="${crafter.engine.site.default.config.paths}"/>
+		<constructor-arg name="applicationContextPaths" value="${crafter.engine.site.default.config.appContext.paths}"/>
+		<constructor-arg name="urlRewriteConfPaths" value="${crafter.engine.site.default.urlrewrite.config.paths}"/>
+		<constructor-arg name="groovyClassesPath" value="${crafter.engine.site.default.classes.groovy.path}"/>
+		<constructor-arg name="jobThreadPoolExecutor" ref="crafter.jobThreadPoolExecutor"/>
+		<constructor-arg name="cacheWarmUpEnabled" value="false"/>
+		<property name="disableVariableRestrictions" value="${crafter.engine.disableVariableRestrictions}"/>
+		<property name="defaultPublicBeans" value="${crafter.engine.defaultPublicBeans}"/>
+		<property name="cacheOn" value="false"/>
+	</bean>
+
+	<!-- ////////////////////////////////// -->
+	<!--								 	-->
+	<!--			Health Check			-->
+	<!--									-->
+	<!-- ////////////////////////////////// -->
+	<bean id="siteHealthCheckService" class="org.craftercms.engine.service.impl.SiteHealthCheckServiceImpl">
+		<constructor-arg name="siteListResolver" ref="crafter.siteListResolver"/>
+		<constructor-arg name="healthChecks" ref="siteHealthChecks"/>
+	</bean>
+
+	<!-- ////////////////////////////////// -->
+	<!--								 	-->
+	<!--		 Preview Support			-->
+	<!--									-->
+	<!-- ////////////////////////////////// -->
+
+	<util:list id="crafter.defaultItemPredicates"/>
+
+	<bean id="crafter.cacheTemplate" class="org.craftercms.core.util.cache.impl.NoopCacheTemplate">
+		<constructor-arg name="cacheService" ref="crafter.cacheService"/>
+	</bean>
+
+	<!-- ////////////////////////////////// -->
+	<!--								 	-->
+	<!--		     Security   			-->
+	<!--									-->
+	<!-- ////////////////////////////////// -->
+
+	<import resource="classpath:crafter/engine/mode/preview/security-context.xml"/>
+
+	<bean id="crafter.tenantsResolver" class="org.craftercms.engine.util.tenant.SiteNameTenantResolver"/>
+
+	<!-- ////////////////////////////////// -->
+	<!--								 	-->
+	<!--		FreeMarker Config			-->
+	<!--									-->
+	<!-- ////////////////////////////////// -->
+
+	<!-- Declared with scope="prototype" so that a new one is created for every SiteContext -->
+	<bean id="crafter.freeMarkerConfig" class="org.craftercms.engine.freemarker.CrafterFreeMarkerConfigurer"
+	      scope="prototype">
+		<property name="templateExceptionHandler" ref="crafter.crafterTemplateExceptionHandler"/>
+		<property name="templateLoaderPaths" value="WEB-INF"/>
+		<property name="defaultEncoding" value="UTF-8"/>
+		<property name="freemarkerSettings">
+			<props>
+				<prop key="output_encoding">UTF-8</prop>
+				<prop key="object_wrapper">org.craftercms.engine.freemarker.CrafterObjectWrapper(${crafter.engine.groovy.sandbox.enable})</prop>
+				<prop key="datetime_format">${crafter.engine.model.datetime.pattern}</prop>
+				<prop key="time_zone">${crafter.engine.model.datetime.timeZone}</prop>
+				<prop key="new_builtin_class_resolver">allows_nothing</prop>
+			</props>
+		</property>
+		<property name="freemarkerVariables" ref="crafter.freemarkerVariables"/>
+		<property name="preTemplateLoaders">
+			<array>
+				<ref bean="crafter.crafterFreeMarkerTemplateLoader"/>
+			</array>
+		</property>
+		<property name="cacheTemplates" value="false"/>
+	</bean>
+
+</beans>

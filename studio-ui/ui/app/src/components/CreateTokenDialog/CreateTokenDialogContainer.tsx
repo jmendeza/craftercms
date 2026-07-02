@@ -1,0 +1,165 @@
+/*
+ * Copyright (C) 2007-2022 Crafter Software Corporation. All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
+import React, { useEffect, useState } from 'react';
+import GlobalState from '../../models/GlobalState';
+import DialogBody from '../DialogBody/DialogBody';
+import Typography from '@mui/material/Typography';
+import TextField from '@mui/material/TextField';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Switch from '@mui/material/Switch';
+import FormHelperText from '@mui/material/FormHelperText';
+import Collapse from '@mui/material/Collapse';
+import DateTimeTimezonePicker from '../DateTimeTimezonePicker/DateTimeTimezonePicker';
+import DialogFooter from '../DialogFooter/DialogFooter';
+import SecondaryButton from '../SecondaryButton';
+import PrimaryButton from '../PrimaryButton';
+import { useSelection } from '../../hooks/useSelection';
+import { CreateTokenContainerProps } from './utils';
+import { createToken } from '../../services/tokens';
+import { useDispatch } from 'react-redux';
+import useUpdateRefs from '../../hooks/useUpdateRefs';
+import { createAtLeastHalfHourInFutureDate } from '../../utils/datetime';
+import Box from '@mui/material/Box';
+import { pushErrorDialog } from '../../utils/system';
+import { useEnhancedDialogContext } from '../EnhancedDialog';
+
+const translations = defineMessages({
+	placeholder: {
+		id: 'words.label',
+		defaultMessage: 'Label'
+	},
+	expiresLabel: {
+		id: 'createTokenDialog.expiresLabel',
+		defaultMessage: 'Expire Token'
+	}
+});
+
+export function CreateTokenDialogContainer(props: CreateTokenContainerProps) {
+	const { isSubmitting, onCreated, onClose } = props;
+	const [expires, setExpires] = useState(false);
+	const [expiresAt, setExpiresAt] = useState(createAtLeastHalfHourInFutureDate());
+	const [label, setLabel] = useState('');
+	const { formatMessage } = useIntl();
+	const dispatch = useDispatch();
+	const { updateSubmittingOrHasPendingChanges } = useEnhancedDialogContext();
+	const onSubmit = (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		onOk({ label, expiresAt: expires ? expiresAt : null });
+	};
+	const locale = useSelection<GlobalState['uiConfig']['locale']>((state) => state.uiConfig.locale);
+	const functionRefs = useUpdateRefs({
+		updateSubmittingOrHasPendingChanges
+	});
+
+	useEffect(() => {
+		updateSubmittingOrHasPendingChanges({
+			hasPendingChanges: Boolean(expires || label)
+		});
+	}, [updateSubmittingOrHasPendingChanges, expires, label]);
+
+	const onOk = ({ label, expiresAt }) => {
+		functionRefs.current.updateSubmittingOrHasPendingChanges({
+			isSubmitting: true
+		});
+		createToken(label, expiresAt).subscribe(
+			(token) => {
+				functionRefs.current.updateSubmittingOrHasPendingChanges({
+					isSubmitting: false
+				});
+				onCreated?.(token);
+			},
+			({ response }) => {
+				functionRefs.current.updateSubmittingOrHasPendingChanges({
+					isSubmitting: false
+				});
+				dispatch(
+					pushErrorDialog({
+						props: {
+							error: response.response,
+							validationErrors: response.validationErrors
+						}
+					})
+				);
+			}
+		);
+	};
+
+	return (
+		<form onSubmit={onSubmit}>
+			<DialogBody>
+				<Typography variant="body2">
+					<FormattedMessage
+						id="createTokenDialog.helperText"
+						defaultMessage="Type a name for the new token. The token will be created by the server and shown to you after. Store it securely as you won’t be able to see it’s value again."
+					/>
+				</Typography>
+				<TextField
+					value={label}
+					autoFocus
+					required
+					placeholder={formatMessage(translations.placeholder)}
+					margin="normal"
+					onChange={(e) => {
+						setLabel(e.target.value);
+					}}
+				/>
+				<Box component="section" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+					<FormControlLabel
+						control={<Switch checked={expires} color="primary" onChange={(e, checked) => setExpires(checked)} />}
+						label={formatMessage(translations.expiresLabel)}
+					/>
+					<FormHelperText>
+						{expires ? (
+							<FormattedMessage
+								id="createTokenDialog.expiresHelperNeverText"
+								defaultMessage="Switch off to never expire."
+							/>
+						) : (
+							<FormattedMessage
+								id="createTokenDialog.expiresHelperText"
+								defaultMessage="Switch on to set an expiration."
+							/>
+						)}
+					</FormHelperText>
+				</Box>
+				<Collapse in={expires} mountOnEnter>
+					<DateTimeTimezonePicker
+						onChange={(date) => {
+							setExpiresAt(date);
+						}}
+						value={expiresAt}
+						disablePast
+						localeCode={locale.localeCode}
+						dateTimeFormatOptions={locale.dateTimeFormatOptions}
+					/>
+				</Collapse>
+			</DialogBody>
+			<DialogFooter>
+				<SecondaryButton onClick={(e) => onClose(e, null)}>
+					<FormattedMessage id="words.cancel" defaultMessage="Cancel" />
+				</SecondaryButton>
+				<PrimaryButton type="submit" autoFocus disabled={isSubmitting || label === ''} loading={isSubmitting}>
+					<FormattedMessage id="words.submit" defaultMessage="Submit" />
+				</PrimaryButton>
+			</DialogFooter>
+		</form>
+	);
+}
+
+export default CreateTokenDialogContainer;
