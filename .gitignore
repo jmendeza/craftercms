@@ -1,6 +1,7 @@
 *.bak
 *.class
 *.swp
+.*.sw*
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
@@ -14,21 +15,16 @@ tmp/
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
-target/
+
 gradle-app.setting
 .tags*
 .gradletasknamecache
-gradle-app.setting
-.tags1
-.tags
 .gradle
 .gradle.log
-*.idea
 *.iml
-.idea
+.idea/
 .cursor/
 dependency-reduced-pom.xml
-target/
 build/
 crafter-install/
 live-env/
@@ -94,14 +90,162 @@ downloads/
 !/cli/build.gradle
 
 !utils/src/main/java/org/craftercms/bundle/utils/
-utils/target
 .project
 .settings/
+.classpath
 .vscode/
 selftest-env/*
 plugins
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
+
+# Maven build overlays
+overlays
+
+# IDE and editor
+.factorypath
+atlassian-ide-plugin.xml
+createdFiles.lst
+inputFiles.lst
+.name
+*.iws
+out/
+cmake-build-*/
+.idea_modules/
+com_crashlytics_export_strings.xml
+crashlytics.properties
+crashlytics-build.properties
+fabric.properties
+.vimrc
+
+# Logs
+*.log
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Node / frontend (common)
+node_modules/
+.sass-cache
+dist/
+coverage/
+.nyc_output
+.grunt
+bower_components/
+.lock-wscript
+build/Release/
+jspm_packages/
+typings/
+.npm
+.eslintcache
+.node_repl_history
+*.tgz
+.yarn-integrity
+.next/
+lib-cov/
+*.pid
+*.seed
+*.pid.lock
+pids/
+*.csv
+*.dat
+*.out
+*.gz
+results/
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+tsconfig.tsbuildinfo
+*.babel
+*.ignore.*
 
 # Docker
 docker/images/build/
 docker/compose/serverless/s3/delivery/config/engine/server-config.properties
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# script-security-plugin
+script-security-plugin/work/
+
+# profile and social
+encryption-keys/
+
+# deployer
+deployer/config/*
+deployer/logs/*
+deployer/settings.json
+
+# engine
+engine/src/main/webapp/default-site/static-assets/js/mylibs/*
+!engine/src/main/webapp/default-site/static-assets/js/mylibs/.gitignore
+
+# social
+social/${crafter.security.authentication.cookie.encryptionKey.file}
+social/ui*/.tmp/
+social/ui*/app/libs/
+social/ui*/app/scripts/vendor/jquery-browser-plugin/
+
+# studio
+studio/deploy/*
+studio/data/*
+studio/repos/*
+studio/dbms/*
+studio/derby.log
+
+# studio-ui
+studio-ui/.bic_cache
+studio-ui/**/build_tsc/
+studio-ui/**/jquery-src/
+studio-ui/ui/app/tsconfig.build.tsbuildinfo
+studio-ui/ui/uppy/lib/
+studio-ui/.yarn/cache/*.flock
+studio-ui/.yarn/cache/*.tmp
+studio-ui/scripts/settings_local.sh
+studio-ui/main.dev.tsx
+studio-ui/ui/app/.env.development
+studio-ui/ui/app/src/translations/src.json
+studio-ui/ui/app/src/translations/whitelists/
+studio-ui/templates/web/common/js-next-scripts.ftl
+studio-ui/static-assets/app/
+studio-ui/static-assets/styles/*.css
+studio-ui/static-assets/styles/*.css.map
+studio-ui/static-assets/themes/cstudioTheme/
+studio-ui/static-assets/scripts/*.umd.js*
+studio-ui/ui/app/public/*.umd.js*
+studio-ui/ui/app/public/shared-worker.js*
+studio-ui/ui/guest/src/jquery/
+studio-ui/static-assets/components/cstudio-admin/mods/encrypt-tool.js
+studio-ui/static-assets/components/cstudio-admin/mods/content-type-propsheet/contentTypes.js
+studio-ui/static-assets/components/cstudio-admin/mods/content-type-propsheet/content-path-input.js
+studio-ui/static-assets/components/cstudio-admin/mods/plugin-management.js
+studio-ui/static-assets/components/cstudio-forms/controls/locale-selector.js
+studio-ui/static-assets/components/cstudio-forms/data-sources/receptacles.js
+studio-ui/static-assets/components/cstudio-forms/data-sources/components.js
+studio-ui/static-assets/images/blueprints/
+studio-ui/static-assets/libs/ace/
+studio-ui/static-assets/libs/bootstrap/
+studio-ui/static-assets/libs/jquery/
+studio-ui/static-assets/libs/jquery-ui/
+studio-ui/static-assets/libs/js-yaml/
+studio-ui/static-assets/libs/monaco/
+studio-ui/static-assets/libs/tinymce/
+
+# js-sdk
+js-sdk/doc/
