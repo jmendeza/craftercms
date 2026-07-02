@@ -43,7 +43,6 @@ ext.splash = { ->
 // Settings
 ext {
 	cmsDir = "${projectDir}/craftercms"
-	srcFolder = "${projectDir}/"
 	commandTimeout = getPropertySafelyWithDefaults("commandTimeout", 1000000).toInteger()
 }
 
@@ -166,28 +165,6 @@ ext.runGradleModuleTask = { module, task, unitTest ->
 	}
 	execCommand(gradleArgs, projectDir)
 	return true
-}
-
-ext.cloneModule = { module, gitUrl, shallowClone, gitBranch, gitRemote ->
-	def url = gitUrl + module
-	def dir = srcFolder
-	def gitFolder = new File(dir + module + "/.git")
-
-	if (!gitFolder.exists()) {
-		if (!file(srcFolder).exists())
-			file(srcFolder).mkdir()
-
-		try {
-			if (shallowClone) {
-				execCommand(["git", "clone", "--depth", "1", "-b", gitBranch, "-o", gitRemote, url], dir)
-			} else {
-				execCommand(["git", "clone", "-b", gitBranch, "-o", gitRemote, url], dir)
-			}
-		} catch (e) {
-			logger.error("Failed to clone module: {}, exception: {}", module, e)
-			throw new GradleException("Failed to clone module.", e)
-		}
-	}
 }
 
 ext.cleanModule = { module ->
