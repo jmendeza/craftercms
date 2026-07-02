@@ -114,15 +114,15 @@ ext.gradleModules = [
 	'groovy-sandbox': ':groovy-sandbox',
 	'script-security-plugin': ':script-security-plugin',
 	'commons': [
-		':commons:audit',
-		':commons:entitlements',
-		':commons:git',
-		':commons:mongo',
-		':commons:plugin',
-		':commons:security',
-		':commons:upgrade-manager',
 		':commons:utilities',
-		':commons:validation'
+		':commons:security',
+		':commons:mongo',
+		':commons:audit',
+		':commons:git',
+		':commons:entitlements',
+		':commons:validation',
+		':commons:plugin',
+		':commons:upgrade-manager'
 	],
 	'core': ':core',
 	'search': [
