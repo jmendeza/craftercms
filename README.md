@@ -92,8 +92,8 @@ For more information on CrafterCMS Git Workflow, please review [CrafterCMS Git W
 * `bundlesDir`: Where to deposit binaries, default `./bundles`
 * `downloadGrapes`: Download Grapes ahead of time (useful when no public Internet is available), default `false`
 * `downloadDir`: Where to store downloads, default `./downloads`
-* `authoringEnvDir`: Where to store the authoring environment, default `./crafter-authoring`
-* `deliveryEnvDir`: Where to store the delivery environment, default `./crafter-delivery`
+* `authoringEnvDir`: Where to store the authoring environment, default `./craftercms/crafter-authoring`
+* `deliveryEnvDir`: Where to store the delivery environment, default `./craftercms/crafter-delivery`
 * `currentPlatform`: What platform to build to (`linux` or `darwin`), default is the build machine's OS
 * `currentArch`: What arch to build to (`aarch64` or `x86_64`), default is the build machine's arch
 * `pushDockerImages`: Push the Docker images to DockerHub (if you have the right permissions), default `false`
@@ -224,7 +224,7 @@ CrafterCMS comprises the following modules:
 * [`social`](https://craftercms.com/docs/current/reference/modules/social/index.html)
 * [`deployer`](https://craftercms.com/docs/current/reference/modules/deployer/index.html)
 
-You'll find these projects checked out and ready for you to contribute to in the folder `src/{modules}`.
+You'll find these projects checked out and ready for you to contribute to in the folder `craftercms/src/{modules}`.
 
 ### 4.3.1. Forking a Module
 
