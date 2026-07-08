@@ -120,6 +120,9 @@ docker/compose/serverless/s3/delivery/config/engine/server-config.properties
 .env.test.local
 .env.production.local
 
+# Crafter licenses
+**/crafter.lic
+
 # script-security-plugin
 script-security-plugin/work/
 
