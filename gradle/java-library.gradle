@@ -42,8 +42,15 @@ plugins.withType(JavaPlugin).configureEach {
 
 	group = 'org.craftercms'
 	version = craftercmsVersion
+
+	tasks.named('jar') {
+		manifest {
+			attributes(crafterManifestAttributes())
+		}
+	}
 }
 
+apply from: "${rootDir}/gradle/build-metadata.gradle"
 apply from: "${rootDir}/gradle/test-classpath.gradle"
 apply from: "${rootDir}/gradle/maven-publish.gradle"
 apply from: "${rootDir}/gradle/bom.gradle"

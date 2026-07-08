@@ -19,6 +19,8 @@ plugins {
 	id 'java-library'
 }
 
+ext.crafterManifestTitle = 'Groovy Sandbox'
+
 apply from: "${rootDir}/gradle/java-library.gradle"
 
 base {
