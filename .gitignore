@@ -123,6 +123,14 @@ docker/compose/serverless/s3/delivery/config/engine/server-config.properties
 # Crafter licenses
 **/crafter.lic
 
+# Secrets and credentials
+**/authorized_keys
+**/id_rsa
+**/id_rsa.pub
+**/*.pem
+**/*.crt
+**/*.key
+
 # script-security-plugin
 script-security-plugin/work/
 
