@@ -159,7 +159,7 @@ studio/dbms/*
 studio/derby.log
 
 # studio-ui
-studio-ui/.bic_cache
+studio-ui/**/.bic_cache
 studio-ui/**/build_tsc/
 studio-ui/**/jquery-src/
 studio-ui/.pnp.*
