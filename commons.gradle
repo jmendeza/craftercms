@@ -149,7 +149,7 @@ ext.gradleModules = [
 	'cli': ':cli'
 ]
 
-ext.runGradleModuleTask = { module, task, unitTest ->
+ext.runGradleModuleTask = { module, task, unitTest, extraArgs = [] ->
 	def projects = gradleModules[module]
 	if (projects == null) {
 		return false
@@ -157,6 +157,9 @@ ext.runGradleModuleTask = { module, task, unitTest ->
 	def gradleArgs = ["./gradlew", "-q"]
 	if (!unitTest) {
 		gradleArgs += ["-x", "test"]
+	}
+	if (extraArgs) {
+		gradleArgs.addAll(extraArgs as List)
 	}
 	if (projects instanceof List) {
 		projects.each { gradleArgs += "${it}:${task}" }

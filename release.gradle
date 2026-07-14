@@ -19,9 +19,12 @@
  *
  * Typical usage (from a release shell or CI):
  *   ./gradlew releaseSetVersion -PreleaseVersion=5.0.0 -PreleaseGitBranch=v5.0.0
+ *   ./gradlew releasePublishMaven -Ppublish
  *   ./gradlew releasePackage -PreleaseS3Path=5.0.0 -Ppublish
  *   ./gradlew releaseDockerImages -PdockerTag=5.0.0 -PpushDockerImages=true \
  *     -PtagDockerImages=latest -Ppublish
+ *
+ * GitHub Packages publish needs GITHUB_ACTOR + GITHUB_TOKEN (or gpr.user / gpr.key).
  */
 
 ext {
@@ -156,6 +159,45 @@ tasks.register('releaseSetVersion') {
 	}
 }
 
+/**
+ * Publishes deployable module JARs/WARs to GitHub Maven Packages
+ * (replaces the legacy per-repo `mvn deploy` from release-crafter42.sh).
+ */
+tasks.register('releasePublishMaven') {
+	group = 'release'
+	description = 'Publishes deployToMavenModules artifacts to GitHub Maven Packages'
+	dependsOn 'releasePreFlight'
+	doLast {
+		if (!releasePublishEnabled) {
+			println 'Skipping GitHub Packages publish (pass -Ppublish to enable)'
+			return
+		}
+
+		def gprUser = System.getenv('GITHUB_ACTOR') ?: findProperty('gpr.user')
+		def gprKey = System.getenv('GITHUB_TOKEN') ?: System.getenv('GPR_TOKEN') ?: findProperty('gpr.key')
+		if (!gprUser || !gprKey) {
+			throw new GradleException(
+				'GitHub Packages publish requires GITHUB_ACTOR and GITHUB_TOKEN ' +
+					'(or -Pgpr.user= / -Pgpr.key=)'
+			)
+		}
+
+		getDeployToMavenModules().each { module ->
+			println "Publishing $module to GitHub Packages"
+			def publishArgs = []
+			['gpr.user', 'gpr.key', 'gpr.owner', 'gpr.repo'].each { prop ->
+				def value = findProperty(prop)
+				if (value) {
+					publishArgs << "-P${prop}=${value}"
+				}
+			}
+			if (!runGradleModuleTask(module, 'publishMavenPublicationToGitHubPackagesRepository', false, publishArgs)) {
+				throw new GradleException("No Gradle module mapping for $module")
+			}
+		}
+	}
+}
+
 /** Builds multi-platform community bundles and optionally publishes them to S3. */
 tasks.register('releasePackage') {
 	group = 'release'
@@ -181,9 +223,9 @@ tasks.register('releaseDockerImages') {
 	}
 }
 
-/** Convenience aggregate: releasePackage then releaseDockerImages (no Git operations). */
+/** Convenience aggregate: Maven Packages, then bundles/Docker (no Git operations). */
 tasks.register('releasePublish') {
 	group = 'release'
-	description = 'Runs releasePackage and releaseDockerImages (artifact publishing only; Git tag/push stays in the shell)'
-	dependsOn 'releasePackage', 'releaseDockerImages'
+	description = 'Runs releasePublishMaven, releasePackage, and releaseDockerImages (Git tag/push stays in the shell)'
+	dependsOn 'releasePublishMaven', 'releasePackage', 'releaseDockerImages'
 }
