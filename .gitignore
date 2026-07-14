@@ -13,6 +13,20 @@
 target/
 tmp/
 
+# Module build output (directly inside each Gradle module)
+groovy-sandbox/bin/
+script-security-plugin/bin/
+core/bin/
+engine/bin/
+deployer/bin/
+studio/bin/
+studio-ui/bin/
+cli/bin/
+commons/*/bin/
+search/*/bin/
+profile/*/bin/
+social/*/bin/
+
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
