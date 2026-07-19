@@ -15,8 +15,14 @@
  */
 
 /*
- * Publishes module artifacts to the local Maven repository (~/.m2/repository).
- * Run: ./gradlew publishToMavenLocal
+ * Maven publishing for module artifacts.
+ *
+ * Local:  ./gradlew publishToMavenLocal
+ * GitHub: ./gradlew publishMavenPublicationToGitHubPackagesRepository
+ *         (requires GITHUB_ACTOR + GITHUB_TOKEN, or -Pgpr.user= / -Pgpr.key=)
+ *
+ * Repository defaults to https://maven.pkg.github.com/craftercms/craftercms
+ * Override with -Pgpr.owner= / -Pgpr.repo=
  */
 
 def configureMavenPublishing = {
@@ -25,9 +31,24 @@ def configureMavenPublishing = {
 	}
 	apply plugin: 'maven-publish'
 
+	def gprUser = System.getenv('GITHUB_ACTOR') ?: findProperty('gpr.user')
+	def gprKey = System.getenv('GITHUB_TOKEN') ?: System.getenv('GPR_TOKEN') ?: findProperty('gpr.key')
+	def gprOwner = findProperty('gpr.owner') ?: 'craftercms'
+	def gprRepo = findProperty('gpr.repo') ?: 'craftercms'
+
 	publishing {
 		repositories {
 			mavenLocal()
+			if (gprUser && gprKey) {
+				maven {
+					name = 'GitHubPackages'
+					url = uri("https://maven.pkg.github.com/${gprOwner}/${gprRepo}")
+					credentials {
+						username = gprUser.toString()
+						password = gprKey.toString()
+					}
+				}
+			}
 		}
 	}
 
