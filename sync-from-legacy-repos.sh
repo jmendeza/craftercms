@@ -15,6 +15,7 @@
 #   ./sync-from-legacy-repos.sh --branch support/4.x engine
 #
 set -euo pipefail
+trap 'echo "ERROR: failed at line ${LINENO} (exit $?)" >&2' ERR
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${SCRIPT_DIR}"
@@ -158,6 +159,10 @@ if ! command -v rsync >/dev/null 2>&1; then
 	echo "rsync is required but not installed." >&2
 	exit 1
 fi
+if ! command -v git >/dev/null 2>&1; then
+	echo "git is required but not installed." >&2
+	exit 1
+fi
 
 mkdir -p "${CACHE_DIR}"
 
@@ -179,8 +184,8 @@ sync_module() {
 	local clone_dir="${CACHE_DIR}/${module}"
 
 	if [[ ! -d "${dest}" ]]; then
-		echo "SKIP ${module}: destination directory missing (${dest})"
-		return 1
+		echo "ERROR: destination directory missing for ${module}: ${dest}" >&2
+		exit 1
 	fi
 
 	echo "---- ${module} ----"
@@ -213,17 +218,9 @@ sync_module() {
 	echo
 }
 
-FAILED=()
 for module in "${MODULES[@]}"; do
-	if ! sync_module "${module}"; then
-		FAILED+=("${module}")
-	fi
+	sync_module "${module}"
 done
-
-if [[ ${#FAILED[@]} -gt 0 ]]; then
-	echo "Finished with failures: ${FAILED[*]}" >&2
-	exit 1
-fi
 
 echo "==> Sync complete."
 if [[ "${DRY_RUN}" -eq 0 ]]; then
