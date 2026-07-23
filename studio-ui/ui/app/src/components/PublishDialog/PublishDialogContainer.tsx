@@ -50,6 +50,7 @@ import useActiveUser from '../../hooks/useActiveUser';
 import { pushErrorDialog } from '../../utils/system';
 import { useEnhancedDialogContext } from '../EnhancedDialog';
 import { ConfirmDropdown } from '../ConfirmDropdown';
+import { useItemsByPath } from '../../hooks/useItemsByPath';
 
 export type DependencyType = 'soft' | 'hard';
 export type DependencyMap = Record<string, DependencyType>;
@@ -118,17 +119,24 @@ export function PublishDialogContainer(props: PublishDialogContainerProps) {
 			// If there aren't any available target (or they haven't loaded), dialog should not have a selected target.
 			if (publishingTargets?.length && target === '') {
 				// If we haven't found a target by this point, we wish to default the dialog to
-				// staging (as long as that target is enabled in the system, which is checked next).
-				target = publishingTargets.find((target) => target.name === 'staging')?.name ?? publishingTargets[0].name;
+				// staging (as long as that target is enabled in the system and it's not the first publish), which is checked next.
+				target = published
+					? (publishingTargets.find((target) => target.name === 'staging')?.name ?? publishingTargets[0].name)
+					: (publishingTargets.find((target) => target.name !== 'staging')?.name ?? '');
 			}
 		}
 
 		return target;
-	}, [publishingTargets, mainItems]);
+	}, [publishingTargets, mainItems, published]);
 	const commentMaxLength = useSelector<GlobalState, number>(
 		(state) => state.uiConfig.publishing.submissionCommentMaxLength
 	);
 	const { formatMessage } = useIntl();
+	const itemsByPath = useItemsByPath();
+
+	const areSomeItemsDraft = useMemo(() => {
+		return itemsDataSummary.itemPaths.some((path) => itemsByPath[path]?.savedAsDraft);
+	}, [itemsDataSummary.itemPaths, itemsByPath]);
 
 	// Auto-generate submission comment based on mainItems labels if comment is blank
 	useEffect(() => {
@@ -439,6 +447,13 @@ export function PublishDialogContainer(props: PublishDialogContainerProps) {
 											<Fade in={arePublishingItemsFolders}>
 												<Alert severity="warning" sx={{ borderTopRightRadius: 0, borderTopLeftRadius: 0 }}>
 													<FormattedMessage defaultMessage="Publishing only folders is not allowed" />
+												</Alert>
+											</Fade>
+										)}
+										{areSomeItemsDraft && (
+											<Fade in={areSomeItemsDraft}>
+												<Alert severity="error" sx={{ borderTopRightRadius: 0, borderTopLeftRadius: 0 }}>
+													<FormattedMessage defaultMessage="Draft items in package. Publishing draft items may result in errors if required fields are not filled in." />
 												</Alert>
 											</Fade>
 										)}
