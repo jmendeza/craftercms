@@ -21,7 +21,7 @@ import * as contentController from '../contentController';
 import { ContentTypeFieldValidations } from '@craftercms/studio-ui/models/ContentType';
 import { post } from '../utils/communicator';
 import { GuestStandardAction } from '../store/models/GuestStandardAction';
-import { NEVER, Observable, Subject } from 'rxjs';
+import { EMPTY, Observable, Subject } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 import { nou } from '@craftercms/studio-ui/utils/object';
 import { snackGuestMessage } from '@craftercms/studio-ui/state/actions/preview';
@@ -29,7 +29,8 @@ import { editComponentInline, exitComponentInlineEdit } from '../store/actions';
 import { emptyFieldClass } from '../constants';
 import { unlockItem } from '@craftercms/studio-ui/state/actions/content';
 import { Editor as EditorReact } from '@tinymce/tinymce-react';
-import { getTinyMceInitOptions } from '@craftercms/studio-ui/components/FormsEngine/lib/formUtils';
+import { getTinyMceInitOptions } from '@craftercms/studio-ui/components/FormsEngine/lib/rteUtils';
+import { getCurrentIntl } from '../utils/i18n';
 import { RteSetup } from '../models/Rte';
 
 export function initTinyMCE(
@@ -49,7 +50,7 @@ export function initTinyMCE(
 			})
 		);
 		post(unlockItem({ path }));
-		return NEVER;
+		return EMPTY;
 	}
 
 	const dispatch$ = new Subject<GuestStandardAction>();
@@ -126,7 +127,7 @@ export function initTinyMCE(
 				id: setupId,
 				tinymceOptions: {
 					// Tinymce typings for tinymce-react are wrong (not in sync with tinymce ones).
-					...(rteSetup?.tinymceOptions as unknown as EditorReact['props']['init']),
+					...((rteSetup?.tinymceOptions as unknown as EditorReact['props']['init']) ?? {}),
 					target: rteEl as any,
 					deprecation_warnings: false,
 					paste_as_text: !isRTE,
@@ -157,6 +158,7 @@ export function initTinyMCE(
 				}
 			}
 		},
+		getCurrentIntl().locale,
 		{},
 		(editor: Editor) => {
 			let changed = false;
