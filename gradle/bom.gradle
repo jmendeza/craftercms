@@ -21,19 +21,19 @@
 
 apply plugin: 'org.cyclonedx.bom'
 
-cyclonedxBom {
+tasks.named('cyclonedxDirectBom') {
 	projectType = 'application'
-	schemaVersion = '1.4'
+	schemaVersion = 'VERSION_14'
 	includeBomSerialNumber = true
 	includeLicenseText = false
-	outputFormat = 'json'
-	outputName = 'bom'
-	destination = layout.buildDirectory.get().asFile
 	skipConfigs = ['testRuntimeClasspath']
+	// Keep output at build/bom.json for aggregate-boms.sh
+	jsonOutput = layout.buildDirectory.file('bom.json')
+	xmlOutput.unsetConvention()
 }
 
 tasks.register('bomGenerate') {
 	group = 'build'
 	description = 'Generates CycloneDX BOM'
-	dependsOn tasks.named('cyclonedxBom')
+	dependsOn tasks.named('cyclonedxDirectBom')
 }
