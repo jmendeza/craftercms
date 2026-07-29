@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2022 Crafter Software Corporation. All Rights Reserved.
+ * Copyright (C) 2007-2025 Crafter Software Corporation. All Rights Reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as published by
@@ -16,7 +16,7 @@
 
 buildscript {
 	repositories {
-        mavenCentral()
+		mavenCentral()
 	}
 	dependencies {
 		classpath "org.ajoberstar.grgit:org.ajoberstar.grgit.gradle.plugin:${project.property('grgit.version')}"
@@ -33,32 +33,32 @@ apply from: "commons.gradle"
 ext.environments = ["authoring", "delivery"]
 
 ext {
-    git = Grgit.open(dir: "${projectDir}")
+	git = Grgit.open(dir: "${projectDir}")
 	gitRevisionId = git.head().id.substring(0, 6)
 }
 
 ext.commonFoldersToCreate = [
-    "/bin",
-    "/bin/apache-tomcat/shared/lib",
-    "/bin/apache-tomcat/webapps",
-    "/bin/apache-tomcat/lib/org/apache/catalina/util/",
-    "/bin/opensearch/logs",
-    "/data"
+	"/bin",
+	"/bin/apache-tomcat/shared/lib",
+	"/bin/apache-tomcat/webapps",
+	"/bin/apache-tomcat/lib/org/apache/catalina/util/",
+	"/bin/opensearch/logs",
+	"/data"
 ]
 
 ext.hostsToScan = [
-    [
-        name: 'Github',
-        host: 'github.com'
-    ],
-    [
-        name: 'Gitlab',
-        host: 'gitlab.com'
-    ],
-    [
-        name: 'Bitbucket',
-        host: 'bitbucket.org'
-    ]
+	[
+		name: 'Github',
+		host: 'github.com'
+	],
+	[
+		name: 'Gitlab',
+		host: 'gitlab.com'
+	],
+	[
+		name: 'Bitbucket',
+		host: 'bitbucket.org'
+	]
 ]
 
 ext.authoringFoldersToCreate = [
@@ -68,894 +68,898 @@ ext.deliveryFoldersToCreate = [
 ]
 
 ext.commonItemsToCopy = [
-    [
-        name: "groovy",
-        from: "${downloadDir}/groovy-${groovyVersion}/",
-        into: "/bin/groovy/",
-        exclude: ""
-    ],
-    [
-        name: "tomcat",
-        from:"${downloadDir}/apache-tomcat-${tomcatVersion}/",
-        into: "/bin/apache-tomcat/",
-        exclude: "webapps/*"
-    ],
-    [
-        name: "tomcat_info",
-        from: "${projectDir}/resources/tomcat/ServerInfo.properties",    // Hides tomcat version
-        into: "/bin/apache-tomcat/lib/org/apache/catalina/util/",
-        exclude: ""
-    ],
-    [
-        name: "opensearch",
-        from: "${downloadDir}/opensearch-${openSearchVersion}/",
-        into: "/bin/opensearch/",
-        exclude: "",
-        postCopy: (envFolder) -> {
-            if (Files.exists(file("${envFolder}/bin/opensearch/plugins/opensearch-security-analytics").toPath())) {
-                println 'Removing opensearch-security-analytics plugin...'
-                execCommand(['./bin/opensearch/bin/opensearch-plugin', 'remove', 'opensearch-security-analytics'], envFolder)
-            }
-        }
-    ],
-    [
-        name: "mongodb",
-        from: "${downloadDir}/mongodb-${mongodbBinary}-${mongodbArch}-${mongodbVersion}/",
-        into: "/bin/mongodb/",
-        exclude: ""
-    ],
-    [
-        name: "mongosh",
-        from: "${downloadDir}/mongosh-${mongoshVersion}-${currentPlatform}-${mongoshArch}/bin/",
-        into: "/bin/mongodb/bin/",
-        exclude: ""
-    ],
-    [
-        name: "mongodb-database-tools",
-        from: "${downloadDir}/mongodb-database-tools-${mongoToolsArch}-${mongoToolsVersion}/bin/",
-        into: "/bin/mongodb/bin/",
-        exclude: ""
-    ],
-    [
-        name: "license",
-        from: "${projectDir}/resources/LICENSE",
-        into: "/",
-        exclude: ""
-    ],
-    [
-        name: "ssh",
-        from: "${projectDir}/resources/ssh",
-        into: "/data/",
-        exclude: ""
-    ]
+	[
+		name   : "groovy",
+		from   : "${downloadDir}/groovy-${groovyVersion}/",
+		into   : "/bin/groovy/",
+		exclude: ""
+	],
+	[
+		name   : "tomcat",
+		from   : "${downloadDir}/apache-tomcat-${tomcatVersion}/",
+		into   : "/bin/apache-tomcat/",
+		exclude: "webapps/*"
+	],
+	[
+		name   : "tomcat_info",
+		from   : "${cmsDir}/resources/tomcat/ServerInfo.properties",    // Hides tomcat version
+		into   : "/bin/apache-tomcat/lib/org/apache/catalina/util/",
+		exclude: ""
+	],
+	[
+		name   : "opensearch",
+		from   : "${downloadDir}/opensearch-${openSearchVersion}/",
+		into   : "/bin/opensearch/",
+		exclude: "",
+		postCopy: (envFolder) -> {
+			if (Files.exists(file("${envFolder}/bin/opensearch/plugins/opensearch-security-analytics").toPath())) {
+				println 'Removing opensearch-security-analytics plugin...'
+				execCommand(['./bin/opensearch/bin/opensearch-plugin', 'remove', 'opensearch-security-analytics'], envFolder)
+			}
+		}
+	],
+	[
+		name   : "mongodb",
+		from   : "${downloadDir}/mongodb-${mongodbBinary}-${mongodbArch}-${mongodbVersion}/",
+		into   : "/bin/mongodb/",
+		exclude: ""
+	],
+	[
+		name   : "mongosh",
+		from   : "${downloadDir}/mongosh-${mongoshVersion}-${currentPlatform}-${mongoshArch}/bin/",
+		into   : "/bin/mongodb/bin/",
+		exclude: ""
+	],
+	[
+		name   : "mongodb-database-tools",
+		from   : "${downloadDir}/mongodb-database-tools-${mongoToolsArch}-${mongoToolsVersion}/bin/",
+		into   : "/bin/mongodb/bin/",
+		exclude: ""
+	],
+	[
+		name   : "license",
+		from   : "${cmsDir}/resources/LICENSE",
+		into   : "/",
+		exclude: ""
+	],
+	[
+		name   : "ssh",
+		from   : "${cmsDir}/resources/ssh",
+		into   : "/data/",
+		exclude: ""
+	]
 ]
 
 ext.authoringItemsToCopy = [
-    [
-        name: "mariadb",
-        from: "${downloadDir}/mariaDB4j-app-${mariadb4jVersion}.jar",
-        into: "/bin/mariaDB4j-app.jar",
-        copyFile: true,
-        exclude: ""
-    ],
-    [
-        name: "setenv",
-        from: "${projectDir}/resources/env/authoring/tomcat-config/setenv.sh",
-        into: "/bin/apache-tomcat/bin/",
-        exclude: ""
-    ]
+	[
+		name    : "mariadb",
+		from    : "${downloadDir}/mariaDB4j-app-${mariadb4jVersion}.jar",
+		into    : "/bin/mariaDB4j-app.jar",
+		copyFile: true,
+		exclude : ""
+	],
+	[
+		name   : "setenv",
+		from   : "${cmsDir}/resources/env/authoring/tomcat-config/setenv.sh",
+		into   : "/bin/apache-tomcat/bin/",
+		exclude: ""
+	]
 ]
 
 ext.deliveryItemsToCopy = [
-    [
-        name: "setenv",
-        from: "${projectDir}/resources/env/delivery/tomcat-config/setenv.sh",
-        into: "/bin/apache-tomcat/bin/",
-        exclude: ""
-    ]
+	[
+		name   : "setenv",
+		from   : "${cmsDir}/resources/env/delivery/tomcat-config/setenv.sh",
+		into   : "/bin/apache-tomcat/bin/",
+		exclude: ""
+	]
 ]
 
 ext.commonGrapesDownloads = [
-    ["groovy/bin/groovy", "-cp", "${projectDir}/resources/bin", "-Dgrape.root=.", "-Dmode.downloadGrapesOnly=true",
-        "${projectDir}/resources/bin/upgrade/start-upgrade.groovy"],
-    ["groovy/bin/groovy", "-cp", "${projectDir}/resources/bin", "-Dgrape.root=.", "-Dmode.downloadGrapesOnly=true",
-        "${projectDir}/resources/bin/upgrade/upgrade-target.groovy"],
-    ["groovy/bin/groovy", "-cp", "${projectDir}/resources/bin", "-Dgrape.root=.", "-Dmode.downloadGrapesOnly=true",
-        "${projectDir}/resources/bin/upgrade/post-upgrade.groovy"],
-    ["groovy/bin/groovy", "-cp", "${projectDir}/resources/bin", "-Dgrape.root=.", "-Dmode.downloadGrapesOnly=true",
-        "${projectDir}/resources/bin/upgrade/upgrade-search.groovy"]
+	["groovy/bin/groovy", "-cp", "${cmsDir}/resources/bin", "-Dgrape.root=.", "-Dmode.downloadGrapesOnly=true",
+	 "${cmsDir}/resources/bin/upgrade/start-upgrade.groovy"],
+	["groovy/bin/groovy", "-cp", "${cmsDir}/resources/bin", "-Dgrape.root=.", "-Dmode.downloadGrapesOnly=true",
+	 "${cmsDir}/resources/bin/upgrade/upgrade-target.groovy"],
+	["groovy/bin/groovy", "-cp", "${cmsDir}/resources/bin", "-Dgrape.root=.", "-Dmode.downloadGrapesOnly=true",
+	 "${cmsDir}/resources/bin/upgrade/post-upgrade.groovy"],
+	["groovy/bin/groovy", "-cp", "${cmsDir}/resources/bin", "-Dgrape.root=.", "-Dmode.downloadGrapesOnly=true",
+	 "${cmsDir}/resources/bin/upgrade/upgrade-search.groovy"]
 ]
 
 ext.authoringGrapesDownloads = [
 ]
 
 ext.deliveryGrapesDownloads = [
-    ["groovy/bin/groovy", "-cp", "${projectDir}/resources/bin", "-Dgrape.root=.", "-Dmode.downloadGrapesOnly=true",
-        "${projectDir}/resources/env/delivery/bin/init-site.groovy"],
-    ["groovy/bin/groovy", "-cp", "${projectDir}/resources/bin", "-Dgrape.root=.", "-Dmode.downloadGrapesOnly=true",
-        "${projectDir}/resources/env/delivery/bin/remove-site.groovy"]
+	["groovy/bin/groovy", "-cp", "${cmsDir}/resources/bin", "-Dgrape.root=.", "-Dmode.downloadGrapesOnly=true",
+	 "${cmsDir}/resources/env/delivery/bin/init-site.groovy"],
+	["groovy/bin/groovy", "-cp", "${cmsDir}/resources/bin", "-Dgrape.root=.", "-Dmode.downloadGrapesOnly=true",
+	 "${cmsDir}/resources/env/delivery/bin/remove-site.groovy"]
 ]
 
 ext.commonUpdatePermissions = [
-    [
-        items: [
-            "/apache-tomcat/bin/catalina.sh",
-            "/apache-tomcat/bin/configtest.sh",
-            "/apache-tomcat/bin/daemon.sh",
-            "/apache-tomcat/bin/digest.sh",
-            "/apache-tomcat/bin/setclasspath.sh",
-            "/apache-tomcat/bin/shutdown.sh",
-            "/apache-tomcat/bin/startup.sh",
-            "/apache-tomcat/bin/tool-wrapper.sh",
-            "/apache-tomcat/bin/version.sh",
-        ],
-        permissions: [
-            "+x"
-        ]
-    ],
-    [
-        items: [
-            "/opensearch/bin/",
-            "/opensearch/modules"
-        ],
-        permissions: [
-            "-R",
-            "+x"
-        ]
-    ]
+	[
+		items      : [
+			"/apache-tomcat/bin/catalina.sh",
+			"/apache-tomcat/bin/configtest.sh",
+			"/apache-tomcat/bin/daemon.sh",
+			"/apache-tomcat/bin/digest.sh",
+			"/apache-tomcat/bin/setclasspath.sh",
+			"/apache-tomcat/bin/shutdown.sh",
+			"/apache-tomcat/bin/startup.sh",
+			"/apache-tomcat/bin/tool-wrapper.sh",
+			"/apache-tomcat/bin/version.sh",
+		],
+		permissions: [
+			"+x"
+		]
+	],
+	[
+		items      : [
+			"/opensearch/bin/",
+			"/opensearch/modules"
+		],
+		permissions: [
+			"-R",
+			"+x"
+		]
+	]
 ]
 
 ext.authoringUpdatePermissions = [
-    [
-        items: [
-            "/apache-tomcat/bin/setenv.sh",
-            "/crafter-deployer/deployer.sh",
-            "/crafter-deployer/startup.sh",
-            "/crafter-deployer/shutdown.sh",
-            "/crafter.sh",
-            "/wait-for-it.sh",
-            "/startup.sh",
-            "/debug.sh",
-            "/shutdown.sh",
-            "/crafter-setenv.sh",
-            "/upgrade/start-upgrade.sh",
-            "/upgrade/upgrade-target.sh"
-        ],
-        permissions: [
-            "+x"
-        ]
-    ]
+	[
+		items      : [
+			"/apache-tomcat/bin/setenv.sh",
+			"/crafter-deployer/deployer.sh",
+			"/crafter-deployer/startup.sh",
+			"/crafter-deployer/shutdown.sh",
+			"/crafter.sh",
+			"/wait-for-it.sh",
+			"/startup.sh",
+			"/debug.sh",
+			"/shutdown.sh",
+			"/crafter-setenv.sh",
+			"/upgrade/start-upgrade.sh",
+			"/upgrade/upgrade-target.sh"
+		],
+		permissions: [
+			"+x"
+		]
+	]
 ]
 
 ext.deliveryUpdatePermissions = [
-    [
-        items: [
-            "/apache-tomcat/bin/setenv.sh",
-            "/crafter-deployer/deployer.sh",
-            "/crafter-deployer/startup.sh",
-            "/crafter-deployer/shutdown.sh",
-            "/crafter.sh",
-            "/wait-for-it.sh",
-            "/remove-site.sh",
-            "/startup.sh",
-            "/debug.sh",
-            "/shutdown.sh",
-            "/crafter-setenv.sh",
-            "/upgrade/start-upgrade.sh",
-            "/upgrade/upgrade-target.sh"
-        ],
-        permissions: [
-            "+x"
-        ]
-    ]
+	[
+		items      : [
+			"/apache-tomcat/bin/setenv.sh",
+			"/crafter-deployer/deployer.sh",
+			"/crafter-deployer/startup.sh",
+			"/crafter-deployer/shutdown.sh",
+			"/crafter.sh",
+			"/wait-for-it.sh",
+			"/remove-site.sh",
+			"/startup.sh",
+			"/debug.sh",
+			"/shutdown.sh",
+			"/crafter-setenv.sh",
+			"/upgrade/start-upgrade.sh",
+			"/upgrade/upgrade-target.sh"
+		],
+		permissions: [
+			"+x"
+		]
+	]
 ]
 
 ext.commonConfUpdatePatterns = [
-    [
-        confFile: "/bin/apache-tomcat/conf/server.xml",
-        patterns: [
-            [
-                match: 'protocol="HTTP/1.1"',
-                replace: 'protocol="HTTP/1.1" URIEncoding="UTF-8"'
-            ],
-            [
-                match: 'protocol="AJP/1.3"',
-                replace: 'protocol="AJP/1.3" URIEncoding="UTF-8"'
-            ],
-            [
-                match: 'logs',
-                replace: '${catalina.logs}'
-            ]
-        ]
-    ],
-    [
-        confFile: "/bin/apache-tomcat/conf/context.xml",
-        patterns: [
-            [
-                match: '<WatchedResource>${catalina.base}/conf/web.xml</WatchedResource>',
-                replace: '<WatchedResource>${catalina.base}/conf/web.xml</WatchedResource>' + System.lineSeparator() +
-                        '    <Resources cachingAllowed="true" cacheMaxSize="100000"/>'
-            ],
-            [   // defaultTldScan=false so only jars listed in jarsToScan and NOT listed in jarsToSkip are scanned for tld
-                match: '</Context>',
-                replace: '  <JarScanner>\n' +
-                        '    <JarScanFilter tldScan="" defaultTldScan="false" />\n' +
-                        '  </JarScanner>\n' +
-                        '</Context>'
-            ]
-        ]
-    ],
-    [
-        confFile: "/bin/apache-tomcat/conf/catalina.properties",
-        patterns: [
-            [
-                match: 'shared.loader=',
-                replace: 'shared.loader=${catalina.base}/shared/classes,${catalina.base}/shared/lib/*.jar'
-            ],
-            [
-                match: 'tomcat.util.scan.StandardJarScanFilter.jarsToSkip=\\',
-                replace: 'tomcat.util.scan.StandardJarScanFilter.jarsToSkip=\\\n' +
-                        'activation-*.jar,\\\n' +
-                        'aggs-matrix-stats-client-*.jar,\\\n' +
-                        'angus-activation-*.jar,\\\n' +
-                        'angus-mail-*.jar,\\\n' +
-                        'annotations-*.jar,\\\n' +
-                        'apache-client-*.jar,\\\n' +
-                        'apache-mime4j-core-*.jar,\\\n' +
-                        'apache-mime4j-dom-*.jar,\\\n' +
-                        'apiguardian-api-*.jar,\\\n' +
-                        'AppleJavaExtensions-*.jar,\\\n' +
-                        'arns-*.jar,\\\n' +
-                        'auth-*.jar,\\\n' +
-                        'aws-core-*.jar,\\\n' +
-                        'aws-java-sdk-*.jar,\\\n' +
-                        'aws-json-protocol-*.jar,\\\n' +
-                        'aws-query-protocol-*.jar,\\\n' +
-                        'aws-xml-protocol-*.jar,\\\n' +
-                        'batik-*.jar,\\\n' +
-                        'bcjmail-jdk18on-*.jar,\\\n' +
-                        'bcmail-*.jar,\\\n' +
-                        'bcpg-jdk15on-*.jar,\\\n' +
-                        'bcpg-jdk18on-*.jar,\\\n' +
-                        'bcpkix-*.jar,\\\n' +
-                        'bcprov-*.jar,\\\n' +
-                        'bcutil-*.jar,\\\n' +
-                        'bsh-*.jar,\\\n' +
-                        'bson4jackson-*.jar,\\\n' +
-                        'bson-*.jar,\\\n' +
-                        'c3p0-*.jar,\\\n' +
-                        'caffeine-*.jar,\\\n' +
-                        'checker-qual-*.jar,\\\n' +
-                        'checksums-*.jar,\\\n' +
-                        'checksums-spi-*.jar,\\\n' +
-                        'classmate-*.jar,\\\n' +
-                        'commons-configuration2-*.jar,\\\n' +
-                        'commons-configuration-*.jar,\\\n' +
-                        'commons-csv-*.jar,\\\n' +
-                        'commons-exec-*.jar,\\\n' +
-                        'commons-text-*.jar,\\\n' +
-                        'compiler-*.jar,\\\n' +
-                        'crafter-*.jar,\\\n' +
-                        'crt-core-*.jar,\\\n' +
-                        'curvesapi-*.jar,\\\n' +
-                        'cxf-*.jar,\\\n' +
-                        'daisydiff.jar,\\\n' +
-                        'dd-plist-*.jar,\\\n' +
-                        'dec-*.jar,\\\n' +
-                        'directory-watcher-0.19.1.jar,\\\n' +
-                        'eddsa-*.jar,\\\n' +
-                        'elastictranscoder-*.jar,\\\n' +
-                        'endpoints-spi-*.jar,\\\n' +
-                        'error_prone_annotations-*.jar,\\\n' +
-                        'esapi-*.jar,\\\n' +
-                        'eventstream-1.0.1.jar,\\\n' +
-                        'exec-*.jar,\\\n' +
-                        'ezmorph-*.jar,\\\n' +
-                        'failureaccess-*.jar,\\\n' +
-                        'FastInfoset-*.jar,\\\n' +
-                        'findbugs-*.jar,\\\n' +
-                        'fontbox-*.jar,\\\n' +
-                        'freemarker-*.jar,\\\n' +
-                        'geronimo-jta_1.1_spec-*.jar,\\\n' +
-                        'gmongo-*.jar,\\\n' +
-                        'graphql-java-*.jar,\\\n' +
-                        'groovy-*.jar,\\\n' +
-                        'gson-*.jar,\\\n' +
-                        'guava-*.jar,\\\n' +
-                        'HdrHistogram-*.jar,\\\n' +
-                        'HikariCP-java7-*.jar,\\\n' +
-                        'hppc-*.jar,\\\n' +
-                        'httpasyncclient-*.jar,\\\n' +
-                        'http-auth-*.jar,\\\n' +
-                        'http-auth-aws-*.jar,\\\n' +
-                        'http-auth-aws-eventstream-*.jar,\\\n' +
-                        'http-auth-spi-*.jar,\\\n' +
-                        'http-client-spi-*.jar,\\\n' +
-                        'httpcore5-*.jar,\\\n' +
-                        'httpcore-*.jar,\\\n' +
-                        'httpcore-nio-*.jar,\\\n' +
-                        'identity-spi-*.jar,\\\n' +
-                        'ion-java-*.jar,\\\n' +
-                        'istack-commons-runtime-*.jar,\\\n' +
-                        'ivy-*.jar,\\\n' +
-                        'j2objc-annotations-*.jar,\\\n' +
-                        'jackcess-encrypt-*.jar,\\\n' +
-                        'jackcess-*.jar,\\\n' +
-                        'jackson-annotations-*.jar,\\\n' +
-                        'jackson-*.jar,\\\n' +
-                        'jai-imageio-core-*.jar,\\\n' +
-                        'jakarta.activation-*.jar,\\\n' +
-                        'jakarta.inject-*.jar,\\\n' +
-                        'jakarta.*.jar,\\\n' +
-                        'jakarta.mail-*.jar,\\\n' +
-                        'java-dataloader-*.jar,\\\n' +
-                        'JavaEWAH-*.jar,\\\n' +
-                        'java-libpst-*.jar,\\\n' +
-                        'javaparser-core-*.jar,\\\n' +
-                        'javax.activation-api-1.2.0.jar,\\\n' +
-                        'javax.inject-1.jar,\\\n' +
-                        'jbig2-imageio-*.jar,\\\n' +
-                        'jboss-logging-3.4.1.Final.jar,\\\n' +
-                        'jboss-logging-3.6.1.Final.jar,\\\n' +
-                        'jcip-annotations-*.jar,\\\n' +
-                        'jcl-over-slf4j-*.jar,\\\n' +
-                        'jcommander-*.jar,\\\n' +
-                        'jdom2-*.jar,\\\n' +
-                        'jempbox-*.jar,\\\n' +
-                        'jFormatString-*.jar,\\\n' +
-                        'jhighlight-*.jar,\\\n' +
-                        'jline-*.jar,\\\n' +
-                        'jmatio-*.jar,\\\n' +
-                        'jmespath-java-*.jar,\\\n' +
-                        'jna-*.jar,\\\n' +
-                        'joda-time-*.jar,\\\n' +
-                        'jongo-*.jar,\\\n' +
-                        'jopt-simple-*.jar,\\\n' +
-                        'jose4j-*.jar,\\\n' +
-                        'jquery-*.jar,\\\n' +
-                        'json-lib-2.4-jdk15.jar,\\\n' +
-                        'json-utils-*.jar,\\\n' +
-                        'jsoup-*.jar,\\\n' +
-                        'jspecify-1.0.0.jar,\\\n' +
-                        'jsr305-*.jar,\\\n' +
-                        'juniversalchardet-*.jar,\\\n' +
-                        'junrar-*.jar,\\\n' +
-                        'jwarc-*.jar,\\\n' +
-                        'jzlib-1.1.3.jar,\\\n' +
-                        'kotlin-stdlib-*.jar,\\\n' +
-                        'lang-mustache-client-*.jar,\\\n' +
-                        'LatencyUtils-2.0.3.jar,\\\n' +
-                        'listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar,\\\n' +
-                        'log4j-jakarta-web-*.jar,\\\n' +
-                        'log4j-*.jar,\\\n' +
-                        'lucene-*.jar,\\\n' +
-                        'mapper-extras-client-*.jar,\\\n' +
-                        'mariaDB4j-*.jar,\\\n' +
-                        'mariadb-java-client-*.jar,\\\n' +
-                        'mchange-commons-java-*.jar,\\\n' +
-                        'mediaconvert-*.jar,\\\n' +
-                        'metadata-extractor-*.jar,\\\n' +
-                        'metrics-spi-*.jar,\\\n' +
-                        'micrometer-commons-*.jar,\\\n' +
-                        'micrometer-core-*.jar,\\\n' +
-                        'micrometer-observation-*.jar,\\\n' +
-                        'minimal-json-*.jar,\\\n' +
-                        'mongodb-*.jar,\\\n' +
-                        'mongo-java-driver-*.jar,\\\n' +
-                        'mxparser-*.jar,\\\n' +
-                        'mybatis-*.jar,\\\n' +
-                        'neethi-*.jar,\\\n' +
-                        'neko-htmlunit-*.jar,\\\n' +
-                        'netty-buffer-*.jar,\\\n' +
-                        'netty-codec-*.jar,\\\n' +
-                        'netty-codec-http2-*.jar,\\\n' +
-                        'netty-codec-http-*.jar,\\\n' +
-                        'netty-common-*.jar,\\\n' +
-                        'netty-handler-*.jar,\\\n' +
-                        'netty-nio-client-*.jar,\\\n' +
-                        'netty-resolver-*.jar,\\\n' +
-                        'netty-transport-*.jar,\\\n' +
-                        'netty-transport-classes-epoll-*.jar,\\\n' +
-                        'netty-transport-native-unix-common-*.jar,\\\n' +
-                        'okhttp-*.jar,\\\n' +
-                        'okio-*.jar,\\\n' +
-                        'opensearch-*.jar,\\\n' +
-                        'opentest4j-*.jar,\\\n' +
-                        'org.abego.treelayout.core-*.jar,\\\n' +
-                        'org.eclipse.jgit-*.jar,\\\n' +
-                        'org.eclipse.jgit.ssh.apache-*.jar,\\\n' +
-                        'parent-join-client-*.jar,\\\n' +
-                        'parso-*.jar,\\\n' +
-                        'parsson-*.jar,\\\n' +
-                        'pdfbox-*.jar,\\\n' +
-                        'picocli-*.jar,\\\n' +
-                        'poi-*.jar,\\\n' +
-                        'profiles-*.jar,\\\n' +
-                        'protobuf-java-*.jar,\\\n' +
-                        'protocol-core-*.jar,\\\n' +
-                        'qdox-*.jar,\\\n' +
-                        'quartz-*.jar,\\\n' +
-                        'rank-eval-client-*.jar,\\\n' +
-                        'reactive-streams-*.jar,\\\n' +
-                        'reactor-core-*.jar,\\\n' +
-                        'regions-*.jar,\\\n' +
-                        'retries-*.jar,\\\n' +
-                        'retries-spi-*.jar,\\\n' +
-                        'RoaringBitmap-*.jar,\\\n' +
-                        'rome-*.jar,\\\n' +
-                        's3-*.jar,\\\n' +
-                        's3-transfer-manager-*.jar,\\\n' +
-                        'saaj-impl-*.jar,\\\n' +
-                        'sardine-*.jar,\\\n' +
-                        'Saxon-HE-*.jar,\\\n' +
-                        'script-security-*.jar,\\\n' +
-                        'sdk-core-*.jar,\\\n' +
-                        'semver4j-*.jar,\\\n' +
-                        'smiley-http-proxy-servlet-*.jar,\\\n' +
-                        'snakeyaml-*.jar,\\\n' +
-                        'SparseBitSet-*.jar,\\\n' +
-                        'spatial4j-*.jar,\\\n' +
-                        'spring-aop-*.jar,\\\n' +
-                        'spring-beans-*.jar,\\\n' +
-                        'spring-context-*.jar,\\\n' +
-                        'spring-context-support-*.jar,\\\n' +
-                        'spring-core-*.jar,\\\n' +
-                        'spring-data-commons-*.jar,\\\n' +
-                        'spring-expression-*.jar,\\\n' +
-                        'spring-jcl-*.jar,\\\n' +
-                        'spring-jdbc-*.jar,\\\n' +
-                        'spring-ldap-core-*.jar,\\\n' +
-                        'spring-messaging-*.jar,\\\n' +
-                        'spring-oxm-*.jar,\\\n' +
-                        'spring-security-config-*.jar,\\\n' +
-                        'spring-security-core-*.jar,\\\n' +
-                        'spring-security-crypto-*.jar,\\\n' +
-                        'spring-security-ldap-*.jar,\\\n' +
-                        'spring-security-messaging-*.jar,\\\n' +
-                        'spring-security-web-*.jar,\\\n' +
-                        'spring-social-*.jar,\\\n' +
-                        'spring-tx-*.jar,\\\n' +
-                        'spring-web-*.jar,\\\n' +
-                        'spring-webmvc-*.jar,\\\n' +
-                        'spring-websocket-*.jar,\\\n' +
-                        'sshd-*.jar,\\\n' +
-                        'sso-*.jar,\\\n' +
-                        'ssooidc-*.jar,\\\n' +
-                        'stax2-api-*.jar,\\\n' +
-                        'stax-ex-*.jar,\\\n' +
-                        'sts-*.jar,\\\n' +
-                        't-digest-*.jar,\\\n' +
-                        'testng-*.jar,\\\n' +
-                        'third-party-jackson-core-*.jar,\\\n' +
-                        'tika-core-*.jar,\\\n' +
-                        'tika-parser-*.jar,\\\n' +
-                        'tika-parsers-standard-package-*.jar,\\\n' +
-                        'tinify-*.jar,\\\n' +
-                        'txw2-*.jar,\\\n' +
-                        'unit-api-*.jar,\\\n' +
-                        'urlrewritefilter-*.jar,\\\n' +
-                        'utils-*.jar,\\\n' +
-                        'utils-lite-*.jar,\\\n' +
-                        'validation-api-*.jar,\\\n' +
-                        'vorbis-java-*.jar,\\\n' +
-                        'woodstox-core-*.jar,\\\n' +
-                        'xercesImpl-*.jar,\\\n' +
-                        'xml-apis-*.jar,\\\n' +
-                        'xmlbeans-*.jar,\\\n' +
-                        'xmlgraphics-commons-*.jar,\\\n' +
-                        'xmlpull-*.jar,\\\n' +
-                        'xmlresolver-*-data.jar,\\\n' +
-                        'xml-resolver-*.jar,\\\n' +
-                        'xmlresolver-*.jar,\\\n' +
-                        'xmlschema-core-*.jar,\\\n' +
-                        'xmpbox-*.jar,\\\n' +
-                        'xmpcore-*.jar,\\\n' +
-                        'xstream-*.jar,\\\n' +
-                        'xz-*.jar,\\\n' +
-                        'yasson-*.jar,\\\n' +
-                        'zstd-jni-*.jar,\\\n' +
-                        'zxcvbn-*.jar,\\'
-            ]
-        ]
-    ],
-    [
-        confFile: "/bin/apache-tomcat/conf/logging.properties",
-        patterns: [
-            [
-                match: '${catalina.base}/logs',
-                replace: '${catalina.logs}'
-            ]
-        ]
-    ],
-    [
-        confFile: "/bin/opensearch/config/opensearch.yml",
-        patterns: [
-            [
-                match: "#path.data: /path/to/data",
-                replace: 'path.data: ${SEARCH_INDEXES_DIR}'
-            ],
-            [
-                match: "#path.logs: /path/to/logs",
-                replace: 'path.logs: ${SEARCH_LOGS_DIR}'
-            ],
-            [
-                match: "#http.port: 9200",
-                replace: 'http.port: ${SEARCH_PORT}'
-            ],
-            [
-                match: '# --------------------------------- Discovery ----------------------------------',
-                replace: System.lineSeparator() +
-                    '# Disable cluster discovery' + System.lineSeparator() +
-                    'discovery.type: single-node' + System.lineSeparator() + System.lineSeparator() +
-                    '# ---------------------------------- Gateway -----------------------------------'
-            ],
-            [
-                match: '# ---------------------------------- Various -----------------------------------',
-                replace: '# ---------------------------------- Various -----------------------------------' +
-                        System.lineSeparator() +
-                        'plugins.security.disabled: true' + System.lineSeparator() + 'plugins.sql.enabled: false' +
-                        System.lineSeparator() +
-                        'indices.query.bool.max_clause_count: 8192' +
-                        System.lineSeparator()
-            ]
-        ]
-    ],
-    [
-            confFile: "/bin/opensearch/config/jvm.options",
-            patterns: [
-                    [
-                            match: "-Xm",
-                            replace: '#-Xm'
-                    ]
-            ]
-    ]
+	[
+		confFile: "/bin/apache-tomcat/conf/server.xml",
+		patterns: [
+			[
+				match  : 'protocol="HTTP/1.1"',
+				replace: 'protocol="HTTP/1.1" URIEncoding="UTF-8"'
+			],
+			[
+				match  : 'protocol="AJP/1.3"',
+				replace: 'protocol="AJP/1.3" URIEncoding="UTF-8"'
+			],
+			[
+				match  : 'logs',
+				replace: '${catalina.logs}'
+			],
+			[
+				match  : "<!-- SingleSignOn valve, share authentication between web applications",
+				replace: '<Valve className="org.apache.catalina.valves.ErrorReportValve" showReport="true" showServerInfo="false" />\n        <!-- SingleSignOn valve, share authentication between web applications'
+			]
+		]
+	],
+	[
+		confFile: "/bin/apache-tomcat/conf/context.xml",
+		patterns: [
+			[
+				match  : '<WatchedResource>${catalina.base}/conf/web.xml</WatchedResource>',
+				replace: '<WatchedResource>${catalina.base}/conf/web.xml</WatchedResource>' + System.lineSeparator() +
+					'    <Resources cachingAllowed="true" cacheMaxSize="100000"/>'
+						],
+						[   // defaultTldScan=false so only jars listed in jarsToScan and NOT listed in jarsToSkip are scanned for tld
+							match  : '</Context>',
+							replace: '  <JarScanner>\n' +
+									'    <JarScanFilter tldScan="" defaultTldScan="false" />\n' +
+									'  </JarScanner>\n' +
+									'</Context>'
+			]
+		]
+	],
+	[
+		confFile: "/bin/apache-tomcat/conf/catalina.properties",
+		patterns: [
+			[
+				match  : 'shared.loader=',
+				replace: 'shared.loader=${catalina.base}/shared/classes,${catalina.base}/shared/lib/*.jar'
+			],
+			[
+				match  : 'tomcat.util.scan.StandardJarScanFilter.jarsToSkip=\\',
+				replace: 'tomcat.util.scan.StandardJarScanFilter.jarsToSkip=\\\n' +
+					'activation-*.jar,\\\n' +
+					'aggs-matrix-stats-client-*.jar,\\\n' +
+					'angus-activation-*.jar,\\\n' +
+					'angus-mail-*.jar,\\\n' +
+					'annotations-*.jar,\\\n' +
+					'apache-client-*.jar,\\\n' +
+					'apache-mime4j-core-*.jar,\\\n' +
+					'apache-mime4j-dom-*.jar,\\\n' +
+					'apiguardian-api-*.jar,\\\n' +
+					'AppleJavaExtensions-*.jar,\\\n' +
+					'arns-*.jar,\\\n' +
+					'auth-*.jar,\\\n' +
+					'aws-core-*.jar,\\\n' +
+					'aws-java-sdk-*.jar,\\\n' +
+					'aws-json-protocol-*.jar,\\\n' +
+					'aws-query-protocol-*.jar,\\\n' +
+					'aws-xml-protocol-*.jar,\\\n' +
+					'batik-*.jar,\\\n' +
+					'bcjmail-jdk18on-*.jar,\\\n' +
+					'bcmail-*.jar,\\\n' +
+					'bcpg-jdk15on-*.jar,\\\n' +
+					'bcpg-jdk18on-*.jar,\\\n' +
+					'bcpkix-*.jar,\\\n' +
+					'bcprov-*.jar,\\\n' +
+					'bcutil-*.jar,\\\n' +
+					'bsh-*.jar,\\\n' +
+					'bson4jackson-*.jar,\\\n' +
+					'bson-*.jar,\\\n' +
+					'c3p0-*.jar,\\\n' +
+					'caffeine-*.jar,\\\n' +
+					'checker-qual-*.jar,\\\n' +
+					'checksums-*.jar,\\\n' +
+					'checksums-spi-*.jar,\\\n' +
+					'classmate-*.jar,\\\n' +
+					'commons-configuration2-*.jar,\\\n' +
+					'commons-configuration-*.jar,\\\n' +
+					'commons-csv-*.jar,\\\n' +
+					'commons-exec-*.jar,\\\n' +
+					'commons-text-*.jar,\\\n' +
+					'compiler-*.jar,\\\n' +
+					'crafter-*.jar,\\\n' +
+					'crt-core-*.jar,\\\n' +
+					'curvesapi-*.jar,\\\n' +
+					'cxf-*.jar,\\\n' +
+					'daisydiff.jar,\\\n' +
+					'dd-plist-*.jar,\\\n' +
+					'dec-*.jar,\\\n' +
+					'directory-watcher-0.19.1.jar,\\\n' +
+					'eddsa-*.jar,\\\n' +
+					'elastictranscoder-*.jar,\\\n' +
+					'endpoints-spi-*.jar,\\\n' +
+					'error_prone_annotations-*.jar,\\\n' +
+					'esapi-*.jar,\\\n' +
+					'eventstream-1.0.1.jar,\\\n' +
+					'exec-*.jar,\\\n' +
+					'ezmorph-*.jar,\\\n' +
+					'failureaccess-*.jar,\\\n' +
+					'FastInfoset-*.jar,\\\n' +
+					'findbugs-*.jar,\\\n' +
+					'fontbox-*.jar,\\\n' +
+					'freemarker-*.jar,\\\n' +
+					'geronimo-jta_1.1_spec-*.jar,\\\n' +
+					'gmongo-*.jar,\\\n' +
+					'graphql-java-*.jar,\\\n' +
+					'groovy-*.jar,\\\n' +
+					'gson-*.jar,\\\n' +
+					'guava-*.jar,\\\n' +
+					'HdrHistogram-*.jar,\\\n' +
+					'HikariCP-java7-*.jar,\\\n' +
+					'hppc-*.jar,\\\n' +
+					'httpasyncclient-*.jar,\\\n' +
+					'http-auth-*.jar,\\\n' +
+					'http-auth-aws-*.jar,\\\n' +
+					'http-auth-aws-eventstream-*.jar,\\\n' +
+					'http-auth-spi-*.jar,\\\n' +
+					'http-client-spi-*.jar,\\\n' +
+					'httpcore5-*.jar,\\\n' +
+					'httpcore-*.jar,\\\n' +
+					'httpcore-nio-*.jar,\\\n' +
+					'identity-spi-*.jar,\\\n' +
+					'ion-java-*.jar,\\\n' +
+					'istack-commons-runtime-*.jar,\\\n' +
+					'ivy-*.jar,\\\n' +
+					'j2objc-annotations-*.jar,\\\n' +
+					'jackcess-encrypt-*.jar,\\\n' +
+					'jackcess-*.jar,\\\n' +
+					'jackson-annotations-*.jar,\\\n' +
+					'jackson-*.jar,\\\n' +
+					'jai-imageio-core-*.jar,\\\n' +
+					'jakarta.activation-*.jar,\\\n' +
+					'jakarta.inject-*.jar,\\\n' +
+					'jakarta.*.jar,\\\n' +
+					'jakarta.mail-*.jar,\\\n' +
+					'java-dataloader-*.jar,\\\n' +
+					'JavaEWAH-*.jar,\\\n' +
+					'java-libpst-*.jar,\\\n' +
+					'javaparser-core-*.jar,\\\n' +
+					'javax.activation-api-1.2.0.jar,\\\n' +
+					'javax.inject-1.jar,\\\n' +
+					'jbig2-imageio-*.jar,\\\n' +
+					'jboss-logging-3.4.1.Final.jar,\\\n' +
+					'jboss-logging-3.6.1.Final.jar,\\\n' +
+					'jcip-annotations-*.jar,\\\n' +
+					'jcl-over-slf4j-*.jar,\\\n' +
+					'jcommander-*.jar,\\\n' +
+					'jdom2-*.jar,\\\n' +
+					'jempbox-*.jar,\\\n' +
+					'jFormatString-*.jar,\\\n' +
+					'jhighlight-*.jar,\\\n' +
+					'jline-*.jar,\\\n' +
+					'jmatio-*.jar,\\\n' +
+					'jmespath-java-*.jar,\\\n' +
+					'jna-*.jar,\\\n' +
+					'joda-time-*.jar,\\\n' +
+					'jongo-*.jar,\\\n' +
+					'jopt-simple-*.jar,\\\n' +
+					'jose4j-*.jar,\\\n' +
+					'jquery-*.jar,\\\n' +
+					'json-lib-2.4-jdk15.jar,\\\n' +
+					'json-utils-*.jar,\\\n' +
+					'jsoup-*.jar,\\\n' +
+					'jspecify-1.0.0.jar,\\\n' +
+					'jsr305-*.jar,\\\n' +
+					'juniversalchardet-*.jar,\\\n' +
+					'junrar-*.jar,\\\n' +
+					'jwarc-*.jar,\\\n' +
+					'jzlib-1.1.3.jar,\\\n' +
+					'kotlin-stdlib-*.jar,\\\n' +
+					'lang-mustache-client-*.jar,\\\n' +
+					'LatencyUtils-2.0.3.jar,\\\n' +
+					'listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar,\\\n' +
+					'log4j-jakarta-web-*.jar,\\\n' +
+					'log4j-*.jar,\\\n' +
+					'lucene-*.jar,\\\n' +
+					'mapper-extras-client-*.jar,\\\n' +
+					'mariaDB4j-*.jar,\\\n' +
+					'mariadb-java-client-*.jar,\\\n' +
+					'mchange-commons-java-*.jar,\\\n' +
+					'mediaconvert-*.jar,\\\n' +
+					'metadata-extractor-*.jar,\\\n' +
+					'metrics-spi-*.jar,\\\n' +
+					'micrometer-commons-*.jar,\\\n' +
+					'micrometer-core-*.jar,\\\n' +
+					'micrometer-observation-*.jar,\\\n' +
+					'minimal-json-*.jar,\\\n' +
+					'mongodb-*.jar,\\\n' +
+					'mongo-java-driver-*.jar,\\\n' +
+					'mxparser-*.jar,\\\n' +
+					'mybatis-*.jar,\\\n' +
+					'neethi-*.jar,\\\n' +
+					'neko-htmlunit-*.jar,\\\n' +
+					'netty-buffer-*.jar,\\\n' +
+					'netty-codec-*.jar,\\\n' +
+					'netty-codec-http2-*.jar,\\\n' +
+					'netty-codec-http-*.jar,\\\n' +
+					'netty-common-*.jar,\\\n' +
+					'netty-handler-*.jar,\\\n' +
+					'netty-nio-client-*.jar,\\\n' +
+					'netty-resolver-*.jar,\\\n' +
+					'netty-transport-*.jar,\\\n' +
+					'netty-transport-classes-epoll-*.jar,\\\n' +
+					'netty-transport-native-unix-common-*.jar,\\\n' +
+					'okhttp-*.jar,\\\n' +
+					'okio-*.jar,\\\n' +
+					'opensearch-*.jar,\\\n' +
+					'opentest4j-*.jar,\\\n' +
+					'org.abego.treelayout.core-*.jar,\\\n' +
+					'org.eclipse.jgit-*.jar,\\\n' +
+					'org.eclipse.jgit.ssh.apache-*.jar,\\\n' +
+					'parent-join-client-*.jar,\\\n' +
+					'parso-*.jar,\\\n' +
+					'parsson-*.jar,\\\n' +
+					'pdfbox-*.jar,\\\n' +
+					'picocli-*.jar,\\\n' +
+					'poi-*.jar,\\\n' +
+					'profiles-*.jar,\\\n' +
+					'protobuf-java-*.jar,\\\n' +
+					'protocol-core-*.jar,\\\n' +
+					'qdox-*.jar,\\\n' +
+					'quartz-*.jar,\\\n' +
+					'rank-eval-client-*.jar,\\\n' +
+					'reactive-streams-*.jar,\\\n' +
+					'reactor-core-*.jar,\\\n' +
+					'regions-*.jar,\\\n' +
+					'retries-*.jar,\\\n' +
+					'retries-spi-*.jar,\\\n' +
+					'RoaringBitmap-*.jar,\\\n' +
+					'rome-*.jar,\\\n' +
+					's3-*.jar,\\\n' +
+					's3-transfer-manager-*.jar,\\\n' +
+					'saaj-impl-*.jar,\\\n' +
+					'sardine-*.jar,\\\n' +
+					'Saxon-HE-*.jar,\\\n' +
+					'script-security-*.jar,\\\n' +
+					'sdk-core-*.jar,\\\n' +
+					'semver4j-*.jar,\\\n' +
+					'smiley-http-proxy-servlet-*.jar,\\\n' +
+					'snakeyaml-*.jar,\\\n' +
+					'SparseBitSet-*.jar,\\\n' +
+					'spatial4j-*.jar,\\\n' +
+					'spring-aop-*.jar,\\\n' +
+					'spring-beans-*.jar,\\\n' +
+					'spring-context-*.jar,\\\n' +
+					'spring-context-support-*.jar,\\\n' +
+					'spring-core-*.jar,\\\n' +
+					'spring-data-commons-*.jar,\\\n' +
+					'spring-expression-*.jar,\\\n' +
+					'spring-jcl-*.jar,\\\n' +
+					'spring-jdbc-*.jar,\\\n' +
+					'spring-ldap-core-*.jar,\\\n' +
+					'spring-messaging-*.jar,\\\n' +
+					'spring-oxm-*.jar,\\\n' +
+					'spring-security-config-*.jar,\\\n' +
+					'spring-security-core-*.jar,\\\n' +
+					'spring-security-crypto-*.jar,\\\n' +
+					'spring-security-ldap-*.jar,\\\n' +
+					'spring-security-messaging-*.jar,\\\n' +
+					'spring-security-web-*.jar,\\\n' +
+					'spring-social-*.jar,\\\n' +
+					'spring-tx-*.jar,\\\n' +
+					'spring-web-*.jar,\\\n' +
+					'spring-webmvc-*.jar,\\\n' +
+					'spring-websocket-*.jar,\\\n' +
+					'sshd-*.jar,\\\n' +
+					'sso-*.jar,\\\n' +
+					'ssooidc-*.jar,\\\n' +
+					'stax2-api-*.jar,\\\n' +
+					'stax-ex-*.jar,\\\n' +
+					'sts-*.jar,\\\n' +
+					't-digest-*.jar,\\\n' +
+					'testng-*.jar,\\\n' +
+					'third-party-jackson-core-*.jar,\\\n' +
+					'tika-core-*.jar,\\\n' +
+					'tika-parser-*.jar,\\\n' +
+					'tika-parsers-standard-package-*.jar,\\\n' +
+					'tinify-*.jar,\\\n' +
+					'txw2-*.jar,\\\n' +
+					'unit-api-*.jar,\\\n' +
+					'urlrewritefilter-*.jar,\\\n' +
+					'utils-*.jar,\\\n' +
+					'utils-lite-*.jar,\\\n' +
+					'validation-api-*.jar,\\\n' +
+					'vorbis-java-*.jar,\\\n' +
+					'woodstox-core-*.jar,\\\n' +
+					'xercesImpl-*.jar,\\\n' +
+					'xml-apis-*.jar,\\\n' +
+					'xmlbeans-*.jar,\\\n' +
+					'xmlgraphics-commons-*.jar,\\\n' +
+					'xmlpull-*.jar,\\\n' +
+					'xmlresolver-*-data.jar,\\\n' +
+					'xml-resolver-*.jar,\\\n' +
+					'xmlresolver-*.jar,\\\n' +
+					'xmlschema-core-*.jar,\\\n' +
+					'xmpbox-*.jar,\\\n' +
+					'xmpcore-*.jar,\\\n' +
+					'xstream-*.jar,\\\n' +
+					'xz-*.jar,\\\n' +
+					'yasson-*.jar,\\\n' +
+					'zstd-jni-*.jar,\\\n' +
+					'zxcvbn-*.jar,\\'
+			]
+		]
+	],
+	[
+		confFile: "/bin/apache-tomcat/conf/logging.properties",
+		patterns: [
+			[
+				match  : '${catalina.base}/logs',
+				replace: '${catalina.logs}'
+			]
+		]
+	],
+	[
+		confFile: "/bin/opensearch/config/opensearch.yml",
+		patterns: [
+			[
+				match  : "#path.data: /path/to/data",
+				replace: 'path.data: ${SEARCH_INDEXES_DIR}'
+			],
+			[
+				match  : "#path.logs: /path/to/logs",
+				replace: 'path.logs: ${SEARCH_LOGS_DIR}'
+			],
+			[
+				match  : "#http.port: 9200",
+				replace: 'http.port: ${SEARCH_PORT}'
+			],
+			[
+				match  : '# --------------------------------- Discovery ----------------------------------',
+				replace: System.lineSeparator() +
+					'# Disable cluster discovery' + System.lineSeparator() +
+					'discovery.type: single-node' + System.lineSeparator() + System.lineSeparator() +
+					'# ---------------------------------- Gateway -----------------------------------'
+			],
+			[
+				match  : '# ---------------------------------- Various -----------------------------------',
+				replace: '# ---------------------------------- Various -----------------------------------' +
+					System.lineSeparator() +
+					'plugins.security.disabled: true' + System.lineSeparator() + 'plugins.sql.enabled: false' +
+					System.lineSeparator() +
+					'indices.query.bool.max_clause_count: 8192' +
+					System.lineSeparator()
+			]
+		]
+	],
+	[
+		confFile: "/bin/opensearch/config/jvm.options",
+		patterns: [
+			[
+				match  : "-Xm",
+				replace: '#-Xm'
+			]
+		]
+	]
 ]
 
 ext.authoringConfUpdatePatterns = [
-    [
-        confFile: "/bin/apache-tomcat/conf/server.xml",
-        patterns: [
-            [
-                match: "8005",
-                replace: "${authoringTomcatShutdownPort}"
-            ],
-            [
-                match: "8080",
-                replace: "${authoringTomcatHttpPort}"
-            ],
-            [
-                match: "8009",
-                replace: "${authoringTomcatAjpPort}"
-            ],
-            [
-                match: "8443",
-                replace: "${authoringTomcatHttpsPort}"
-            ],
-            [
-                match: "8000",
-                replace: "${authoringTomcatDebugPort}"
-            ],
-            [// Setting startStopThreads to 0 so Tomcat will determine the number of threads to use based on the number of available processors and start the apps in parallel
-                match: 'unpackWARs="true" autoDeploy="true"',
-                replace: 'unpackWARs="true" autoDeploy="true" startStopThreads="0"'
-            ]
-        ]
-    ]
+	[
+		confFile: "/bin/apache-tomcat/conf/server.xml",
+		patterns: [
+			[
+				match  : "8005",
+				replace: "${authoringTomcatShutdownPort}"
+			],
+			[
+				match  : "8080",
+				replace: "${authoringTomcatHttpPort}"
+			],
+			[
+				match  : "8009",
+				replace: "${authoringTomcatAjpPort}"
+			],
+			[
+				match  : "8443",
+				replace: "${authoringTomcatHttpsPort}"
+			],
+			[
+				match  : "8000",
+				replace: "${authoringTomcatDebugPort}"
+			],
+			[// Setting startStopThreads to 0 so Tomcat will determine the number of threads to use based on the number of available processors and start the apps in parallel
+				match: 'unpackWARs="true" autoDeploy="true"',
+				replace: 'unpackWARs="true" autoDeploy="true" startStopThreads="0"'
+			]
+		]
+	]
 ]
 
 ext.deliveryConfUpdatePatterns = [
-    [
-        confFile: "/bin/apache-tomcat/conf/server.xml",
-        patterns: [
-            [
-                match: "8005",
-                replace: "${deliveryTomcatShutdownPort}"
-            ],
-            [
-                match: "8080",
-                replace: "${deliveryTomcatHttpPort}"
-            ],
-            [
-                match: "8009",
-                replace: "${deliveryTomcatAjpPort}"
-            ],
-            [
-                match: "8443",
-                replace: "${deliveryTomcatHttpsPort}"
-            ],
-            [
-                match: "8000",
-                replace: "${deliveryTomcatDebugPort}"
-            ]
-        ]
-    ]
+	[
+		confFile: "/bin/apache-tomcat/conf/server.xml",
+		patterns: [
+			[
+				match  : "8005",
+				replace: "${deliveryTomcatShutdownPort}"
+			],
+			[
+				match  : "8080",
+				replace: "${deliveryTomcatHttpPort}"
+			],
+			[
+				match  : "8009",
+				replace: "${deliveryTomcatAjpPort}"
+			],
+			[
+				match  : "8443",
+				replace: "${deliveryTomcatHttpsPort}"
+			],
+			[
+				match  : "8000",
+				replace: "${deliveryTomcatDebugPort}"
+			]
+		]
+	]
 ]
 
 def authoringTokens = [
-  TOMCAT_HTTP_PORT     : String.valueOf(authoringTomcatHttpPortDefault),
-  TOMCAT_HTTPS_PORT    : String.valueOf(authoringTomcatHttpsPortDefault),
-  TOMCAT_AJP_PORT      : String.valueOf(authoringTomcatAjpPortDefault),
-  TOMCAT_SHUTDOWN_PORT : String.valueOf(authoringTomcatShutdownPortDefault),
-  TOMCAT_DEBUG_PORT    : String.valueOf(authoringTomcatDebugPortDefault),
-  SEARCH_PORT          : String.valueOf(authoringSearchPort),
-  DEPLOYER_PORT        : String.valueOf(authoringDeployerPort),
-  DEPLOYER_DEBUG_PORT  : String.valueOf(authoringDeployerDebugPort),
-  DEPLOYMENT_DIR       : String.valueOf(authoringDeploymentDir),
-  MARIADB_PORT         : String.valueOf(authoringMariaDbPort),
-  MONGODB_PORT         : String.valueOf(authoringMongoDbPort),
-  ENV                  : "authoring",
-  VERSION              : project.version,
-  GIT_BUILD_ID         : gitRevisionId,
-  SMTP_PORT            : String.valueOf(authoringSmtpPort),
-  MARIADB_VERSION      : String.valueOf(mariaDbVersion),
-  SEARCH_VERSION       : String.valueOf(openSearchVersion)
+	TOMCAT_HTTP_PORT    : String.valueOf(authoringTomcatHttpPortDefault),
+	TOMCAT_HTTPS_PORT   : String.valueOf(authoringTomcatHttpsPortDefault),
+	TOMCAT_AJP_PORT     : String.valueOf(authoringTomcatAjpPortDefault),
+	TOMCAT_SHUTDOWN_PORT: String.valueOf(authoringTomcatShutdownPortDefault),
+	TOMCAT_DEBUG_PORT   : String.valueOf(authoringTomcatDebugPortDefault),
+	SEARCH_PORT         : String.valueOf(authoringSearchPort),
+	DEPLOYER_PORT       : String.valueOf(authoringDeployerPort),
+	DEPLOYER_DEBUG_PORT : String.valueOf(authoringDeployerDebugPort),
+	DEPLOYMENT_DIR      : String.valueOf(authoringDeploymentDir),
+	MARIADB_PORT        : String.valueOf(authoringMariaDbPort),
+	MONGODB_PORT        : String.valueOf(authoringMongoDbPort),
+	ENV                 : "authoring",
+	VERSION             : project.version,
+	GIT_BUILD_ID        : gitRevisionId,
+	SMTP_PORT           : String.valueOf(authoringSmtpPort),
+	MARIADB_VERSION     : String.valueOf(mariaDbVersion),
+	SEARCH_VERSION      : String.valueOf(openSearchVersion)
 ]
 
 def deliveryTokens = [
-  TOMCAT_HTTP_PORT     : String.valueOf(deliveryTomcatHttpPortDefault),
-  TOMCAT_HTTPS_PORT    : String.valueOf(deliveryTomcatHttpsPortDefault),
-  TOMCAT_AJP_PORT      : String.valueOf(deliveryTomcatAjpPortDefault),
-  TOMCAT_SHUTDOWN_PORT : String.valueOf(deliveryTomcatShutdownPortDefault),
-  TOMCAT_DEBUG_PORT    : String.valueOf(deliveryTomcatDebugPortDefault),
-  SEARCH_PORT          : String.valueOf(deliverySearchPort),
-  DEPLOYER_PORT        : String.valueOf(deliveryDeployerPort),
-  DEPLOYER_DEBUG_PORT  : String.valueOf(deliveryDeployerDebugPort),
-  DEPLOYMENT_DIR       : String.valueOf(deliveryDeploymentDir),
-  MONGODB_PORT         : String.valueOf(deliveryMongoDbPort),
-  ENV                  : "delivery",
-  VERSION              : project.version,
-  GIT_BUILD_ID         : gitRevisionId,
-  SMTP_PORT            : String.valueOf(deliverySmtpPort),
-  SEARCH_VERSION       : String.valueOf(openSearchVersion)
+	TOMCAT_HTTP_PORT    : String.valueOf(deliveryTomcatHttpPortDefault),
+	TOMCAT_HTTPS_PORT   : String.valueOf(deliveryTomcatHttpsPortDefault),
+	TOMCAT_AJP_PORT     : String.valueOf(deliveryTomcatAjpPortDefault),
+	TOMCAT_SHUTDOWN_PORT: String.valueOf(deliveryTomcatShutdownPortDefault),
+	TOMCAT_DEBUG_PORT   : String.valueOf(deliveryTomcatDebugPortDefault),
+	SEARCH_PORT         : String.valueOf(deliverySearchPort),
+	DEPLOYER_PORT       : String.valueOf(deliveryDeployerPort),
+	DEPLOYER_DEBUG_PORT : String.valueOf(deliveryDeployerDebugPort),
+	DEPLOYMENT_DIR      : String.valueOf(deliveryDeploymentDir),
+	MONGODB_PORT        : String.valueOf(deliveryMongoDbPort),
+	ENV                 : "delivery",
+	VERSION             : project.version,
+	GIT_BUILD_ID        : gitRevisionId,
+	SMTP_PORT           : String.valueOf(deliverySmtpPort),
+	SEARCH_VERSION      : String.valueOf(openSearchVersion)
 ]
 
 ext.getEnvironments = { ->
-    String[] result;
+	String[] result;
 
-    if (project.hasProperty("env"))
-        result = project.property("env").toLowerCase().split(",")
-    else
-        result = environments;
+	if (project.hasProperty("env"))
+		result = project.property("env").toLowerCase().split(",")
+	else
+		result = environments;
 
-    return result;
+	return result;
 }
 
 ext.prepareBaseEnvironment = { envFolder, overwriteChangedFiles, downloadGrapes, includeMongodb ->
-    // Copy files into env
-    commonItemsToCopy.each { item ->
-        def name = item.name
-        def from = item.from
-        def into = item.into
-        def exclude = item.exclude
-        def performSync = true
+	// Copy files into env
+	commonItemsToCopy.each { item ->
+		def name = item.name
+		def from = item.from
+		def into = item.into
+		def exclude = item.exclude
+		def performSync = true
 
-        // Skip Profile if it's not required nor is Social required (since Social depends on Profile)
-        def mongoSync = ["mongodb", "mongosh", "mongodb-database-tools"].contains(name)
-        if (mongoSync && !includeMongodb) {
-            performSync = false
-        }
+		// Skip Profile if it's not required nor is Social required (since Social depends on Profile)
+		def mongoSync = ["mongodb", "mongosh", "mongodb-database-tools"].contains(name)
+		if (mongoSync && !includeMongodb) {
+			performSync = false
+		}
 
-        if (performSync) {
-            syncFolder("${projectDir}", from, envFolder + into, exclude, overwriteChangedFiles, !mongoSync)
-        }
-        if (item.postCopy) {
-            println "Executing postCopy for ${name}"
-            item.postCopy(envFolder)
-        }
-    }
+		if (performSync) {
+			syncFolder("${projectDir}", from, envFolder + into, exclude, overwriteChangedFiles, !mongoSync)
+		}
+		if (item.postCopy) {
+			println "Executing postCopy for ${name}"
+			item.postCopy(envFolder)
+		}
+	}
 
-    // Download Grapes
-    if (downloadGrapes) {
-        copy {
-            from "${projectDir}/resources/bin/grapeConfig.xml"
-            into "${envFolder}/bin"
-        }
-        commonGrapesDownloads.each() { grapes ->
-            def command = grapes
-            execCommand(command, envFolder + "/bin/")
-        }
-    }
+	// Download Grapes
+	if (downloadGrapes) {
+		copy {
+			from "${cmsDir}/resources/bin/grapeConfig.xml"
+			into "${envFolder}/bin"
+		}
+		commonGrapesDownloads.each() { grapes ->
+			def command = grapes
+			execCommand(command, envFolder + "/bin/")
+		}
+	}
 
-    commonUpdatePermissions.each { group ->
-        def command = ["chmod"]
-        group['permissions'].each { permission ->
-            command << permission
-        }
-        group['items'].each { item ->
-            command << "bin" + item
-        }
-        execCommand(command, envFolder)
-    }
+	commonUpdatePermissions.each { group ->
+		def command = ["chmod"]
+		group['permissions'].each { permission ->
+			command << permission
+		}
+		group['items'].each { item ->
+			command << "bin" + item
+		}
+		execCommand(command, envFolder)
+	}
 
-    // Update configuration files
+	// Update configuration files
 	commonConfUpdatePatterns.each { conf ->
 		updateConfFile(envFolder + conf['confFile'], conf['patterns'])
 	}
 
-    // Update known_hosts
-    updateKnownHosts(envFolder)
+	// Update known_hosts
+	updateKnownHosts(envFolder)
 
-    // Create required folders
-    commonFoldersToCreate.each { folder ->
-        file(envFolder + folder).mkdirs()
-    }
+	// Create required folders
+	commonFoldersToCreate.each { folder ->
+		file(envFolder + folder).mkdirs()
+	}
 }
 
 ext.prepareAuthoringEnvironment = { overwriteChangedFiles, downloadGrapes, includeMongodb ->
-    // Prepare the base
-    prepareBaseEnvironment("${authoringEnvDir}", overwriteChangedFiles, downloadGrapes, includeMongodb)
+	// Prepare the base
+	prepareBaseEnvironment("${authoringEnvDir}", overwriteChangedFiles, downloadGrapes, includeMongodb)
 
-    // Copy files into env
-    authoringItemsToCopy.each { item ->
-        def from = item.from
-        def into = item.into
-        def exclude = item.exclude
-        if (item.copyFile) {
-            copyFile("${projectDir}", from, "${authoringEnvDir}" + into)
-        } else {
-            syncFolder("${projectDir}", from, "${authoringEnvDir}" + into, exclude, overwriteChangedFiles, true)
-        }
-    }
+	// Copy files into env
+	authoringItemsToCopy.each { item ->
+		def from = item.from
+		def into = item.into
+		def exclude = item.exclude
+		if (item.copyFile) {
+			copyFile("${projectDir}", from, "${authoringEnvDir}" + into)
+		} else {
+			syncFolder("${projectDir}", from, "${authoringEnvDir}" + into, exclude, overwriteChangedFiles, true)
+		}
+	}
 
-    // Copy Deployer config
-    copy {
-        from "./resources/deployer"
-        into "${authoringEnvDir}/bin/crafter-deployer"
-        filter(ReplaceTokens, tokens: authoringTokens)
-    }
+	// Copy Deployer config
+	copy {
+		from "${cmsDir}/resources/deployer"
+		into "${authoringEnvDir}/bin/crafter-deployer"
+		filter(ReplaceTokens, tokens: authoringTokens)
+	}
 
-    // Copy bin scripts
-    copy {
-        from "${projectDir}/resources/bin"
-        into "${authoringEnvDir}/bin"
-        filter(ReplaceTokens, tokens: authoringTokens)
-    }
+	// Copy bin scripts
+	copy {
+		from "${cmsDir}/resources/bin"
+		into "${authoringEnvDir}/bin"
+		filter(ReplaceTokens, tokens: authoringTokens)
+	}
 
-    // Copy env specific bin scripts
-    copy {
-        from "./resources/env/authoring/bin"
-        into "${authoringEnvDir}/bin"
-        filter(ReplaceTokens, tokens: authoringTokens)
-    }
+	// Copy env specific bin scripts
+	copy {
+		from "${cmsDir}/resources/env/authoring/bin"
+		into "${authoringEnvDir}/bin"
+		filter(ReplaceTokens, tokens: authoringTokens)
+	}
 
-    // Copy Tomcat shared conf
-    copy {
-        from "./resources/env/authoring/tomcat-config/crafter"
-        into "${authoringEnvDir}/bin/apache-tomcat/shared/classes/crafter"
-        filter(ReplaceTokens, tokens: authoringTokens)
-    }
+	// Copy Tomcat shared conf
+	copy {
+		from "${cmsDir}/resources/env/authoring/tomcat-config/crafter"
+		into "${authoringEnvDir}/bin/apache-tomcat/shared/classes/crafter"
+		filter(ReplaceTokens, tokens: authoringTokens)
+	}
 
-    // Download Grapes
-    if (downloadGrapes) {
-        authoringGrapesDownloads.each() { grapes ->
-            def command = grapes
-            execCommand(command, "${authoringEnvDir}" + "/bin/")
-        }
-    }
+	// Download Grapes
+	if (downloadGrapes) {
+		authoringGrapesDownloads.each() { grapes ->
+			def command = grapes
+			execCommand(command, "${authoringEnvDir}" + "/bin/")
+		}
+	}
 
-    authoringUpdatePermissions.each { group ->
-        def command = ["chmod"]
-        group['permissions'].each { permission ->
-            command << permission
-        }
-        group['items'].each { item ->
-            command << "bin" + item
-        }
-        execCommand(command, "${authoringEnvDir}")
-    }
+	authoringUpdatePermissions.each { group ->
+		def command = ["chmod"]
+		group['permissions'].each { permission ->
+			command << permission
+		}
+		group['items'].each { item ->
+			command << "bin" + item
+		}
+		execCommand(command, "${authoringEnvDir}")
+	}
 
-    // Update configuration files
+	// Update configuration files
 	authoringConfUpdatePatterns.each { conf ->
 		updateConfFile("${authoringEnvDir}" + conf['confFile'], conf['patterns'])
 	}
 
-    // Create required folders
-    authoringFoldersToCreate.each { folder ->
-        file("${authoringEnvDir}" + folder).mkdirs()
-    }
+	// Create required folders
+	authoringFoldersToCreate.each { folder ->
+		file("${authoringEnvDir}" + folder).mkdirs()
+	}
 }
 
 ext.prepareDeliveryEnvironment = { overwriteChangedFiles, downloadGrapes, includeMongodb ->
-    // Prepare the base
-    prepareBaseEnvironment("${deliveryEnvDir}", overwriteChangedFiles, downloadGrapes, includeMongodb)
+	// Prepare the base
+	prepareBaseEnvironment("${deliveryEnvDir}", overwriteChangedFiles, downloadGrapes, includeMongodb)
 
-    // Copy files into env
-    deliveryItemsToCopy.each { item ->
-        def from = item.from
-        def into = item.into
-        def exclude = item.exclude
-        syncFolder("${projectDir}", from, "${deliveryEnvDir}" + into, exclude, overwriteChangedFiles, true)
-    }
+	// Copy files into env
+	deliveryItemsToCopy.each { item ->
+		def from = item.from
+		def into = item.into
+		def exclude = item.exclude
+		syncFolder("${projectDir}", from, "${deliveryEnvDir}" + into, exclude, overwriteChangedFiles, true)
+	}
 
-    // Copy Deployer config
-    copy {
-        from "./resources/deployer"
-        into "${deliveryEnvDir}/bin/crafter-deployer"
-        filter(ReplaceTokens, tokens: deliveryTokens)
-    }
+	// Copy Deployer config
+	copy {
+		from "${cmsDir}/resources/deployer"
+		into "${deliveryEnvDir}/bin/crafter-deployer"
+		filter(ReplaceTokens, tokens: deliveryTokens)
+	}
 
-    // Copy bin scripts
-    copy {
-        from "${projectDir}/resources/bin"
-        into "${deliveryEnvDir}/bin"
-        filter(ReplaceTokens, tokens: deliveryTokens)
-    }
+	// Copy bin scripts
+	copy {
+		from "${cmsDir}/resources/bin"
+		into "${deliveryEnvDir}/bin"
+		filter(ReplaceTokens, tokens: deliveryTokens)
+	}
 
-    // Copy env specific bin scripts
-    copy {
-        from "./resources/env/delivery/bin"
-        into "${deliveryEnvDir}/bin"
-        filter(ReplaceTokens, tokens: deliveryTokens)
-    }
+	// Copy env specific bin scripts
+	copy {
+		from "${cmsDir}/resources/env/delivery/bin"
+		into "${deliveryEnvDir}/bin"
+		filter(ReplaceTokens, tokens: deliveryTokens)
+	}
 
-    // Copy Tomcat shared conf
-    copy {
-        from "./resources/env/delivery/tomcat-config/crafter"
-        into "${deliveryEnvDir}/bin/apache-tomcat/shared/classes/crafter"
-        filter(ReplaceTokens, tokens: deliveryTokens)
-    }
+	// Copy Tomcat shared conf
+	copy {
+		from "${cmsDir}/resources/env/delivery/tomcat-config/crafter"
+		into "${deliveryEnvDir}/bin/apache-tomcat/shared/classes/crafter"
+		filter(ReplaceTokens, tokens: deliveryTokens)
+	}
 
-    // Download Grapes
-    if (downloadGrapes) {
-        deliveryGrapesDownloads.each() { grapes ->
-            def command = grapes
-            execCommand(command, "${deliveryEnvDir}" + "/bin/")
-        }
-    }
+	// Download Grapes
+	if (downloadGrapes) {
+		deliveryGrapesDownloads.each() { grapes ->
+			def command = grapes
+			execCommand(command, "${deliveryEnvDir}" + "/bin/")
+		}
+	}
 
-    deliveryUpdatePermissions.each { group ->
-        def command = ["chmod"]
-        group['permissions'].each { permission ->
-            command << permission
-        }
-        group['items'].each { item ->
-            command << "bin" + item
-        }
-        execCommand(command, "${deliveryEnvDir}")
-    }
+	deliveryUpdatePermissions.each { group ->
+		def command = ["chmod"]
+		group['permissions'].each { permission ->
+			command << permission
+		}
+		group['items'].each { item ->
+			command << "bin" + item
+		}
+		execCommand(command, "${deliveryEnvDir}")
+	}
 
-    // Update configuration files
+	// Update configuration files
 	deliveryConfUpdatePatterns.each { conf ->
 		updateConfFile("${deliveryEnvDir}" + conf['confFile'], conf['patterns'])
 	}
 
-    // Create required folders
-    deliveryFoldersToCreate.each { folder ->
-        file("${deliveryEnvDir}" + folder).mkdirs()
-    }
+	// Create required folders
+	deliveryFoldersToCreate.each { folder ->
+		file("${deliveryEnvDir}" + folder).mkdirs()
+	}
 }
 
 ext.prepareEnvironment = { environment, refreshEnv, overwriteChangedFiles, downloadGrapes, includeMongodb ->
-    if (environment == "authoring") {
-        if (!file("${authoringEnvDir}").exists() || refreshEnv) {
-            prepareAuthoringEnvironment(overwriteChangedFiles, downloadGrapes, includeMongodb)
-        }
-    } else if (environment == "delivery") {
-        if (!file("${deliveryEnvDir}").exists() || refreshEnv) {
-            prepareDeliveryEnvironment(overwriteChangedFiles, downloadGrapes, includeMongodb)
-        }
-    } else {
-        logger.error("Unknown environment \"" + environment + "\"")
-        throw new GradleException("Unknown environment \"" + environment + "\"")
-    }
+	if (environment == "authoring") {
+		if (!file("${authoringEnvDir}").exists() || refreshEnv) {
+			prepareAuthoringEnvironment(overwriteChangedFiles, downloadGrapes, includeMongodb)
+		}
+	} else if (environment == "delivery") {
+		if (!file("${deliveryEnvDir}").exists() || refreshEnv) {
+			prepareDeliveryEnvironment(overwriteChangedFiles, downloadGrapes, includeMongodb)
+		}
+	} else {
+		logger.error("Unknown environment \"" + environment + "\"")
+		throw new GradleException("Unknown environment \"" + environment + "\"")
+	}
 }
 
 ext.updateConfFile = { confFile, patterns ->
-    def file = new File(confFile)
-    def content = file.text
+	def file = new File(confFile)
+	def content = file.text
 
-    // Replace patterns
-    patterns.each { pattern ->
-        content = content.replace(pattern.match, pattern.replace)
-    }
+	// Replace patterns
+	patterns.each { pattern ->
+		content = content.replace(pattern.match, pattern.replace)
+	}
 
-    file.write(content)
+	file.write(content)
 }
 
 ext.updateKnownHosts = { envDir ->
-    def knownHostsFile = file("${envDir}/data/ssh/known_hosts")
-    hostsToScan.each { entry ->
-        knownHostsFile << "# ${entry.name}" << System.lineSeparator()
-                       << "ssh-keyscan ${entry.host}".execute().getText() << System.lineSeparator()
-    }
+	def knownHostsFile = file("${envDir}/data/ssh/known_hosts")
+	hostsToScan.each { entry ->
+		knownHostsFile << "# ${entry.name}" << System.lineSeparator()
+			<< "ssh-keyscan ${entry.host}".execute().getText() << System.lineSeparator()
+	}
 }

@@ -43,7 +43,7 @@ if (!dockerTag.isEmpty()) {
 // TODO: See https://plugins.gradle.org/search?term=docker
 
 ext {
-	imagesDir = "${projectDir}/resources/docker/images"
+	imagesDir = "${cmsDir}/resources/docker/images"
 	imagesBuildDir = "${buildDir}/images"
 	tempDir = "${buildDir}/temp"
 
@@ -68,7 +68,7 @@ ext {
 	} else {
 		// Authoring bundle
 		authoringBundleUrl = ""
-		authoringBundleSource = "${projectDir}/bundles/crafter-cms-authoring-${project.version}-linux-x86_64.tar.gz"
+		authoringBundleSource = "${bundlesDir}/crafter-cms-authoring-${project.version}-linux-x86_64.tar.gz"
 		authoringBundleFile = "${tempDir}/" + FilenameUtils.getName(authoringBundleSource)
 		authoringBundleRoot = "${tempDir}/" + FilenameUtils.getBaseName(authoringBundleSource) + "/crafter"
 	}
@@ -76,20 +76,20 @@ ext {
 	if (!dockerDeliveryBundle.isEmpty()) {
 		deliveryBundleSource = ""
 		if (dockerDeliveryBundle ==~ /^https?:\/\/.+$/) {
-				deliveryBundleUrl = dockerDeliveryBundle
-				deliveryBundleFile = "${tempDir}/" + FilenameUtils.getName(deliveryBundleUrl)
-				deliveryBundleRoot = "${tempDir}/" + FilenameUtils.getBaseName(deliveryBundleUrl) + "/crafter"
+			deliveryBundleUrl = dockerDeliveryBundle
+			deliveryBundleFile = "${tempDir}/" + FilenameUtils.getName(deliveryBundleUrl)
+			deliveryBundleRoot = "${tempDir}/" + FilenameUtils.getBaseName(deliveryBundleUrl) + "/crafter"
 		} else {
-				deliveryBundleUrl = ""
-				deliveryBundleFile = dockerDeliveryBundle
-				deliveryBundleRoot = "${tempDir}/" + FilenameUtils.getBaseName(deliveryBundleFile) + "/crafter"
+			deliveryBundleUrl = ""
+			deliveryBundleFile = dockerDeliveryBundle
+			deliveryBundleRoot = "${tempDir}/" + FilenameUtils.getBaseName(deliveryBundleFile) + "/crafter"
 		}
 	} else {
-			// Delivery bundle
-			deliveryBundleUrl = ""
-			deliveryBundleSource = "${projectDir}/bundles/crafter-cms-delivery-${project.version}-linux-x86_64.tar.gz"
-			deliveryBundleFile = "${tempDir}/" + FilenameUtils.getName(deliveryBundleSource)
-			deliveryBundleRoot = "${tempDir}/" + FilenameUtils.getBaseName(deliveryBundleSource) + "/crafter"
+		// Delivery bundle
+		deliveryBundleUrl = ""
+		deliveryBundleSource = "${bundlesDir}/crafter-cms-delivery-${project.version}-linux-x86_64.tar.gz"
+		deliveryBundleFile = "${tempDir}/" + FilenameUtils.getName(deliveryBundleSource)
+		deliveryBundleRoot = "${tempDir}/" + FilenameUtils.getBaseName(deliveryBundleSource) + "/crafter"
 	}
 
 	defaultTomcatBinExcludes = [
@@ -167,7 +167,7 @@ task downloadDeliveryBundle(type: Download) {
 
 task expandAuthoringBundle(type: Copy) {
 	if (authoringBundleSource) {
-		dependsOn = [ "bundle" ]
+		dependsOn = ["bundle"]
 		from tarTree(authoringBundleSource)
 		into "${tempDir}/" + FilenameUtils.getBaseName(authoringBundleFile)
 	} else {
@@ -179,7 +179,7 @@ task expandAuthoringBundle(type: Copy) {
 
 task expandDeliveryBundle(type: Copy) {
 	if (deliveryBundleSource) {
-		dependsOn = [ "bundle" ]
+		dependsOn = ["bundle"]
 		from tarTree(deliveryBundleSource)
 		into "${tempDir}/" + FilenameUtils.getBaseName(deliveryBundleFile)
 	} else {
@@ -371,7 +371,7 @@ tasks.register('buildDeliveryTomcat') {
 tasks.register('buildDeployer') {
     group = "Build"
     description = "Builds the Deployer Docker image"
-    dependsOn prepareDeliveryBundle
+    dependsOn prepareAuthoringBundle
 	def injected = project.objects.newInstance(InjectedExecOps)
     def imageBuildDir = "${imagesBuildDir}/deployer"
 
@@ -387,7 +387,7 @@ tasks.register('buildDeployer') {
         updateDockerfileUser("${imageBuildDir}/Dockerfile")
 
         copy {
-            from "${deliveryBundleRoot}/bin/"
+            from "${authoringBundleRoot}/bin/"
             into "${imageBuildDir}/bin"
             exclude "migration"
             exclude "upgrade"

@@ -1,0 +1,231 @@
+/*
+ * Copyright (C) 2007-2026 Crafter Software Corporation. All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*
+ * Community (CE) release orchestration for the CrafterCMS monorepo.
+ *
+ * Typical usage (from a release shell or CI):
+ *   ./gradlew releaseSetVersion -PreleaseVersion=5.0.0 -PreleaseGitBranch=v5.0.0
+ *   ./gradlew releasePublishMaven -Ppublish
+ *   ./gradlew releasePackage -PreleaseS3Path=5.0.0 -Ppublish
+ *   ./gradlew releaseDockerImages -PdockerTag=5.0.0 -PpushDockerImages=true \
+ *     -PtagDockerImages=latest -Ppublish
+ *
+ * GitHub Packages publish needs GITHUB_ACTOR + GITHUB_TOKEN (or gpr.user / gpr.key).
+ */
+
+ext {
+	releasePublishEnabled = project.hasProperty('publish')
+	releaseAwsProfile = getPropertySafelyWithDefaults('releaseAwsProfile', 'crafter')
+	releaseS3Bucket = getPropertySafelyWithDefaults('releaseS3Bucket', 'downloads.craftercms.org')
+	releaseS3Path = getPropertySafelyWithDefaults('releaseS3Path', project.version.toString())
+}
+
+/** Writes transform(file) only when contents change; returns whether a write occurred. */
+ext.updateFileIfChanged = { File target, Closure transform ->
+	if (!target.exists()) {
+		return false
+	}
+	def original = target.getText('UTF-8')
+	def updated = transform.call(original)
+	if (updated != original) {
+		target.write(updated, 'UTF-8')
+		println "Updated ${project.relativePath(target)}"
+		return true
+	}
+	return false
+}
+
+/** Bumps craftercmsVersion (properties/toml), optional gitBranch, and community docker-compose image tags. */
+ext.applyReleaseVersions = { String releaseVersion, String gitBranchName ->
+	updateFileIfChanged(file("${projectDir}/gradle.properties")) { text ->
+		text.replaceAll(/(?m)^craftercmsVersion=.*/, "craftercmsVersion=${releaseVersion}")
+	}
+
+	updateFileIfChanged(file("${projectDir}/gradle/libs.versions.toml")) { text ->
+		text.replaceAll(/(?m)^craftercms\s*=\s*".*"/, "craftercms = \"${releaseVersion}\"")
+	}
+
+	if (gitBranchName) {
+		updateFileIfChanged(file("${projectDir}/global-settings.gradle")) { text ->
+			text.replaceAll(
+				/project\.ext\.set\("gitBranch", "[^"]*"\) \/\/ craftercms branch flag/,
+				"project.ext.set(\"gitBranch\", \"${gitBranchName}\") // craftercms branch flag"
+			)
+		}
+	}
+
+	def composeFiles = fileTree(dir: "${projectDir}/docker-compose", include: '**/docker-compose*.yml')
+	composeFiles.each { composeFile ->
+		updateFileIfChanged(composeFile) { text ->
+			text.replaceAll(
+				/image: ([^:\s]+):([^:\s]+) # craftercms version flag/,
+				"image: \$1:${releaseVersion} # craftercms version flag"
+			)
+		}
+	}
+}
+
+/** Builds linux/darwin/aarch64 bundles, optionally uploads to S3, then cleans bundle dirs. */
+ext.runReleaseBundleMatrix = { String s3Path ->
+	def platformVariants = [
+		[:],
+		[currentPlatform: 'darwin'],
+		[currentPlatform: 'darwin', currentArch: 'aarch64']
+	]
+
+	platformVariants.each { platformProps ->
+		def args = ['./gradlew', 'clean', 'build', 'deploy', 'bundle']
+		platformProps.each { key, value ->
+			args << "-P${key}=${value}"
+		}
+		println "Release bundle: ${args.join(' ')}"
+		execCommand(args, "${projectDir}")
+
+		if (releasePublishEnabled) {
+			def bundles = file("${projectDir}/bundles")
+			if (!bundles.exists()) {
+				throw new GradleException("Bundles directory not found: ${bundles}")
+			}
+			println "Publishing bundles to s3://${releaseS3Bucket}/${s3Path}"
+			execCommand(
+				['aws', '--profile', releaseAwsProfile, 's3', 'sync', '.', "s3://${releaseS3Bucket}/${s3Path}"],
+				"${bundles}"
+			)
+		} else {
+			println "Skipping S3 publish (pass -Ppublish to enable)"
+		}
+
+		delete file("${projectDir}/bundles")
+		delete file("${projectDir}/crafter-authoring")
+		delete file("${projectDir}/crafter-delivery")
+	}
+}
+
+/** True if the named executable is on PATH. */
+ext.commandLineToolAvailable = { String tool ->
+	def proc = "command -v ${tool}".execute()
+	proc.waitFor()
+	return proc.exitValue() == 0
+}
+
+/** Verifies release prerequisites (git/docker; aws/gpg when publishing). */
+tasks.register('releasePreFlight') {
+	group = 'release'
+	description = 'Checks tools and properties required for a release'
+	dependsOn 'preFlightCheck'
+	doLast {
+		['git', 'docker'].each { tool ->
+			if (!commandLineToolAvailable(tool)) {
+				throw new GradleException("'${tool}' is required for release tasks")
+			}
+		}
+		if (releasePublishEnabled) {
+			['aws', 'gpg'].each { tool ->
+				if (!commandLineToolAvailable(tool)) {
+					throw new GradleException("'${tool}' is required when -Ppublish is set")
+				}
+			}
+		}
+	}
+}
+
+/** Applies -PreleaseVersion (and optional git branch) via applyReleaseVersions. */
+tasks.register('releaseSetVersion') {
+	group = 'release'
+	description = 'Updates craftercmsVersion, optional git branch, and docker-compose image tags'
+	doLast {
+		def releaseVersion = project.findProperty('releaseVersion')
+		if (!releaseVersion) {
+			throw new GradleException('Missing required -PreleaseVersion=<version>')
+		}
+		def gitBranchName = project.findProperty('releaseGitBranch') ?: project.findProperty('gitBranch')
+
+		println "Setting release version=${releaseVersion}, gitBranch=${gitBranchName}"
+		applyReleaseVersions(releaseVersion.toString(), gitBranchName?.toString())
+	}
+}
+
+/**
+ * Publishes deployable module JARs/WARs to GitHub Maven Packages
+ * (replaces the legacy per-repo `mvn deploy` from release-crafter42.sh).
+ */
+tasks.register('releasePublishMaven') {
+	group = 'release'
+	description = 'Publishes deployToMavenModules artifacts to GitHub Maven Packages'
+	dependsOn 'releasePreFlight'
+	doLast {
+		if (!releasePublishEnabled) {
+			println 'Skipping GitHub Packages publish (pass -Ppublish to enable)'
+			return
+		}
+
+		def gprUser = System.getenv('GITHUB_ACTOR') ?: findProperty('gpr.user')
+		def gprKey = System.getenv('GITHUB_TOKEN') ?: System.getenv('GPR_TOKEN') ?: findProperty('gpr.key')
+		if (!gprUser || !gprKey) {
+			throw new GradleException(
+				'GitHub Packages publish requires GITHUB_ACTOR and GITHUB_TOKEN ' +
+					'(or -Pgpr.user= / -Pgpr.key=)'
+			)
+		}
+
+		getDeployToMavenModules().each { module ->
+			println "Publishing $module to GitHub Packages"
+			def publishArgs = []
+			['gpr.user', 'gpr.key', 'gpr.owner', 'gpr.repo'].each { prop ->
+				def value = findProperty(prop)
+				if (value) {
+					publishArgs << "-P${prop}=${value}"
+				}
+			}
+			if (!runGradleModuleTask(module, 'publishMavenPublicationToGitHubPackagesRepository', publishArgs)) {
+				throw new GradleException("No Gradle module mapping for $module")
+			}
+		}
+	}
+}
+
+/** Builds multi-platform community bundles and optionally publishes them to S3. */
+tasks.register('releasePackage') {
+	group = 'release'
+	description = 'Builds multi-platform bundles and optionally publishes them to S3'
+	dependsOn 'releasePreFlight'
+	doLast {
+		runReleaseBundleMatrix(releaseS3Path)
+	}
+}
+
+/** Builds/pushes community Docker images via buildMainImages. */
+tasks.register('releaseDockerImages') {
+	group = 'release'
+	description = 'Builds main Docker images and pushes when configured'
+	dependsOn 'releasePreFlight'
+	dependsOn 'buildMainImages'
+	doFirst {
+		if (!releasePublishEnabled && pushDockerImages) {
+			logger.warn('pushDockerImages=true but -Ppublish was not set; images may still push if Gradle docker tasks allow it')
+		}
+		delete file("${projectDir}/crafter-authoring")
+		delete file("${projectDir}/crafter-delivery")
+	}
+}
+
+/** Convenience aggregate: Maven Packages, then bundles/Docker (no Git operations). */
+tasks.register('releasePublish') {
+	group = 'release'
+	description = 'Runs releasePublishMaven, releasePackage, and releaseDockerImages (Git tag/push stays in the shell)'
+	dependsOn 'releasePublishMaven', 'releasePackage', 'releaseDockerImages'
+}
