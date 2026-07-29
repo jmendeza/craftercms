@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (C) 2007-2023 Crafter Software Corporation. All Rights Reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License version 3 as published by
+  ~ the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean class="org.craftercms.commons.spring.ListMergingPostProcessor">
+        <property name="order" value="0" />
+        <property name="beanName" value="crafter.properties" />
+        <property name="propertyName" value="locations" />
+        <property name="additionalElements">
+            <list>
+                <value>classpath:crafter/engine/mode/multi-tenant/mapped/server-config.properties</value>
+            </list>
+        </property>
+    </bean>
+
+    <!-- ////////////////////////////////// -->
+    <!--								 	-->
+    <!--			 Contexts				-->
+    <!--									-->
+    <!-- ////////////////////////////////// -->
+
+    <bean id="crafter.mappingsSiteResolver" class="org.craftercms.engine.service.context.ReloadableMappingsSiteResolver">
+        <constructor-arg name="mappingsFile" value="${crafter.engine.site.mappings.file.path}"/>
+        <constructor-arg name="siteContextManager" ref="crafter.siteContextManager"/>
+    </bean>
+
+    <bean id="crafter.headerSiteResolver" class="org.craftercms.engine.service.context.HeaderSiteResolver">
+        <constructor-arg name="headerName" value="${crafter.engine.request.header.siteName}"/>
+    </bean>
+
+    <bean id="crafter.cookieSiteResolver" class="org.craftercms.engine.service.context.CookieSiteResolver">
+        <constructor-arg name="paramOrCookieName" value="${crafter.engine.request.param.siteName}"/>
+    </bean>
+
+    <bean id="crafter.siteResolver" class="org.craftercms.engine.service.context.SiteResolverChain">
+        <constructor-arg name="chain">
+            <list>
+                <ref bean="crafter.mappingsSiteResolver"/>
+                <ref bean="crafter.headerSiteResolver"/>
+                <ref bean="crafter.cookieSiteResolver"/>
+            </list>
+        </constructor-arg>
+    </bean>
+
+    <bean id="crafter.siteContextManager" class="org.craftercms.engine.service.context.SiteContextManager" parent="crafter.siteContextManagerBase">
+        <constructor-arg name="siteListResolver" ref="crafter.mappingsSiteResolver"/>
+    </bean>
+
+    <!-- ////////////////////////////////// -->
+    <!--								 	-->
+    <!--			Health Check			-->
+    <!--									-->
+    <!-- ////////////////////////////////// -->
+    <bean id="siteHealthCheckService" class="org.craftercms.engine.service.impl.SiteHealthCheckServiceImpl">
+        <constructor-arg name="siteListResolver" ref="crafter.mappingsSiteResolver"/>
+        <constructor-arg name="healthChecks" ref="siteHealthChecks"/>
+    </bean>
+
+    <!-- ////////////////////////////////// -->
+    <!--								 	-->
+    <!--			 Security				-->
+    <!--									-->
+    <!-- ////////////////////////////////// -->
+
+    <bean id="crafter.tenantsResolver" class="org.craftercms.engine.util.tenant.SiteNameTenantResolver"/>
+
+    <bean id="crafter.accessTokenIdResolver" class="org.craftercms.engine.security.ConfigAwareAccessTokenIdResolver"/>
+
+</beans>

@@ -1,0 +1,114 @@
+/*
+ * Copyright (C) 2007-2022 Crafter Software Corporation. All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.craftercms.studio.impl.v2.service.content;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.craftercms.commons.security.permissions.DefaultPermission;
+import org.craftercms.commons.security.permissions.annotations.HasPermission;
+import org.craftercms.studio.api.v1.exception.ServiceLayerException;
+import org.craftercms.studio.api.v1.exception.security.AuthenticationException;
+import org.craftercms.studio.api.v1.exception.security.UserNotFoundException;
+import org.craftercms.studio.api.v1.service.deployment.DeploymentException;
+import org.craftercms.studio.api.v2.annotation.RequireSiteReady;
+import org.craftercms.studio.api.v2.annotation.SiteId;
+import org.craftercms.studio.api.v2.service.content.ContentTypeService;
+import org.craftercms.studio.api.v2.service.content.internal.ContentTypeServiceInternal;
+import org.craftercms.studio.model.contentType.ContentTypeUsage;
+import org.springframework.core.io.Resource;
+
+import java.beans.ConstructorProperties;
+import java.util.Collection;
+
+import static org.craftercms.studio.permissions.StudioPermissionsConstants.*;
+
+/**
+ * Default implementation for {@link ContentTypeService}
+ *
+ * @author joseross
+ * @since 4.0
+ */
+public class ContentTypeServiceImpl implements ContentTypeService {
+
+    protected final ContentTypeServiceInternal contentTypeServiceInternal;
+
+    @ConstructorProperties({"contentTypeServiceInternal"})
+    public ContentTypeServiceImpl(ContentTypeServiceInternal contentTypeServiceInternal) {
+        this.contentTypeServiceInternal = contentTypeServiceInternal;
+    }
+
+    /**
+     * Finds all items related to a given content-type
+     *
+     * @param siteId the id of the site
+     * @param contentType the id of the content-type
+     * @return the usage
+     * @throws ServiceLayerException if there is any error finding the items
+     */
+    @Override
+    @RequireSiteReady
+    @HasPermission(type = DefaultPermission.class, action = PERMISSION_CONTENT_READ)
+    public ContentTypeUsage getContentTypeUsage(@SiteId String siteId, String contentType) throws ServiceLayerException {
+        return contentTypeServiceInternal.getContentTypeUsage(siteId, contentType);
+    }
+
+    /**
+     * Finds the preview image for a given content-type
+     *
+     * @param siteId the id of the site
+     * @param contentTypeId the id of the content-type
+     * @return the preview image file as a pair of path and resource
+     * @throws ServiceLayerException if there is any error finding the items
+     */
+    @Override
+    @RequireSiteReady
+    @HasPermission(type = DefaultPermission.class, action = PERMISSION_CONTENT_READ)
+    public ImmutablePair<String, Resource> getContentTypePreviewImage(@SiteId String siteId, String contentTypeId) throws ServiceLayerException {
+        return contentTypeServiceInternal.getContentTypePreviewImage(siteId, contentTypeId);
+    }
+
+    @Override
+    @RequireSiteReady
+    @HasPermission(type = DefaultPermission.class, action = PERMISSION_CONTENT_READ)
+    public ImmutablePair<String, Resource> getContentTypeFormController(@SiteId String siteId, String contentTypeId) throws ServiceLayerException {
+        return contentTypeServiceInternal.getContentTypeFormController(siteId, contentTypeId);
+    }
+
+    /**
+     * Deletes all files related to a given content-type
+     *
+     * @param siteId the id of the site
+     * @param contentType the id of the content-type
+     * @param deleteDependencies indicates if all dependencies should be deleted
+     * @throws ServiceLayerException if there is any error deleting the files
+     * @throws AuthenticationException if there is any error authenticating the user
+     * @throws DeploymentException if there is any error publishing the changes
+     */
+    @Override
+    @RequireSiteReady
+    @HasPermission(type = DefaultPermission.class, action = PERMISSION_WRITE_CONFIGURATION)
+    public void deleteContentType(@SiteId String siteId, String contentType, boolean deleteDependencies)
+            throws ServiceLayerException, AuthenticationException, DeploymentException, UserNotFoundException {
+        contentTypeServiceInternal.deleteContentType(siteId, contentType, deleteDependencies);
+    }
+
+    @Override
+    @RequireSiteReady
+    @HasPermission(type= DefaultPermission.class, action = PERMISSION_READ_CONFIGURATION)
+    public Collection<String> getAllModelDefinitions(@SiteId final String site) throws ServiceLayerException {
+        return contentTypeServiceInternal.getAllModelDefinitions(site);
+    }
+
+}

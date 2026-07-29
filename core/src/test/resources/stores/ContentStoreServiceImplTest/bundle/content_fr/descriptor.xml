@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (C) 2007-2022 Crafter Software Corporation. All Rights Reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License version 3 as published by
+  ~ the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<descriptor>
+    <!-- Bundle Extension Descriptor - FR -->
+    <merge-strategy>content-bundle</merge-strategy>
+    <first-quote></first-quote>
+    <second-quote>Ne haïssez pas, c'est un fardeau trop lourd à supporter. -- Martin Luther King, Jr.</second-quote>
+    <third-quote>Si j'ai vu un peu plus loin c'est en me tenant sur ​​les épaules de géants. -- Issac Newton</third-quote>
+</descriptor>

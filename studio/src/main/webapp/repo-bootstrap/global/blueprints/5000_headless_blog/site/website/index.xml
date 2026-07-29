@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (C) 2007-2022 Crafter Software Corporation. All Rights Reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License version 3 as published by
+  ~ the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<page>
+	<content-type>/page/item-explorer</content-type>	<placeInNav>true</placeInNav>
+	<display-template>/templates/web/item-explorer.ftl</display-template>
+  	<merge-strategy>inherit-levels</merge-strategy>
+	<placeInNav>false</placeInNav>
+	<file-name>index.xml</file-name>
+	<internal-name>Item Explorer</internal-name>
+	<orderDefault_f>-1</orderDefault_f>
+	<body_html>&lt;p&gt;This sample site allows you to manage a blog using multiple authors, categories and tags for the posts.&lt;/p&gt;
+		&lt;p&gt;All content is retrieved using &lt;a href="https://github.com/craftercms/craftercms-sdk-js/tree/master/packages/search" target="_blank" rel="noopener"&gt;CrafterCMS SDK&lt;/a&gt; for javascript (search package).&lt;/p&gt;
+		&lt;p&gt;To search for content (documentation in &lt;a href="https://github.com/craftercms/craftercms-sdk-js/tree/master/packages/search" target="_blank" rel="noopener"&gt;here&lt;/a&gt;) using Elasticsearch,&amp;nbsp; use the following content types in query:&lt;/p&gt;
+		&lt;ul&gt;
+		&lt;li&gt;'/component/author'&lt;/li&gt;
+		&lt;li&gt;'/component/post'&lt;/li&gt;
+		&lt;/ul&gt;
+		&lt;p&gt;Elasticsearch also supports 'size' and 'page' parameters for pagination.&lt;/p&gt;</body_html>
+	<objectGroupId>8d7f</objectGroupId>
+	<objectId>8d7f21fa-5e09-00aa-8340-853b7db302da</objectId>
+	<folder-name/>
+	<createdDate>2017-01-31T16:18:14.000Z</createdDate>
+	<createdDate_dt>2017-01-31T16:18:14.000Z</createdDate_dt>
+	<lastModifiedDate>2017-05-17T15:51:28.000Z</lastModifiedDate>
+	<lastModifiedDate_dt>2017-05-17T15:51:28.000Z</lastModifiedDate_dt>
+	<title_s>Item Explorer</title_s>
+</page>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (C) 2007-2022 Crafter Software Corporation. All Rights Reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License version 3 as published by
+  ~ the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<component>
+	<content-type>/component/author</content-type>	<display-template/>
+	<merge-strategy>inherit-levels</merge-strategy>
+	<objectGroupId>150a</objectGroupId>
+	<objectId>150a8781-76fc-4fca-b9a3-eefa4eefafb4</objectId>
+	<file-name>150a8781-76fc-4fca-b9a3-eefa4eefafb4.xml</file-name>
+	<internal-name>Joe Bloggs (Guest)</internal-name>
+	<createdDate>2017-05-10T17:8:53.000Z</createdDate>
+	<createdDate_dt>2017-05-10T17:8:53.000Z</createdDate_dt>
+	<lastModifiedDate>2017-05-10T21:32:57.000Z</lastModifiedDate>
+	<lastModifiedDate_dt>2017-05-10T21:32:57.000Z</lastModifiedDate_dt>
+	<name_s>Joe Bloggs</name_s>
+	<website_s>https://www.example.com/</website_s>
+	<disabled>false</disabled>
+	<photo_s>/static-assets/images/avatars/anonymous.png</photo_s>
+	<biography_html>&lt;p&gt;Donec sed odio dui. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.&lt;/p&gt;</biography_html>
+</component>

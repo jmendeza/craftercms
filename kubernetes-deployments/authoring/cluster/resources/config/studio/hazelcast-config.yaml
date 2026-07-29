@@ -1,0 +1,13 @@
+hazelcast:
+  network:
+    join:
+      multicast:
+        enabled: false
+      kubernetes:
+        enabled: true
+        namespace: craftercms
+        service-label-name: hazelcastClusterName
+        service-label-value: studio_hazelcast_cluster
+        expose-externally: false
+        resolve-not-ready-addresses: true
+        service-port: 5701

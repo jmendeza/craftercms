@@ -1,0 +1,130 @@
+/*
+ * Copyright (C) 2007-2022 Crafter Software Corporation. All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package org.craftercms.deployer.utils.opensearch.legacy;
+
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.craftercms.commons.config.ConfigurationException;
+import org.opensearch.client.RestHighLevelClient;
+
+import java.net.URISyntaxException;
+
+import static org.craftercms.search.opensearch.spring.RestHighLevelClientFactory.createClient;
+
+/**
+ * Holds the configuration for a single OpenSearch cluster
+ *
+ * @author joseross
+ * @since 3.1.5
+ */
+public class OpenSearchClusterConfig {
+
+    public static final String CONFIG_KEY_URLS = "urls";
+
+    public static final String CONFIG_KEY_USERNAME = "username";
+
+    public static final String CONFIG_KEY_PASSWORD = "password";
+
+    public static final String CONFIG_KEY_TIMEOUT_CONNECT = "timeout.connect";
+
+    public static final String CONFIG_KEY_TIMEOUT_SOCKET = "timeout.socket";
+
+    public static final String CONFIG_KEY_THREADS = "threads";
+
+    public static final String CONFIG_KEY_KEEP_ALIVE = "keepAlive";
+
+    public static final String CONFIG_KEY_MAX_TOTAL_CONNECTIONS = "maxTotalConnections";
+
+    public static final String CONFIG_KEY_MAX_CONNECTIONS_PER_ROUTE = "maxConnectionsPerRoute";
+
+    /**
+     * The list of urls to connect to the cluster
+     */
+    public final String[] urls;
+
+    /**
+     * The username to connect to the cluster
+     */
+    public final String username;
+
+    /**
+     * The password to connect to the cluster
+     */
+    public final String password;
+
+    public final int connectTimeout;
+
+    public final int socketTimeout;
+
+    public final int threadCount;
+
+    public final boolean keepAlive;
+
+    public final int maxTotalConnections;
+
+    public final int maxConnectionsPerRoute;
+
+    public OpenSearchClusterConfig() {
+        urls = null;
+        username = null;
+        password = null;
+        connectTimeout = -1;
+        socketTimeout = -1;
+        threadCount = -1;
+        keepAlive = false;
+        maxTotalConnections = -1;
+        maxConnectionsPerRoute = -1;
+    }
+
+    public OpenSearchClusterConfig(HierarchicalConfiguration<?> config) {
+        urls = (String[]) config.getArray(String.class, CONFIG_KEY_URLS);
+        username = config.getString(CONFIG_KEY_USERNAME, null);
+        password = config.getString(CONFIG_KEY_PASSWORD, null);
+        connectTimeout = config.getInt(CONFIG_KEY_TIMEOUT_CONNECT, -1);
+        socketTimeout = config.getInt(CONFIG_KEY_TIMEOUT_SOCKET, -1);
+        threadCount = config.getInt(CONFIG_KEY_THREADS, -1);
+        keepAlive = config.getBoolean(CONFIG_KEY_KEEP_ALIVE, false);
+        maxTotalConnections = config.getInt(CONFIG_KEY_MAX_TOTAL_CONNECTIONS, -1);
+        maxConnectionsPerRoute = config.getInt(CONFIG_KEY_MAX_CONNECTIONS_PER_ROUTE, -1);
+    }
+
+    public OpenSearchClusterConfig(HierarchicalConfiguration<?> config, String username, String password,
+                                   int connectTimeout, int socketTimeout, int threadCount, boolean keepAlive,
+                                   int maxTotalConnections, int maxConnectionsPerRoute) {
+        urls = (String[]) config.getArray(String.class, CONFIG_KEY_URLS);
+        this.username = config.getString(CONFIG_KEY_USERNAME, username);
+        this.password = config.getString(CONFIG_KEY_PASSWORD, password);
+        this.connectTimeout = config.getInt(CONFIG_KEY_TIMEOUT_CONNECT, connectTimeout);
+        this.socketTimeout = config.getInt(CONFIG_KEY_TIMEOUT_SOCKET, socketTimeout);
+        this.threadCount = config.getInt(CONFIG_KEY_THREADS, threadCount);
+        this.keepAlive = config.getBoolean(CONFIG_KEY_KEEP_ALIVE, keepAlive);
+        this.maxTotalConnections = config.getInt(CONFIG_KEY_MAX_TOTAL_CONNECTIONS, maxTotalConnections);
+        this.maxConnectionsPerRoute = config.getInt(CONFIG_KEY_MAX_CONNECTIONS_PER_ROUTE, maxConnectionsPerRoute);
+    }
+
+    /**
+     * Returns a client matching the current configuration of the cluster
+     */
+    public RestHighLevelClient buildClient() throws ConfigurationException {
+        try {
+            return createClient(urls, username, password, connectTimeout, socketTimeout, threadCount, keepAlive, maxTotalConnections, maxConnectionsPerRoute);
+        } catch (URISyntaxException e) {
+            throw new ConfigurationException("Error building OpenSearch client. Invalid url", e);
+        }
+    }
+
+}

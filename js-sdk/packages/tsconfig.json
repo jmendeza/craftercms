@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "declaration": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "strictNullChecks": false,
+    "outDir": "../dist/all/@craftercms",
+    "noImplicitAny": false,
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "redux": ["../node_modules/redux"],
+      "rxjs": ["../node_modules/rxjs"],
+      "rxjs/*": ["../node_modules/rxjs/*"],
+      "@craftercms/*": ["./*"]
+    },
+    "rootDir": ".",
+    "inlineSourceMap": true,
+    "lib": ["dom", "es2019"],
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true,
+    "target": "es5"
+  },
+  "exclude": [
+    "./angular",
+    "**/**.spec.ts",
+    "**/mock-responses.ts"
+  ]
+}

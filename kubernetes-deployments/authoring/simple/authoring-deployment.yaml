@@ -1,0 +1,252 @@
+# ALB Ingress (uncomment when deploying to AWS)
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: authoring-ingress
+#   annotations:
+#     alb.ingress.kubernetes.io/target-type: ip
+#     alb.ingress.kubernetes.io/scheme: internet-facing
+#     alb.ingress.kubernetes.io/healthcheck-port: '8080'
+#     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+#     alb.ingress.kubernetes.io/healthcheck-path: /studio/api/2/monitoring/status.json?token=defaultManagementToken
+#     alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'
+#     alb.ingress.kubernetes.io/success-codes: '200'
+#     alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=600
+# spec:
+#   ingressClassName: alb
+#   rules:
+#     - http:
+#         paths:
+#           - path: /*
+#             pathType: ImplementationSpecific
+#             backend:
+#               service:
+#                 name: authoring-svc-headless
+#                 port:
+#                   number: 8080
+# ---
+# Authoring Headless service, needed for stable DNS entries of StatefulSet members.
+apiVersion: v1
+kind: Service
+metadata:
+  name: authoring-svc-headless
+spec:
+  clusterIP: None
+  selector:
+    component: authoring
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+    # # Uncomment if using Git SSH
+    # - name: git-ssh
+    #   protocol: TCP
+    #   port: 22
+    #   targetPort: 22
+    # Uncomment if using Git HTTPS
+    - name: git-https
+      protocol: TCP
+      port: 443
+      targetPort: 443
+---
+# Authoring Deployment
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: authoring
+spec:
+  serviceName: authoring-svc-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      component: authoring
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 10Gi
+  template:
+    metadata:
+      labels:
+        component: authoring
+    spec:
+      volumes:
+        # # Uncomment if using Git SSH
+        # - name: ssh-keys
+        #   secret:
+        #     secretName: ssh-keys
+        # Uncomment if using Git HTTPS
+        - name: git-https-server-cert-files
+          secret:
+            secretName: git-https-server-cert-files
+        - name: temp
+          emptyDir: {}
+        - name: logs
+          emptyDir: {}
+      containers:
+        # OpenSearch container for internal authoring/preview search
+        - name: opensearch
+          image: opensearchproject/opensearch:3.3.2
+          readinessProbe:
+            httpGet:
+              path: /_cluster/health?wait_for_status=yellow
+              port: 9200
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          ports:
+            - containerPort: 9200
+          volumeMounts:
+            - name: data
+              subPath: indexes
+              mountPath: /usr/share/opensearch/data
+            - name: logs
+              subPath: search
+              mountPath: /usr/share/opensearch/logs
+          env:
+            - name: discovery.type
+              value: single-node
+            # For example purposes, disables SSL and authentication
+            - name: DISABLE_SECURITY_PLUGIN
+              value: 'true'
+            - name: OPENSEARCH_JAVA_OPTS
+              value: "-server -Xss1024K -XX:MaxRAMPercentage=60.0"
+          resources:
+            requests:
+              cpu: 500m
+              memory: 2.5Gi
+            limits:
+              cpu: 1
+              memory: 2.5Gi
+        # Tomcat container
+        - name: tomcat
+          image: craftercms/authoring_tomcat:4.5.0
+          imagePullPolicy: "Always"
+          startupProbe:
+            httpGet:
+              path: /studio/api/2/monitoring/status.json?token=defaultManagementToken
+              port: 8080
+            failureThreshold: 60
+            periodSeconds: 60
+          readinessProbe:
+            httpGet:
+              path: /studio/api/2/monitoring/status.json?token=defaultManagementToken
+              port: 8080
+            failureThreshold: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /studio/api/2/monitoring/status.json?token=defaultManagementToken
+              port: 8080
+            failureThreshold: 10
+            timeoutSeconds: 60
+            periodSeconds: 60
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: data
+              mountPath: /opt/crafter/data
+            - name: temp
+              mountPath: /opt/crafter/temp
+            - name: logs
+              mountPath: /opt/crafter/logs
+          env:
+            - name: CATALINA_OPTS
+              value: "-server -Xss1024K -XX:MaxRAMPercentage=70.0"
+          resources:
+            requests:
+              cpu: 1
+              memory: 5Gi
+            limits:
+              cpu: 2
+              memory: 5Gi
+        # Deployer container
+        - name: deployer
+          image: craftercms/deployer:4.5.0
+          startupProbe:
+            httpGet:
+              path: /api/1/monitoring/status?token=defaultManagementToken
+              port: 9191
+            failureThreshold: 60
+            periodSeconds: 60
+          readinessProbe:
+            httpGet:
+              path: /api/1/monitoring/status?token=defaultManagementToken
+              port: 9191
+            failureThreshold: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/1/monitoring/status?token=defaultManagementToken
+              port: 9191
+            failureThreshold: 10
+            timeoutSeconds: 60
+            periodSeconds: 60
+          ports:
+            - containerPort: 9191
+          volumeMounts:
+            # # Uncomment if using Git SSH
+            # - name: ssh-keys
+            #   mountPath: /opt/crafter/.ssh
+            #   readOnly: true
+            - name: data
+              mountPath: /opt/crafter/data
+            - name: temp
+              mountPath: /opt/crafter/temp
+            - name: logs
+              mountPath: /opt/crafter/logs
+          env:
+            - name: DEPLOYER_JAVA_OPTS
+              value: "-server -Xss1024K -XX:MaxRAMPercentage=70.0"
+          resources:
+            requests:
+              cpu: 500m
+              memory: 2.5Gi
+            limits:
+              cpu: 1
+              memory: 2.5Gi
+        # # Git SSH server container
+        # # Uncomment if using Git SSH
+        # - name: git-ssh-server
+        #   image: craftercms/git_ssh_server:4.5.0
+        #   imagePullPolicy: "Always"
+        #   ports:
+        #     - containerPort: 22
+        #   volumeMounts:
+        #     - name: ssh-keys
+        #       mountPath: /opt/crafter/.ssh
+        #       readOnly: true
+        #     - name: data
+        #       mountPath: /opt/crafter/data
+        # Git HTTPS server container
+        # Uncomment if using Git HTTPS
+        - name: git-https-server
+          image: craftercms/git_https_server:4.5.0
+          imagePullPolicy: "Always"
+          ports:
+            - containerPort: 443
+          volumeMounts:
+            - name: git-https-server-cert-files
+              subPath: server.crt
+              mountPath: /usr/local/apache2/conf/server.crt
+              readOnly: true
+            - name: git-https-server-cert-files
+              subPath: server.key
+              mountPath: /usr/local/apache2/conf/server.key
+              readOnly: true
+            - name: data
+              mountPath: /opt/crafter/data
+          env:
+            - name: GIT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: git-https-server-credentials
+                  key: username
+            - name: GIT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: git-https-server-credentials
+                  key: password

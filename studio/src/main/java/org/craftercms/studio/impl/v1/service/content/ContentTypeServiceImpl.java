@@ -1,0 +1,335 @@
+/*
+ * Copyright (C) 2007-2024 Crafter Software Corporation. All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package org.craftercms.studio.impl.v1.service.content;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.craftercms.commons.validation.annotations.param.ValidateSecurePathParam;
+import org.craftercms.commons.validation.annotations.param.ValidateStringParam;
+import org.craftercms.studio.api.v1.constant.DmConstants;
+import org.craftercms.studio.api.v1.constant.StudioConstants;
+import org.craftercms.studio.api.v1.exception.ContentNotFoundException;
+import org.craftercms.studio.api.v1.exception.ServiceLayerException;
+import org.craftercms.studio.api.v1.exception.security.UserNotFoundException;
+import org.craftercms.studio.api.v1.repository.ContentRepository;
+import org.craftercms.studio.api.v1.repository.RepositoryItem;
+import org.craftercms.studio.api.v1.service.configuration.ContentTypesConfig;
+import org.craftercms.studio.api.v1.service.configuration.ServicesConfig;
+import org.craftercms.studio.api.v1.service.content.ContentService;
+import org.craftercms.studio.api.v1.service.content.ContentTypeService;
+import org.craftercms.studio.api.v1.service.security.SecurityService;
+import org.craftercms.studio.api.v1.to.ContentItemTO;
+import org.craftercms.studio.api.v1.to.ContentTypeConfigTO;
+import org.craftercms.studio.api.v2.dal.security.NormalizedRole;
+import org.craftercms.studio.api.v2.utils.StudioConfiguration;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import jakarta.validation.Valid;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
+import static java.lang.String.format;
+import static org.craftercms.studio.api.v1.constant.StudioConstants.FILE_SEPARATOR;
+import static org.craftercms.studio.api.v2.utils.StudioConfiguration.CONFIGURATION_SITE_CONTENT_TYPES_CONFIG_BASE_PATH;
+import static org.craftercms.studio.api.v2.utils.StudioConfiguration.CONFIGURATION_SITE_CONTENT_TYPES_CONFIG_FILE_NAME;
+
+/**
+ * @author Dejan Brkic
+ */
+public class ContentTypeServiceImpl implements ContentTypeService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ContentTypeServiceImpl.class);
+
+    protected ContentService contentService;
+    protected ServicesConfig servicesConfig;
+    protected ContentTypesConfig contentTypesConfig;
+    protected SecurityService securityService;
+    protected ContentRepository contentRepository;
+    protected StudioConfiguration studioConfiguration;
+
+    @Override
+    @Valid
+    public ContentTypeConfigTO getContentTypeForContent(@ValidateStringParam String site,
+                                                        @ValidateSecurePathParam String path)
+            throws ServiceLayerException {
+        try {
+            String type = contentService.getItemContentType(site, path);
+            if (StringUtils.isEmpty(type)) {
+                throw new ServiceLayerException(format("No content type specified for '%s' in site '%s'", path, site));
+            }
+            return servicesConfig.getContentTypeConfig(site, type);
+        } catch (DocumentException e) {
+            throw new ServiceLayerException(format("Failed to get content type for item at path '%s' site '%s'", path, site));
+        }
+    }
+
+    @Override
+    public boolean isUserAllowed(Set<NormalizedRole> userRoles, ContentTypeConfigTO item) {
+        if (item == null) {
+            logger.debug("No content type config provided for null item to limit user access, " +
+                    "defaulting to permit the user");
+            return true;
+        }
+
+        Set<NormalizedRole> allowedRoles = item.getAllowedRoles();
+        logger.trace("Item '{}' allows roles '{}', checking against user roles '{}'",
+                item.getName(), allowedRoles, userRoles);
+
+        if (CollectionUtils.isEmpty(allowedRoles)) {
+            logger.trace("User with roles '{}' is allowed access to '{}'", userRoles, item.getName());
+            return true;
+        }
+
+        boolean notAllowed = Collections.disjoint(userRoles, allowedRoles);
+        if (notAllowed) {
+            logger.debug("Item '{}' is not allowed for user with roles '{}'",
+                    item.getName(), userRoles);
+            return false;
+        }
+
+        logger.trace("User with roles '{}' is allowed access to '{}'", userRoles, item.getName());
+        return true;
+    }
+
+    @Override
+    @Valid
+    public ContentTypeConfigTO getContentTypeByRelativePath(@ValidateStringParam String site,
+                                                            @ValidateSecurePathParam
+                                                            String relativePath) throws ServiceLayerException {
+        ContentItemTO item = contentService.getContentItem(site, relativePath, 0);
+        if (item != null) {
+            String type = item.getContentType();
+            if (!StringUtils.isEmpty(type)) {
+                return servicesConfig.getContentTypeConfig(site, type);
+            } else {
+                throw new ServiceLayerException("No content type specified for " + relativePath + " in site: " + site);
+            }
+        } else {
+            throw new ContentNotFoundException(relativePath + " is not found in site: " + site);
+        }
+    }
+
+    @Override
+    @Valid
+    public ContentTypeConfigTO getContentType(@ValidateStringParam String site,
+                                              @ValidateStringParam String type) {
+        return servicesConfig.getContentTypeConfig(site, type);
+    }
+
+    @Override
+    @Valid
+    public List<ContentTypeConfigTO> getAllContentTypes(@ValidateStringParam String site,
+                                                        boolean searchable) {
+        return getAllContentTypes(site);
+    }
+
+    @Override
+    @Valid
+    public List<ContentTypeConfigTO> getAllowedContentTypesForPath(@ValidateStringParam String site,
+                                                                   @ValidateSecurePathParam
+                                                                   String relativePath) {
+        String user = securityService.getCurrentUser();
+        Set<NormalizedRole> userRoles = securityService.getUserRoles(site, user);
+        List<ContentTypeConfigTO> allContentTypes = getAllContentTypes(site);
+
+        if (CollectionUtils.isNotEmpty(allContentTypes)) {
+            List<ContentTypeConfigTO> contentTypes = new ArrayList<>();
+            for (ContentTypeConfigTO contentTypeConfig : allContentTypes) {
+                // check if the path matches one of includes paths
+                if (CollectionUtils.isNotEmpty(contentTypeConfig.getPathIncludes())) {
+                    for (String pathIncludes : contentTypeConfig.getPathIncludes()) {
+                        if (relativePath.matches(pathIncludes)) {
+                            logger.trace("In site '{}' path '{}' matches '{}'", site, relativePath, pathIncludes);
+                            boolean isMatch = true;
+                            if (contentTypeConfig.getPathExcludes() != null) {
+                                for (String excludePath : contentTypeConfig.getPathExcludes()) {
+                                    if (relativePath.matches(excludePath)) {
+                                        logger.trace("In site '{}' path '{}' matches an exclude path '{}'",
+                                                site, relativePath, excludePath);
+                                        isMatch = false;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (isMatch) {
+                                // if a match is found, populate the content type information
+                                addContentTypes(site, userRoles, contentTypeConfig, contentTypes);
+                            }
+                        }
+                    }
+                } else if (CollectionUtils.isEmpty(contentTypeConfig.getPathExcludes())) {
+                    addContentTypes(site, userRoles, contentTypeConfig, contentTypes);
+                }
+            }
+            return contentTypes;
+        } else {
+            logger.error("No content type path configuration is found for site '{}'", site);
+            return null;
+        }
+    }
+
+    protected void addContentTypes(String site, Set<NormalizedRole> userRoles, ContentTypeConfigTO config,
+                                   List<ContentTypeConfigTO> contentTypes) {
+        boolean isAllowed = this.isUserAllowed(userRoles, config);
+        if (isAllowed) {
+            contentTypes.add(config);
+        }
+    }
+
+    @Override
+    @Valid
+    public boolean changeContentType(@ValidateStringParam String site,
+                                     @ValidateSecurePathParam String path,
+                                     @ValidateStringParam String contentType)
+            throws ServiceLayerException, UserNotFoundException {
+        ContentTypeConfigTO contentTypeConfigTO = getContentType(site, contentType);
+        if (contentTypeConfigTO.getFormPath().equalsIgnoreCase(DmConstants.CONTENT_TYPE_CONFIG_FORM_PATH_SIMPLE)) {
+            // Simple form engine is not using templates - skip copying template and merging content
+            return true;
+        }
+        // get new template and the current data and merge data
+        ContentItemTO item = contentService.getContentItem(site, path, 0);
+        if (item != null) {
+            contentService.lockContent(site, path);
+            Document original = null;
+            try {
+                original = contentService.getContentAsDocument(site, path);
+            } catch (DocumentException e) {
+                logger.error("Failed to get content as document for site '{}' path '{}'", site, path, e);
+                return false;
+            }
+            throw new RuntimeException("Unexpected code path");
+        } else {
+            throw new ContentNotFoundException(path + " is not a valid content path.");
+        }
+    }
+
+    protected List<ContentTypeConfigTO> getAllContentTypes(String site) {
+        String contentTypesRootPath = getConfigPath().replaceAll(StudioConstants.PATTERN_SITE, site);
+
+        RepositoryItem[] folders = contentRepository.getContentChildren(site, contentTypesRootPath);
+        List<ContentTypeConfigTO> contentTypes = new ArrayList<>();
+
+        if (folders != null) {
+            for (int i = 0; i < folders.length; i++) {
+                String configPath =
+                        folders[i].path + FILE_SEPARATOR + folders[i].name + FILE_SEPARATOR + getConfigFileName();
+                if (contentService.contentExists(site, configPath)) {
+                    ContentTypeConfigTO config = contentTypesConfig
+                            .reloadConfiguration(site,
+                                    configPath.replace(contentTypesRootPath, "")
+                                            .replace(FILE_SEPARATOR + getConfigFileName(), ""));
+                    if (config != null) {
+                        contentTypes.add(config);
+                    }
+                }
+
+                reloadContentTypeConfigForChildren(site, folders[i], contentTypes);
+            }
+        }
+        return contentTypes;
+    }
+
+    protected void reloadContentTypeConfigForChildren(String site, RepositoryItem node,
+                                                      List<ContentTypeConfigTO> contentTypes) {
+        String contentTypesRootPath = getConfigPath().replaceAll(StudioConstants.PATTERN_SITE, site);
+        String fullPath = node.path + FILE_SEPARATOR + node.name;
+        logger.debug("Get Content Type Config from site '{}' for children path '{}'", site, fullPath);
+        RepositoryItem[] folders = contentRepository.getContentChildren(site, fullPath);
+        if (folders != null) {
+            for (int i = 0; i < folders.length; i++) {
+                if (folders[i].isFolder) {
+                    String configPath =
+                            folders[i].path + FILE_SEPARATOR + folders[i].name + FILE_SEPARATOR + getConfigFileName();
+                    if (contentService.contentExists(site, configPath)) {
+                        ContentTypeConfigTO config = contentTypesConfig
+                                .reloadConfiguration(site, configPath
+                                        .replace(contentTypesRootPath, "")
+                                        .replace(FILE_SEPARATOR + getConfigFileName(), ""));
+                        if (config != null) {
+                            contentTypes.add(config);
+                        }
+                    }
+                    // traverse the children file-folder structure
+
+                    reloadContentTypeConfigForChildren(site, folders[i], contentTypes);
+                }
+            }
+        }
+    }
+
+    public String getConfigPath() {
+        return studioConfiguration.getProperty(CONFIGURATION_SITE_CONTENT_TYPES_CONFIG_BASE_PATH);
+    }
+
+    public String getConfigFileName() {
+        return studioConfiguration.getProperty(CONFIGURATION_SITE_CONTENT_TYPES_CONFIG_FILE_NAME);
+    }
+
+    public ContentService getContentService() {
+        return contentService;
+    }
+
+    public void setContentService(ContentService contentService) {
+        this.contentService = contentService;
+    }
+
+    public ServicesConfig getServicesConfig() {
+        return servicesConfig;
+    }
+
+    public void setServicesConfig(ServicesConfig servicesConfig) {
+        this.servicesConfig = servicesConfig;
+    }
+
+    public ContentTypesConfig getContentTypesConfig() {
+        return contentTypesConfig;
+    }
+
+    public void setContentTypesConfig(ContentTypesConfig contentTypesConfig) {
+        this.contentTypesConfig = contentTypesConfig;
+    }
+
+    public SecurityService getSecurityService() {
+        return securityService;
+    }
+
+    public void setSecurityService(SecurityService securityService) {
+        this.securityService = securityService;
+    }
+
+    public ContentRepository getContentRepository() {
+        return contentRepository;
+    }
+
+    public void setContentRepository(ContentRepository contentRepository) {
+        this.contentRepository = contentRepository;
+    }
+
+    public StudioConfiguration getStudioConfiguration() {
+        return studioConfiguration;
+    }
+
+    public void setStudioConfiguration(StudioConfiguration studioConfiguration) {
+        this.studioConfiguration = studioConfiguration;
+    }
+}

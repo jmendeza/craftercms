@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (C) 2007-2022 Crafter Software Corporation. All Rights Reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License version 3 as published by
+  ~ the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<component>
+	<content-type>/component/author</content-type>	<display-template/>
+	<merge-strategy>inherit-levels</merge-strategy>
+	<objectGroupId>dc55</objectGroupId>
+	<objectId>dc550575-a1df-cba1-202e-16e89de32313</objectId>
+	<file-name>dc550575-a1df-cba1-202e-16e89de32313.xml</file-name>
+	<internal-name>John Doe (Owner)</internal-name>
+	<createdDate>2017-05-9T21:42:38.000Z</createdDate>
+	<createdDate_dt>2017-05-9T21:42:38.000Z</createdDate_dt>
+	<lastModifiedDate>2017-05-10T21:36:46.000Z</lastModifiedDate>
+	<lastModifiedDate_dt>2017-05-10T21:36:46.000Z</lastModifiedDate_dt>
+	<disabled>false</disabled>
+	<name_s>John Doe</name_s>
+	<website_s>https://www.example.com/</website_s>
+	<photo_s>/static-assets/images/avatars/guy.png</photo_s>
+	<biography_html>&lt;p&gt;Donec ullamcorper nulla non metus auctor fringilla. Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Integer posuere erat a ante venenatis dapibus posuere velit aliquet. Etiam porta sem malesuada magna mollis euismod.&lt;/p&gt;</biography_html>
+</component>

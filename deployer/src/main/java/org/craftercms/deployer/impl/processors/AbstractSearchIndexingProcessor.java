@@ -1,0 +1,339 @@
+/*
+ * Copyright (C) 2007-2024 Crafter Software Corporation. All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.craftercms.deployer.impl.processors;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.lang3.StringUtils;
+import org.craftercms.commons.config.ConfigurationException;
+import org.craftercms.core.service.CacheService;
+import org.craftercms.core.service.ContentStoreService;
+import org.craftercms.core.service.Context;
+import org.craftercms.deployer.api.ChangeSet;
+import org.craftercms.deployer.api.Deployment;
+import org.craftercms.deployer.api.ProcessorExecution;
+import org.craftercms.deployer.api.exceptions.DeployerException;
+import org.craftercms.deployer.utils.BooleanUtils;
+import org.craftercms.search.batch.BatchIndexer;
+import org.craftercms.search.batch.UpdateSet;
+import org.craftercms.search.batch.UpdateStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectFactory;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.BiFunction;
+import java.util.regex.Pattern;
+
+import static org.apache.commons.collections4.ListUtils.emptyIfNull;
+import static org.craftercms.commons.config.ConfigUtils.getBooleanProperty;
+import static org.craftercms.commons.config.ConfigUtils.getStringProperty;
+import static org.craftercms.deployer.impl.DeploymentConstants.REPROCESS_ALL_FILES_PARAM_NAME;
+
+/**
+ * Processor that indexes the files on the change set, using one or several {@link BatchIndexer}. After the files have
+ * been indexed it submits a commit. A processor instance can be configured with the following YAML properties:
+ *
+ * <ul>
+ *     <li><strong>ignoreIndexId:</strong> If the index ID should be ignored, in other words, if the index ID should
+ *     always be null on update calls.</li>
+ *     <li><strong>indexId:</strong> The specific index ID to use</li>
+ *     <li><strong>reindexDependentItemsOnDescriptorUpdates:</strong> Flag that indicates that if a descriptor
+ *     under {@code /site/} is updated, all other items that include it should be re-indexed. This is needed
+ *     when XML flattening is enabled. Defaults to {@code true}.
+ *     The legacy name {@code reindexItemsOnComponentUpdates} is also supported for backwards compatibility.</li>
+ * </ul>
+ *
+ * @author avasquez
+ */
+public abstract class AbstractSearchIndexingProcessor extends AbstractMainDeploymentProcessor {
+
+    private static final Logger logger = LoggerFactory.getLogger(AbstractSearchIndexingProcessor.class);
+
+    protected static final String INDEX_ID_CONFIG_KEY = "indexId";
+    protected static final String IGNORE_INDEX_ID_CONFIG_KEY = "ignoreIndexId";
+    protected static final String REINDEX_ITEMS_ON_COMPONENT_UPDATES = "reindexItemsOnComponentUpdates";
+    protected static final String REINDEX_DEPENDENT_ITEMS_ON_DESCRIPTOR_UPDATES = "reindexDependentItemsOnDescriptorUpdates";
+    protected static final String CREATE_INDEX_IF_MISSING_CONFIG_KEY = "createIndexIfMissing";
+
+    protected static final Pattern DEFAULT_DESCRIPTOR_PATH_PATTERN = Pattern.compile("^/site/.+\\.xml$");
+
+    protected CacheService cacheService;
+    protected ObjectFactory<Context> contextFactory;
+    protected ContentStoreService contentStoreService;
+    protected List<BatchIndexer> batchIndexers;
+    protected boolean xmlFlatteningEnabled;
+    protected Pattern descriptorPathPattern;
+    protected String indexIdFormat;
+
+    // Config properties (populated on init)
+
+    protected String indexId;
+    protected boolean reindexDependentItemsOnDescriptorUpdates;
+    protected boolean createIndexIfMissing;
+
+    public AbstractSearchIndexingProcessor() {
+        this.descriptorPathPattern = DEFAULT_DESCRIPTOR_PATH_PATTERN;
+    }
+
+    public void setCacheService(CacheService cacheService) {
+        this.cacheService = cacheService;
+    }
+
+    /**
+     * Sets the factory for the {@link Context}.
+     */
+    public void setContextFactory(ObjectFactory<Context> contextFactory) {
+        this.contextFactory = contextFactory;
+    }
+
+    /**
+     * Sets the content store used to retrieve the files to index.
+     */
+    public void setContentStoreService(ContentStoreService contentStoreService) {
+        this.contentStoreService = contentStoreService;
+    }
+
+    /**
+     * Sets the single batch indexer used for indexing.
+     */
+    public void setBatchIndexer(BatchIndexer batchIndexer) {
+        this.batchIndexers = Collections.singletonList(batchIndexer);
+    }
+
+    /**
+     * Sets the list of batch indexers used for indexing.
+     */
+    public void setBatchIndexers(List<BatchIndexer> batchIndexers) {
+        this.batchIndexers = batchIndexers;
+    }
+
+    /**
+     * Sets whether XML flattening is enabled. Only used in conjunction with {@code reindexDependentItemsOnDescriptorUpdates}
+     * to decide whether items should be re-indexed when descriptors they include are updated.
+     */
+    public void setXmlFlatteningEnabled(boolean xmlFlatteningEnabled) {
+        this.xmlFlatteningEnabled = xmlFlatteningEnabled;
+    }
+
+    /**
+     * Sets the regex used to match descriptor paths for detecting inheriting items that should be reindex.
+     */
+    public void setDescriptorPathRegex(String descriptorPathRegex) {
+        descriptorPathPattern = Pattern.compile(descriptorPathRegex);
+    }
+
+    /**
+     * The format used for the index id
+     */
+    public void setIndexIdFormat(String indexIdFormat) {
+        this.indexIdFormat = indexIdFormat;
+    }
+
+    @Override
+    protected void doInit(Configuration config) throws ConfigurationException {
+        boolean ignoreIndexId = getBooleanProperty(config, IGNORE_INDEX_ID_CONFIG_KEY, false);
+        if (ignoreIndexId) {
+            indexId = null;
+        } else {
+            indexId = getStringProperty(config, INDEX_ID_CONFIG_KEY);
+            if (StringUtils.isEmpty(indexId)) {
+                indexId = String.format(indexIdFormat, siteName);
+            }
+        }
+
+        Boolean reindexDependentItems = getBooleanProperty(config, REINDEX_DEPENDENT_ITEMS_ON_DESCRIPTOR_UPDATES, null);
+        // If missing, use the old property
+        if (reindexDependentItems == null) {
+            reindexDependentItems = getBooleanProperty(config, REINDEX_ITEMS_ON_COMPONENT_UPDATES, true);
+        }
+
+        reindexDependentItemsOnDescriptorUpdates = reindexDependentItems;
+        createIndexIfMissing = getBooleanProperty(config, CREATE_INDEX_IF_MISSING_CONFIG_KEY, true);
+
+        if (CollectionUtils.isEmpty(batchIndexers)) {
+            throw new IllegalStateException("At least one batch indexer should be provided");
+        }
+    }
+
+    @Override
+    protected void doDestroy() throws DeployerException {
+        // Do nothing
+    }
+
+    @Override
+    public boolean supportsMode(Deployment.Mode mode) {
+        return mode == Deployment.Mode.PUBLISH || mode == Deployment.Mode.SEARCH_INDEX;
+    }
+
+    protected abstract void doCreateIndexIfMissing();
+
+    /**
+     * Expand the change set by adding items that need to be updated because a descriptor they include or inherit from
+     * was created, updated, or deleted. Applies to any descriptor under {@code /site/} (see
+     * {@link #DEFAULT_DESCRIPTOR_PATH_PATTERN}) and is gated by {@code xmlFlatteningEnabled} and, for include-based
+     * expansion, {@code reindexDependentItemsOnDescriptorUpdates}.
+     *
+     * @param changeSet original change set
+     * @return expanded change set
+     */
+    protected ChangeSet expandChangeSet(ChangeSet changeSet) {
+        if (createIndexIfMissing) {
+            logger.info("Ensuring that index {} exists", indexId);
+            doCreateIndexIfMissing();
+        }
+        boolean isReprocessAll = BooleanUtils.toBoolean(getDeploymentParam(REPROCESS_ALL_FILES_PARAM_NAME));
+        if (changeSet == null || changeSet.isEmpty() || !xmlFlatteningEnabled || isReprocessAll) {
+            return changeSet;
+        }
+        List<String> createdFiles = changeSet.getCreatedFiles();
+        List<String> updatedFiles = changeSet.getUpdatedFiles();
+        List<String> deletedFiles = changeSet.getDeletedFiles();
+        List<String> newUpdatedFiles = new ArrayList<>(updatedFiles);
+
+        if (CollectionUtils.isNotEmpty(createdFiles)) {
+            for (String path : createdFiles) {
+                if (isDescriptor(path)) {
+                    addItemsThatInheritFromDescriptorToUpdatedFiles(path, createdFiles, newUpdatedFiles, deletedFiles);
+                    if (reindexDependentItemsOnDescriptorUpdates) {
+                        addItemsThatIncludeDescriptorToUpdatedFiles(path, createdFiles, newUpdatedFiles, deletedFiles);
+                    }
+                }
+            }
+        }
+
+        if (CollectionUtils.isNotEmpty(updatedFiles)) {
+            for (String path : updatedFiles) {
+                if (isDescriptor(path)) {
+                    addItemsThatInheritFromDescriptorToUpdatedFiles(path, createdFiles, newUpdatedFiles, deletedFiles);
+                    if (reindexDependentItemsOnDescriptorUpdates) {
+                        addItemsThatIncludeDescriptorToUpdatedFiles(path, createdFiles, newUpdatedFiles, deletedFiles);
+                    }
+                }
+            }
+        }
+
+        if (CollectionUtils.isNotEmpty(deletedFiles)) {
+            for (String path : deletedFiles) {
+                if (isDescriptor(path)) {
+                    addItemsThatInheritFromDescriptorToUpdatedFiles(path, createdFiles, newUpdatedFiles, deletedFiles);
+                    if (reindexDependentItemsOnDescriptorUpdates) {
+                        addItemsThatIncludeDescriptorToUpdatedFiles(path, createdFiles, newUpdatedFiles, deletedFiles);
+                    }
+                }
+            }
+        }
+
+        ChangeSet filteredChangeSet = new ChangeSet(createdFiles, newUpdatedFiles, deletedFiles);
+        filteredChangeSet.setUpdateDetails(changeSet.getUpdateDetails());
+        filteredChangeSet.setUpdateLog(changeSet.getUpdateLog());
+        return filteredChangeSet;
+    }
+
+    @Override
+    protected ChangeSet doMainProcess(Deployment deployment, ProcessorExecution execution,
+                                      ChangeSet filteredChangeSet, ChangeSet originalChangeSet) throws DeployerException {
+        logger.info("Performing search indexing...");
+
+        ChangeSet expandedChangeSet = expandChangeSet(filteredChangeSet);
+
+        List<String> createdFiles = emptyIfNull(expandedChangeSet.getCreatedFiles());
+        List<String> updatedFiles = emptyIfNull(expandedChangeSet.getUpdatedFiles());
+        List<String> deletedFiles = emptyIfNull(expandedChangeSet.getDeletedFiles());
+        UpdateSet updateSet = new UpdateSet(ListUtils.union(createdFiles, updatedFiles), deletedFiles);
+        updateSet.setUpdateDetails(expandedChangeSet.getUpdateDetails());
+        updateSet.setUpdateLog(expandedChangeSet.getUpdateLog());
+        UpdateStatus updateStatus = new UpdateStatus();
+
+        execution.setStatusDetails(updateStatus);
+
+        Context context = contextFactory.getObject();
+
+        logger.debug("Clearing cache for context {}", context);
+        cacheService.clearScope(context);
+
+        boolean failed = false;
+        try {
+            for (BatchIndexer indexer : batchIndexers) {
+                indexer.updateIndex(indexId, siteName, contentStoreService, context, updateSet,
+                        updateStatus);
+
+                if (updateStatus.getAttemptedUpdatesAndDeletes() > 0) {
+                    doCommit(indexId);
+                }
+
+                failed = failed || updateStatus.getFailedUpdatesAndDeletes() > 0;
+            }
+        } catch (Exception e) {
+            throw new DeployerException("Error while performing search indexing", e);
+        }
+
+        if (failed) {
+            throw new DeployerException("Failed to update or delete some files, please check previous log messages " +
+                    "for the causes of the failures");
+        }
+
+        return null;
+    }
+
+    protected abstract void doCommit(final String indexId);
+
+    protected boolean isDescriptor(String path) {
+        return descriptorPathPattern.matcher(path).matches();
+    }
+
+    protected boolean isBeingUpdatedOrDeleted(String path, List<String> createdFiles, List<String> updatedFiles,
+                                              List<String> deletedFiles) {
+        return createdFiles.contains(path) || updatedFiles.contains(path) || deletedFiles.contains(path);
+    }
+
+    protected abstract List<String> getItemsThatInheritDescriptor(String indexId, String descriptorPath);
+
+    protected void addItemsThatInheritFromDescriptorToUpdatedFiles(String descriptorPath, List<String> createdFiles,
+                                                                   List<String> updatedFiles,
+                                                                   List<String> deletedFiles) {
+        addAffectedItemsToUpdatedFiles(descriptorPath, createdFiles, updatedFiles, deletedFiles,
+                this::getItemsThatInheritDescriptor);
+    }
+
+    protected abstract List<String> getItemsThatIncludeDescriptor(String indexId, String descriptorPath);
+
+    protected void addItemsThatIncludeDescriptorToUpdatedFiles(String descriptorPath, List<String> createdFiles,
+                                                               List<String> updatedFiles, List<String> deletedFiles) {
+        addAffectedItemsToUpdatedFiles(descriptorPath, createdFiles, updatedFiles, deletedFiles,
+                this::getItemsThatIncludeDescriptor);
+    }
+
+    protected void addAffectedItemsToUpdatedFiles(String path, List<String> createdFiles, List<String> updatedFiles,
+                                                  List<String> deletedFiles,
+                                                  BiFunction<String, String, List<String>> function) {
+        List<String> itemPaths = function.apply(indexId, path);
+        if (CollectionUtils.isNotEmpty(itemPaths)) {
+            for (String itemPath : itemPaths) {
+                if (!isBeingUpdatedOrDeleted(itemPath, createdFiles, updatedFiles, deletedFiles)) {
+                    logger.debug("Item {} is affected by the update of {}. Adding it to list of updated files.",
+                            itemPath, path);
+
+                    updatedFiles.add(itemPath);
+                }
+            }
+        }
+    }
+
+}
