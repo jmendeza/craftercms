@@ -17,7 +17,7 @@ Download a pre-built binary archive here: https://craftercms.com/download.
 
 Read the docs here: https://craftercms.com/docs/
 
-This repository is for developers interested in contributing to CrafterCMS, customizing their own release, or building the latest. This parent project helps you build the following:
+This repository is for developers interested in contributing to CrafterCMS, customizing their own release, or building the latest. It contains all CrafterCMS modules and helps you build the following:
 
 1. Deployable CrafterCMS binaries
 2. Docker images
@@ -33,10 +33,10 @@ https://craftercms.com/docs/current/by-role/system-admin/installation.html#requi
 
 Let's begin :)
 
-If you're building deployable CrafterCMS binaries, we'll clone the tag where the tag is the release you want to build. For example, if we want to build CrafterCMS version 4.4.4, we'll check the [CrafterCMS tags list](https://github.com/craftercms/craftercms/tags) to get the tag for the version we want, which is `v4.4.4` for our example:
+If you're building deployable CrafterCMS binaries, we'll clone the tag where the tag is the release you want to build. For example, if we want to build CrafterCMS version 4.4.4, we'll check the [CrafterCMS tags list](https://github.com/craftersoftware/craftercms/tags) to get the tag for the version we want, which is `v4.4.4` for our example:
 
 ```bash
-git clone --branch v4.4.4 https://github.com/craftercms/craftercms.git
+git clone --branch v4.4.4 https://github.com/craftersoftware/craftercms.git
 ```
 
 OR
@@ -44,10 +44,10 @@ OR
 If you would like to contribute to CrafterCMS, to build a developer's environment, we'll need to clone the develop branch (default):
 
 ```bash
-git clone https://github.com/craftercms/craftercms.git
+git clone https://github.com/craftersoftware/craftercms.git
 ```
 
-For more information on CrafterCMS Git Workflow, please review [CrafterCMS Git Workflow](https://github.com/craftercms/craftercms/blob/develop/GIT_WORKFLOW.md).
+For more information on CrafterCMS Git Workflow, please review [CrafterCMS Git Workflow](https://github.com/craftersoftware/craftercms/blob/develop/GIT_WORKFLOW.md).
 
 # 2. Summary of Commands and Options
 
@@ -58,7 +58,7 @@ For more information on CrafterCMS Git Workflow, please review [CrafterCMS Git W
 * `clean` Clean modules
 * `build` Build modules
 * `deploy` Deploy modules
-* `upgrade` Upgrade modules (same as  `selfUpdate`, `clean`, `build`, `deploy`)
+* `upgrade` Upgrade modules (same as `selfUpdate`, `clean`, `build`, `deploy`)
 * `start` Start CrafterCMS
 * `stop` Stop CrafterCMS
 * `status` Report status on running environments if any
@@ -94,7 +94,7 @@ For more information on CrafterCMS Git Workflow, please review [CrafterCMS Git W
 * `pushDockerImages`: Push the Docker images to DockerHub (if you have the right permissions), default `false`
 * `tagDockerImages`: Tag the Docker images with the tag provided (if you have the right permissions), default is not to tag
 * `rootlessDockerImages`: Docker images without using root at runtime, default `false`
-* `dockerTag`: Tag used to build a Docker image, typically the version number, e.g. `4.2.0`
+* `dockerTag`: Tag used to build a Docker image, typically the version number, e.g. `5.0.0`
 * `dockerAuthoringBundle`: Use to point to an external authoring bundle from which to build the Docker images. This can be a remote URL, a local `.tar.gz` file path, or an expanded bundle path.
 * `dockerDeliveryBundle`: Use to point to an external delivery bundle from which to build the Docker images. This can be a remote URL, a local `.tar.gz` file path, or an expanded bundle path.
 
@@ -133,7 +133,7 @@ To download, build and generate a binary archive from a given tag or branch of t
 1. Clone the branch/tag of craftercms that you want to work with
 
 ```bash
-    git clone -b <tag or branch> https://github.com/craftercms/craftercms/
+    git clone -b <tag or branch> https://github.com/craftersoftware/craftercms.git
 ```
 
 2. Download, build and bundle the tag/branch that you want to work with
@@ -211,25 +211,25 @@ To build, start and stop one of the two environments is similar to building/star
 
 The mechanics for working with a single module are similar to working with _all_, with one exception: You can deploy a module to one or both environments (`authoring`/`delivery`).
 
-CrafterCMS comprises the following modules:
+CrafterCMS comprises the following modules (among others):
 
-* [`engine`](https://craftercms.com/docs/current/reference/modules/engine/index.html)
-* [`studio`](https://craftercms.com/docs/current/reference/modules/studio/index.html)
-* [`profile`](https://craftercms.com/docs/current/reference/modules/profile/index.html)
-* [`social`](https://craftercms.com/docs/current/reference/modules/social/index.html)
-* [`deployer`](https://craftercms.com/docs/current/reference/modules/deployer/index.html)
+* [`engine`](https://craftercms.com/docs/current/reference/modules/engine.html)
+* [`studio`](https://craftercms.com/docs/current/reference/modules/studio.html)
+* [`profile`](https://craftercms.com/docs/current/reference/modules/profile.html)
+* [`social`](https://craftercms.com/docs/current/reference/modules/social.html)
+* [`deployer`](https://craftercms.com/docs/current/reference/modules/deployer.html)
 
 You'll find these projects under the root project directory and ready for you to contribute to in the folder `{Project Root}/{module}`.
 
-### 4.3.1. Forking a Module
+### 4.3.1. Forking the Repository
 
-Start by forking the module you want to work on. You can follow the [GitHub instructions](https://help.github.com/articles/fork-a-repo/).
-The next step is to switch the origin url location to be the one just forked, to do so you can use [these GitHub instructions](https://help.github.com/articles/changing-a-remote-s-url/).
-The last step will be to add an upstream repository from the main `craftercms` repo to your own. Follow [these steps](https://help.github.com/articles/fork-a-repo/#step-3-configure-git-to-sync-your-fork-with-the-original-spoon-knife-repository)
+Start by forking this repository. You can follow the [GitHub instructions](https://help.github.com/articles/fork-a-repo/).
+The next step is to switch the origin URL to your fork; see [these GitHub instructions](https://help.github.com/articles/changing-a-remote-s-url/).
+Then add an upstream remote pointing at the main [craftersoftware/craftercms](https://github.com/craftersoftware/craftercms) repo. Follow [these steps](https://help.github.com/articles/fork-a-repo/#step-3-configure-git-to-sync-your-fork-with-the-original-spoon-knife-repository)
 to make it happen.
 You can now work in your local system, and build/deploy and ultimately push to your fork. We welcome code contributions, so please do send us pull-requests.
 
-To update your project with the latest:
+To update your local clone with the latest:
 
 ```bash
     ./gradlew selfUpdate
@@ -362,7 +362,7 @@ To build the authoring and delivery environments, run the following:
 The Gradle task above will:
 
 1. Download the dependencies
-2. Build all CrafterCMS modules from the source (check the [section](#git) on how to update the source)
+2. Build all CrafterCMS modules from the source
 
 	- ``crafter-authoring``
 	- ``crafter-delivery``
