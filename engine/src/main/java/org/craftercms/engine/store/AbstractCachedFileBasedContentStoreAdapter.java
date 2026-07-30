@@ -1,0 +1,102 @@
+/*
+ * Copyright (C) 2007-2022 Crafter Software Corporation. All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.craftercms.engine.store;
+
+import org.craftercms.commons.lang.Callback;
+import org.craftercms.core.exception.InvalidContextException;
+import org.craftercms.core.exception.StoreException;
+import org.craftercms.core.service.CachingOptions;
+import org.craftercms.core.service.Context;
+import org.craftercms.core.store.impl.AbstractFileBasedContentStoreAdapter;
+import org.craftercms.core.store.impl.File;
+import org.craftercms.core.util.cache.CacheTemplate;
+import org.craftercms.core.util.cache.impl.CachingAwareList;
+import org.springframework.validation.Validator;
+
+import java.util.List;
+
+/**
+ * {@link AbstractFileBasedContentStoreAdapter} to provide extra caching for {@link File}s. Useful for adapters that
+ * connect to remote stores, like S3.
+ *
+ * @author avasquez.
+ */
+public abstract class AbstractCachedFileBasedContentStoreAdapter extends AbstractFileBasedContentStoreAdapter {
+
+    public static final String CONST_KEY_ELEM_FILE= "fileBasedContentStoreAdapter.file";
+    public static final String CONST_KEY_ELEM_CHILDREN = "fileBasedContentStoreAdapter.children";
+
+    public AbstractCachedFileBasedContentStoreAdapter(Validator pathValidator, String descriptorFileExtension,
+                                                      String metadataFileExtension, CacheTemplate cacheTemplate) {
+        super(pathValidator, descriptorFileExtension, metadataFileExtension, cacheTemplate);
+    }
+
+    @Override
+    protected File findFile(Context context, CachingOptions cachingOptions,
+                            String path) throws InvalidContextException, StoreException {
+        final CachingOptions actualCachingOptions = cachingOptions != null? cachingOptions: defaultCachingOptions;
+
+        return cacheTemplate.getObject(context, actualCachingOptions, new Callback<>() {
+
+            @Override
+            public File execute() {
+                return doFindFile(context, path);
+            }
+
+            @Override
+            public String toString() {
+                return String.format(AbstractCachedFileBasedContentStoreAdapter.this.getClass().getName() +
+                        ".findFile(%s, %s)", context, path);
+            }
+
+        }, path, CONST_KEY_ELEM_FILE);
+    }
+
+    @Override
+    protected List<File> getChildren(Context context, CachingOptions cachingOptions,
+                                     File dir) throws InvalidContextException, StoreException {
+        final CachingOptions actualCachingOptions = cachingOptions != null? cachingOptions: defaultCachingOptions;
+
+        return cacheTemplate.getObject(context, actualCachingOptions, new Callback<>() {
+
+            @Override
+            public List<File> execute() {
+                List<File> children = doGetChildren(context, dir);
+                if (children != null) {
+                    if (children instanceof CachingAwareList) {
+                        return children;
+                    } else {
+                        return new CachingAwareList<>(children);
+                    }
+                } else {
+                    return null;
+                }
+            }
+
+            @Override
+            public String toString() {
+                return String.format(AbstractCachedFileBasedContentStoreAdapter.this.getClass().getName() +
+                        ".getChildren(%s, %s)", context, dir);
+            }
+
+        }, dir, CONST_KEY_ELEM_CHILDREN);
+    }
+
+    protected abstract File doFindFile(Context context, String path) throws InvalidContextException, StoreException;
+
+    protected abstract List<File> doGetChildren(Context context, File dir) throws InvalidContextException, StoreException;
+
+}

@@ -42,9 +42,8 @@ ext.splash = { ->
 
 // Settings
 ext {
-	srcFolder = getPropertySafelyWithDefaults("projectDir", ".") + "/src/"
+	cmsDir = "${projectDir}/craftercms"
 	commandTimeout = getPropertySafelyWithDefaults("commandTimeout", 1000000).toInteger()
-	mavenCmd = getPropertySafelyWithDefaults("quietBuild", "true").toBoolean()? ["mvn", "-q"] : ["mvn"]
 }
 
 ext.execCommand = { command, dir ->
@@ -57,7 +56,7 @@ ext.execCommand = { command, dir ->
 		}
 	}
 
-	//System.out.println("Executing command \"" + dir + ":" + cmd + "\"")
+	// System.out.println("Executing command \"" + dir + ":" + cmd + "\"")
 
 	def proc = cmd.execute(null, file(dir))
 
@@ -80,147 +79,101 @@ ext.copyFile = { workingDir, source, destination ->
 }
 
 ext.syncFolder = { workingDir, source, destination, exclude, overwriteChangedFiles, deleteNonExisting ->
-    def command = ["rsync", "-ar"]
+	def command = ["rsync", "-ar"]
 
 	if (!overwriteChangedFiles) {
-        command += ["--update"]
-    }
+		command += ["--update"]
+	}
 
-    if (deleteNonExisting) {
-        command += ["--delete"]
-    }
+	if (deleteNonExisting) {
+		command += ["--delete"]
+	}
 
 	if (!exclude.isEmpty()) {
 		command += ["--exclude", exclude]
 	}
 
-    // Make sure the destination exists
-    file(destination).mkdirs()
+	// Make sure the destination exists
+	file(destination).mkdirs()
 
-    // Rsync the source to the destination
+	// Rsync the source to the destination
 	command += [source, destination]
 
 	try {
 		execCommand(command, workingDir)
 	} catch (e) {
 		logger.error("Failed to sync folders workingDir: {}, source: {}, destination: {}," +
-				"exclude: {}, overwriteChangedFiles: {}, exception: {}", workingDir, source,
-				destination, exclude, overwriteChangedFiles, e)
+			"exclude: {}, overwriteChangedFiles: {}, exception: {}", workingDir, source,
+			destination, exclude, overwriteChangedFiles, e)
 		throw new GradleException("Failed to sync folders.", e)
 	}
 }
 
 // Build methods
-ext.cloneModule = { module, gitUrl, shallowClone, gitBranch, gitRemote ->
-	def url = gitUrl + module
-	def dir = srcFolder
-	def gitFolder = new File(dir + module + "/.git")
+ext.gradleModules = [
+	'groovy-sandbox': ':groovy-sandbox',
+	'script-security-plugin': ':script-security-plugin',
+	'commons': [
+		':commons:utilities',
+		':commons:security',
+		':commons:mongo',
+		':commons:audit',
+		':commons:git',
+		':commons:entitlements',
+		':commons:validation',
+		':commons:plugin',
+		':commons:upgrade-manager'
+	],
+	'core': ':core',
+	'search': [
+		':search:commons',
+		':search:batch-indexer',
+		':search:opensearch'
+	],
+	'profile': [
+		':profile:api',
+		':profile:client',
+		':profile:security-provider',
+		':profile:server',
+		':profile:admin-console'
+	],
+	'engine': ':engine',
+	'social': [
+		':social:virus-scanner',
+		':social:server',
+		':social:admin'
+	],
+	'studio-ui': ':studio-ui',
+	'studio': ':studio',
+	'deployer': ':deployer',
+	'cli': ':cli'
+]
 
-	if (!gitFolder.exists()) {
-		if (!file(srcFolder).exists())
-			file(srcFolder).mkdir()
-
-		try {
-			if (shallowClone) {
-				execCommand(["git", "clone", "--depth", "1", "-b", gitBranch, "-o", gitRemote, url], dir)
-			} else {
-				execCommand(["git", "clone", "-b", gitBranch, "-o", gitRemote, url], dir)
-			}
-		} catch (e) {
-			logger.error("Failed to clone module: {}, exception: {}", module, e)
-			throw new GradleException("Failed to clone module.", e)
-		}
+// This is used to run external tasks: bomGenerate, publishMavenPublicationToGitHubPackagesRepository
+ext.runGradleModuleTask = { module, task, extraArgs = [] ->
+	def projects = gradleModules[module]
+	if (projects == null) {
+		return false
 	}
-}
-
-ext.installPoms = {
-	try {
-		execCommand(mavenCmd + ["install"], "${projectDir}/shared-dependencies")
-		execCommand(mavenCmd + ["install"], "${projectDir}")
-		execCommand(mavenCmd + ["install"], "${projectDir}/spring-boot")
-	} catch (e) {
-		logger.error("Failed to install POMs, exception: {}", e)
-		throw new GradleException("Failed to install POMs.", e)
+	def gradleArgs = ["./gradlew"]
+	if (extraArgs) {
+		gradleArgs.addAll(extraArgs as List)
 	}
-}
-
-ext.updateModule = { module, remote, branch ->
-	def dir = srcFolder + module
-
-	try {
-		execCommand(["git", "pull", remote, branch], dir)
-	} catch (e) {
-		logger.error("Failed to update module: {}, exception: {}", module, e)
-		throw new GradleException("Failed to update module.", e)
-	}
-}
-
-ext.cleanModule = { module ->
-	def dir = srcFolder + module
-
-	try {
-		execCommand(mavenCmd + ["clean"], dir)
-	} catch (e) {
-		logger.error("Failed to clean module: {}, exception: {}", module, e)
-		throw new GradleException("Failed to clean module.", e)
-	}
-}
-
-ext.buildModule = { module, unitTest ->
-	def dir = srcFolder + module
-
-	try {
-		if (unitTest)
-			execCommand(mavenCmd + ["install"], dir)
-		else
-			execCommand(mavenCmd + ["install", "-DskipTests"], dir)
-	} catch (e) {
-		logger.error("Failed to build module: {}, exception: {}", module, e)
-		throw new GradleException("Failed to build module.", e)
-	}
-}
-
-ext.deployArtifact = { module, dir, unitTest ->
-	try {
-		if (unitTest)
-			execCommand(mavenCmd + ["deploy", "-Prelease-sign-artifacts"], dir)
-		else
-			execCommand(mavenCmd + ["deploy", "-DskipTests", "-Prelease-sign-artifacts"], dir)
-	} catch (e) {
-		logger.error("Failed to deploy module: {}, exception: {}", module, e)
-		throw new GradleException("Failed to deploy module.", e)
-	}
-}
-
-ext.deployModule = { module, unitTest ->
-	def dir
-
-	if (module == "craftercms") {
-		dir = projectDir
-		deployArtifact(module, "$dir/shared-dependencies", unitTest)
-		deployArtifact(module, "$dir/spring-boot", unitTest)
+	if (projects instanceof List) {
+		projects.each { gradleArgs += "${it}:${task}" }
 	} else {
-		dir = srcFolder + module
+		gradleArgs += "${projects}:${task}"
 	}
-
-	deployArtifact(module, dir, unitTest)
+	execCommand(gradleArgs, projectDir)
+	return true
 }
 
 ext.buildBom = { module ->
-	def dir = srcFolder + module
-
-	try {
-		def goal
-		if (module == "studio-ui") {
-			goal = ["frontend:install-node-and-yarn", "frontend:yarn", "frontend:yarn@generate", "-Pgenerate-bom"]
-		} else {
-			goal = ["cyclonedx:makeBom"]
-		}
-		execCommand(mavenCmd + goal, dir)
-	} catch (e) {
-		logger.error("Failed to build bom: {}, exception: {}", module, e)
-		throw new GradleException("Failed to build bom.", e)
+	if (runGradleModuleTask(module, 'bomGenerate')) {
+		return
 	}
+
+	println "Skipping BOM generation for $module (no Gradle bomGenerate task configured)"
 }
 
 ext.aggregateBoms = { dir ->
@@ -233,24 +186,24 @@ ext.aggregateBoms = { dir ->
 }
 
 ext.checksumFile = { filePath, algorithm ->
-    // Set your algorithm
-    // "MD2","MD5","SHA","SHA-1","SHA-256","SHA-384","SHA-512"
-    MessageDigest md = MessageDigest.getInstance(algorithm);
-    FileInputStream fis = new FileInputStream(new File(filePath));
-    byte[] dataBytes = new byte[1024];
+	// Set your algorithm
+	// "MD2","MD5","SHA","SHA-1","SHA-256","SHA-384","SHA-512"
+	MessageDigest md = MessageDigest.getInstance(algorithm);
+	FileInputStream fis = new FileInputStream(new File(filePath));
+	byte[] dataBytes = new byte[1024];
 
-    int nread = 0;
-    while ((nread = fis.read(dataBytes)) != -1) {
-        md.update(dataBytes, 0, nread);
-    }
+	int nread = 0;
+	while ((nread = fis.read(dataBytes)) != -1) {
+		md.update(dataBytes, 0, nread);
+	}
 
-    byte[] mdbytes = md.digest();
+	byte[] mdbytes = md.digest();
 
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < mdbytes.length; i++) {
-        sb.append(Integer.toString((mdbytes[i] & 0xff) + 0x100, 16).substring(1));
-    }
-    return sb.toString();
+	StringBuilder sb = new StringBuilder();
+	for (int i = 0; i < mdbytes.length; i++) {
+		sb.append(Integer.toString((mdbytes[i] & 0xff) + 0x100, 16).substring(1));
+	}
+	return sb.toString();
 }
 
 ext.bundleEnvironment = { env, bundlesDir /*, fresh*/ ->

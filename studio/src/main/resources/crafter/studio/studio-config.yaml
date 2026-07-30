@@ -1,0 +1,1115 @@
+##################################################
+##################################################
+##       Studio Core Configuration File         ##
+##################################################
+##################################################
+
+##################################################
+##     Location of Override Config File         ##
+##################################################
+# Load override configuration files (to override what's defined here)
+studio.config.overrideConfig: crafter/studio/extension/studio-config-override.yaml
+# Load override configuration files (to override what's defined here)
+studio.config.globalRepoOverrideConfig: configuration/studio-config-override.yaml
+
+##################################################
+##              Content Repository              ##
+##################################################
+# Absolute path to repository base (all actual repositories will be under this)
+studio.repo.basePath: ${env:CRAFTER_DATA_DIR}/repos
+# Global repository path (automatically goes under repo-base-path)
+studio.repo.globalRepoPath: global
+# Sites repositories base path (automatically goes under repo-base-path)
+studio.repo.sitesRepoBasePath: sites
+# Sandbox git repository name under every site
+# Sandbox git repository name under every site
+studio.repo.siteSandboxPath: sandbox
+# Sandbox git repository branch for every site
+studio.repo.siteSandboxBranch: master
+# Name used for the git remote for remote sites
+studio.repo.defaultRemoteName: origin
+# Published git repository name under every site
+studio.repo.sitePublishedPath: published
+# Git repository branch for publishing targets are configured here
+# Git repository branch for the `live` publishing target, default "live"
+studio.repo.published.live: live
+# Git repository branch for the `staging` publishing target, default "staging"
+studio.repo.published.staging: staging
+# Blueprints folder name under global
+studio.repo.blueprintsPath: blueprints
+# Blueprints descriptor filename under global
+studio.repo.blueprints.descriptor.filename: craftercms-plugin.yaml
+# Bootstrap the repository with fresh content if no repository is detected in the paths specified. Default is true.
+studio.repo.bootstrapRepo: true
+# Repository commit prologue message
+studio.repo.commitMessagePrologue:
+# Repository commit postscript message
+studio.repo.commitMessagePostscript:
+# Sandbox repository write commit message
+studio.repo.sandbox.write.commitMessage: "User {username} wrote content {path}"
+# Published repository commit message
+studio.repo.published.commitMessage: "Publish event triggered by {username} on {datetime} via {source}.\n\nPublish note from user: \"{message}\"\n\nCommit ID: {commit_id}\n\nPackage ID: {package_id}"
+# Commit message to mark commit not to process when syncing database
+studio.repo.syncDB.commitMessage.noProcessing: "STUDIO: NO PROCESSING"
+# Create new repository commit message
+studio.repo.createRepository.commitMessage: "Create new repository."
+# Create sandbox branch commit message
+studio.repo.createSandboxBranch.commitMessage: "Create {sandbox} branch."
+# Initial commit message
+studio.repo.initialCommit.commitMessage: "Initial commit."
+# Initial publish commit message
+studio.repo.initialPublish.commitMessage: "Initial publish."
+# Publish all commit message
+studio.repo.publishAll.commitMessage: "Publish All."
+# Create as orphan commit message
+studio.repo.createAsOrphan.commitMessage: "Created as orphan."
+# Blueprints updated commit message
+studio.repo.blueprintsUpdated.commitMessage: "Blueprints updated."
+# Create folder commit message
+studio.repo.createFolder.commitMessage: "Created folder site: {site} path: {path}"
+# Delete content commit message
+studio.repo.deleteContent.commitMessage: "Delete file {path}"
+# Move content commit message
+studio.repo.moveContent.commitMessage: "Moving {fromPath} to {toPath}"
+# Copy content commit message
+studio.repo.copyContent.commitMessage: "Copying {fromPath} to {toPath}"
+# The cron expression used on scheduled cleanup of repositories
+studio.repo.cleanup.cron: '0 0 3 ? * SUN'
+# Enable/disable notification messages in case of pull from remote conflicts
+studio.repo.pullFromRemote.conflict.notificationEnabled: false
+# List of gitignore files to add in the repo if missing
+studio.repo.ignoreFiles:
+    # The classpath location of the gitignore file
+  - resource: crafter/studio/utils/main-gitignore
+    # The name of the folder where the gitignore file will be added in the repo (empty means the root)
+    folder: ''
+  - resource: crafter/studio/utils/sources-gitignore
+    folder: sources
+# Max number of retries for retrying repository operation
+studio.repo.retryingOperation.maxAttempts: 50
+# Max sleep time in milliseconds between retries for retrying repository operation
+studio.repo.retryingOperation.maxSleep: 1000
+# If Git CLI should be used for some Git operations, for better performance (Git CLI needs to be installed beforehand)
+studio.repo.git.cli.enabled: true
+# The process name of git, as it is available from PATH
+studio.repo.git.cli.process.name: git
+# Timeout in seconds when waiting for the Git CLI process to finish
+studio.repo.git.cli.process.waitForTimeout: 300
+# Timeout in seconds when waiting for the Git CLI process to finish after destroying the process forcibly
+studio.repo.git.cli.process.destroy.waitForTimeout: 60
+# Max number of bytes to read from the Git CLI process output (longer outputs will need to read the output file)
+studio.repo.git.cli.process.maxOutputBytes: 1000
+
+##################################################
+##               Disk monitoring                ##
+##################################################
+studio.monitoring.disk.highWaterMark: 90
+studio.monitoring.disk.lowWaterMark: 85
+studio.monitoring.disk.cron: '0 0/15 * * * ?'
+
+studio.monitoring.disk.notifications.encoding: UTF-8
+studio.monitoring.disk.notifications.dateTimePattern: MM/dd/yyyy hh:mm:ss.SSS a z
+
+# Email configs
+studio.monitoring.disk.notifications.email.enabled: false
+studio.monitoring.disk.notifications.email.subject: Disk space warning
+studio.monitoring.disk.notifications.email.to: admin@example.com
+studio.monitoring.disk.notifications.email.template: notification/templates/email/disk-monitor-alarm.ftl
+studio.monitoring.disk.notifications.email.html: true
+# Webhook configs
+studio.monitoring.disk.notifications.webhook.enabled: false
+studio.monitoring.disk.notifications.webhook.url: http://example.com/notify
+studio.monitoring.disk.notifications.webhook.method: POST
+studio.monitoring.disk.notifications.webhook.contentType: application/json
+studio.monitoring.disk.notifications.webhook.template: notification/templates/webhook/disk-monitor-alarm.ftl
+
+##################################################
+##        Git configuration properties          ##
+##################################################
+# Git config update to following properties is performed on global configuration and might
+# affect unintended repositories. Opt-out of this by setting this property to false.
+studio.repo.git.global.update.enabled: true
+# git gc --auto will consolidate into one the packs older than this value
+# Notice that this property works when the number of packs is greater than gc.autoPackLimit.
+# See https://git-scm.com/docs/git-gc#Documentation/git-gc.txt-gcautoPackLimit
+# This value is used to configure "gc.prunePackExpire" property, leave empty to skip property setting
+studio.repo.gc.prunePackExpire: 1.hour.ago
+# Set global gc.autoPackLimit property
+studio.repo.gc.autoPackLimit: 50
+
+##################################################
+##           DB Sync from Repository            ##
+##################################################
+# Time in milliseconds to wait before triggering a sync when an event has been received
+studio.repo.sync.event.delayMillis: 1000
+# Maximum number of resets before triggering a sync
+studio.repo.sync.event.maxResets: 10
+
+############################################################
+##                       Blob Store                       ##
+############################################################
+# Module of the blob store configuration file in the site
+studio.blob.config.module: studio
+# Location of the blob store configuration file in the site
+studio.blob.config.path: blob-stores-config.xml
+# Location of the default blob store configuration file if the site does not have one on site create
+studio.blob.default.config.path: classpath:crafter/studio/serverless/default-blob-stores-config.xml
+# Extension used for the blob files in the site
+studio.blob.file.extension: blob
+# Target to use for all operations
+studio.blob.publishingTarget: preview
+# The patterns of urls that should be handled by blob stores
+studio.blob.intercepted.paths:
+  - /static-assets/.*
+
+##################################################
+##                Content Service               ##
+##################################################
+# The max length for filenames (depends on the platform & filesystem used)
+studio.content.filename.maxSize: 255
+# The max length for the full path of files (this needs to be in sync the db schema)
+studio.content.fullPath.maxSize: 1024
+
+studio.content.policy.config.path: /config/studio/site-policy-config.xml
+# Item MIME-types that are editable directly in Crafter Studio
+studio.content.item.editableTypes:
+  - text/*
+  - application/javascript
+  - application/json
+  - application/xml
+  - application/xhtml+xml
+  - application/x-httpd-php
+  - application/rtf
+  - application/ld+json
+  - application/x-groovy
+  - application/x-sh
+  - application/x-yaml
+  - application/x-csh
+############################################################
+##                   Site Configuration                   ##
+############################################################
+# Location where global configuration files are stored.
+studio.configuration.global.configBasePath: /configuration
+# File name where global menu configuration is stored
+studio.configuration.global.menuFileName: global-menu-config.xml
+# File name where global configuration of user role mappings is stored.
+studio.configuration.global.roleMappingFileName: global-role-mappings-config.xml
+# File name where global configuration of user permissions mappings is stored.
+studio.configuration.global.permissionMappingFileName: global-permission-mappings-config.xml
+# UI Resource override path
+studio.configuration.global.ui.resource.override.path: crafter/studio/ui
+# Studio system site name
+studio.configuration.global.systemSite: studio_root
+# Root location where configuration for all sites is stored inside repository.
+studio.configuration.site.configBasePath: /config/studio
+# Root location pattern where configuration for all sites is stored inside repository.
+studio.configuration.site.configBasePathPattern: /config/{module}
+# Root location where configuration for all sites is stored inside repository for specified environment.
+studio.configuration.site.multiEnvironment.configBasePath: /config/studio/env/{environment}
+# Root location pattern where configuration for all sites is stored inside repository for specified environment.
+studio.configuration.site.multiEnvironment.configBasePathPattern: /config/{module}/env/{environment}
+# Location where content types are stored for a site.
+studio.configuration.site.contentTypes.configBasePath: /config/studio/content-types
+# Location where content types configuration files are stored for a site.
+studio.configuration.site.contentTypes.configPath: /config/studio/content-types/{content-type}
+# File name where site configuration is stored.
+studio.configuration.site.generalConfigFileName: site-config.xml
+# File name where configuration of user permissions mappings is stored for a site.
+studio.configuration.site.permissionMappingsFileName: permission-mappings-config.xml
+# File name where configuration of user role mappings is stored for a site.
+studio.configuration.site.roleMappingsFileName: role-mappings-config.xml
+# File name where configuration of content type is stored.
+studio.configuration.site.contentTypes.configFileName: config.xml
+# File name where definition of content type is stored.
+studio.configuration.site.contentTypes.definitionFileName: form-definition.xml
+# Default user groups when site is created
+studio.configuration.defaultGroups: site_author,site_publisher,site_developer,site_reviewer,site_admin
+# Default admin group when site is created to add creator as admin
+studio.configuration.defaultAdminGroup: site_admin
+# Location where data sources configuration is stored for a site.
+studio.configuration.site.dataSources.configLocation: /config/studio/data-sources/cmis-config.xml
+# Destroy site context url for preview engine
+studio.configuration.site.preview.destroy.context.url: http://localhost:8080/api/1/site/context/destroy.json?crafterSite={siteName}&token=${studio.configuration.management.previewAuthorizationToken}
+# Location pattern where default dependency resolver specific configuration for is stored
+studio.configuration.default.dependencyResolver.configBasePath: /configuration/dependency
+# File name where default dependency specific configuration is stored
+studio.configuration.default.dependencyResolver.configFileName: resolver-config.xml
+# File name where dependency specific configuration is stored
+studio.configuration.site.dependencyResolver.configFileName: dependency/resolver-config.xml
+# Module of the AWS configuration
+studio.configuration.site.aws.configurationModule: studio
+# Repo path to read the AWS configuration
+studio.configuration.site.aws.configurationPath: aws/aws.xml
+# Module of the Box configuration
+studio.configuration.site.box.configurationModule: studio
+# Repo path to read the Box configuration
+studio.configuration.site.box.configurationPath: box/box.xml
+# Module of the WebDAV configuration
+studio.configuration.site.webdav.configurationModule: studio
+# Repo path to read the WebDAV configuration
+studio.configuration.site.webdav.configurationPath: webdav/webdav.xml
+# Regex pattern for item specific dependencies
+studio.configuration.dependency.itemSpecificPatterns: /site/components/page/.*,/static-assets/page/.*,/site/components/item/.*,/static-assets/item/.*
+# Repo path to the asset processing config
+studio.configuration.site.asset.processing.configurationPath: /config/studio/asset-processing/asset-processing-config.xml
+# Default preview URL
+studio.configuration.site.defaultPreviewUrl: ^https?://localhost:8080/?
+# Default authoring URL
+studio.configuration.site.defaultAuthoringUrl: ^https?://localhost:8080/studio/?
+# Default GraphQL server URL
+studio.configuration.site.defaultGraphqlServerUrl: ^https?://localhost:8080/?
+# Path for the translation configuration file
+studio.configuration.site.translation: ${studio.configuration.site.configBasePath}/translation-config.xml
+# Studio management authorization token.
+# Please update this per installation and provide this token to the status monitors.
+studio.configuration.management.authorizationToken: defaultManagementToken
+# Preview engine management authorization token.
+# Please update this per installation and provide this token to the status monitors.
+studio.configuration.management.previewAuthorizationToken: ${env:ENGINE_MANAGEMENT_TOKEN}
+# Protected URLs with preview engine management authorization token.
+# Comma separated list of preview engine urls
+studio.configuration.management.previewProtectedUrls: >-
+  /api/1/monitoring/log.json,
+  /api/1/monitoring/memory.json,
+  /api/1/monitoring/status.json,
+  /api/1/monitoring/version.json,
+  /api/1/site/context/id,
+  /api/1/site/context/destroy,
+  /api/1/site/context/rebuild,
+  /api/1/site/context/graphql/rebuild,
+  /api/1/site/cache/clear,
+  /api/1/site/cache/statistics
+
+# The pattern used to load plugins installed from the marketplaces
+studio.configuration.plugin.base.pattern: /config/studio/static-assets/plugins/${id}/${type}/${name}
+# List of patterns to invalidate cache when changes are detected in the global repo (separated by commas)
+studio.configuration.cache.global.patterns: /?configuration/.+
+# List of patterns to invalidate cache when changes are detected in the site repo (separated by commas)
+studio.configuration.cache.site.patterns: /?config/.+
+
+# XPath selector for the display template
+studio.configuration.contentType.template.xpath: "/form/properties/property[name='display-template']/value/text()"
+# XPath selector content type preview image
+studio.configuration.contentType.previewImage.xpath: "/form/imageThumbnail/text()"
+# Path for default content type preview image
+studio.configuration.contentType.defaultPreviewImagePath: "crafter/studio/content-type/default-contentType.jpg"
+# Regular expression to extract content-type type and name
+studio.configuration.contentType.controller.pattern: '/([^/]+)/(.+)'
+# Format string for the controller script of a content-type
+studio.configuration.contentType.controller.format: '/scripts/$1s/$2.groovy'
+# Path for the content type form controller script
+studio.configuration.contentType.formControllerFilePath: form-controller.js
+
+# Publishing blacklist configuration, items matching regexes on this list will never be published
+studio.configuration.publishing.blacklist.regex: >-
+  .*/\.keep
+# Default studio server time zone for date time format
+studio.configuration.defaultTimeZone: UTC
+# The maximum length of configuration content for the configuration service. Default to 512kB -> 512 * 1024
+studio.configuration.maxContentSize: 524288
+
+########################################################
+##                   Import Service                   ##
+########################################################
+# Defines content processor workflow assignee for import process.
+studio.import.assignee: admin
+# Defines content processor chain name used for processing xml content.
+studio.import.xmlChainName: importContent
+# Defines content processor chain name used for processing assets.
+studio.import.assetChainName: assetContent
+
+##############################################################
+##                   Notification Service                   ##
+##############################################################
+# Path where the notification configuration is located
+studio.notification.configurationFile: workflow/notification-config.xml
+# Timezone for the email template engine (which determines how FreeMarker interprets `now` etc.)
+studio.notification.timezone: UTC
+
+##########################################################
+##                   Activity Service                   ##
+##########################################################
+studio.activity.user.name.caseSensitive: false
+
+##############################################################
+##                   Object State Service                   ##
+##############################################################
+# Defines size of a batch when executing object state operation on big path packages (bulk operations). Limitation on bulk operations is imposed by jdbc drivers and limits on number of parameters for sql statements.
+studio.objectState.bulkOperationsBatchSize: 500
+
+##########################################################
+##                   Security Service                   ##
+##########################################################
+# Time in minutes after which active users will be required to log in again
+studio.security.sessionTimeout: 480
+# Time in minutes after which inactive users will be required to log in again
+studio.security.inactivityTimeout: 30
+# Comma separated list of URLs that should not be tracked as user activity
+studio.security.activity.excludeUrls: >
+  /api/2/publish/status.*,/api/2/content/children_by_path.*,/api/2/content/sandbox_items_by_path.*
+# Configuration for the user activity cache
+studio.security.activity.cache.config: initialCapacity=25,maximumSize=100
+
+# Public URLs, comma separated list of regular expressions.
+# The regex should not include extension and should match the query string too.
+studio.security.publicUrls: >
+  /api/1/services/api/1/server/get-available-languages.*,/api/1/services/api/1/server/get-ui-resource-override.*,
+  /api/2/monitoring/.+,/api/2/users/forgot_password.*,/api/2/users/set_password.*,/static-assets/.+,
+  /api/2/users/validate_token.*,/api/1/services/api/1/security/login.*,/api/2/users/forgot_password.*,
+  /api/2/plugin/script/reload.*
+# Salt for encrypting
+studio.security.cipher.salt: DgGN9xhq3GOn6zxg
+# Key for encrypting
+studio.security.cipher.key: zEtRii1jWUuUUB0W
+# Cipher type
+studio.security.cipher.type: AES
+# Cipher algorithm
+studio.security.cipher.algorithm: AES/CBC/PKCS5Padding
+# Forgot password email subject
+studio.security.forgotPassword.message.subject: Forgot Password
+# Forgot password email template
+studio.security.forgotPassword.email.template: /templates/system/email/forgotPassword.ftl
+# Forgot password token time-out period in minutes
+studio.security.forgotPassword.token.timeout: 60
+# Reset password service url
+studio.security.resetPassword.serviceUrl: "login"
+# Password requirements minimum complexity
+# This is based on https://github.com/dropbox/zxcvbn
+# The minimum complexity corresponds to the password score
+# You can try this out here https://lowe.github.io/tryzxcvbn/
+#  score      # Integer from 0-4 (useful for implementing a strength bar)
+#  0 # too guessable: risky password. (guesses < 10^3)
+#  1 # very guessable: protection from throttled online attacks. (guesses < 10^6)
+#  2 # somewhat guessable: protection from unthrottled online attacks. (guesses < 10^8)
+#  3 # safely unguessable: moderate protection from offline slow-hash scenario. (guesses < 10^10)
+#  4 # very unguessable: strong protection from offline slow-hash scenario. (guesses >= 10^10)
+# The default value is 3
+studio.security.passwordRequirements.minimumComplexity: 3
+# Delay set password API response in seconds
+studio.security.setPasswordDelay: 1
+
+# The key used for encryption of configuration properties
+studio.security.encryption.key: default_encryption_key
+# The salt used for encryption of configuration properties
+studio.security.encryption.salt: default_encryption_salt
+# Amount of time (in seconds) to delay encryption response
+studio.security.encryption.delay: 1
+# Amount of characters to limit the encryption input
+studio.security.encryption.maxLength: 4096
+# If the secure headers should be written for every request
+studio.security.headers.enabled: true
+# Value for the Content-Security-Policy header
+studio.security.headers.contentSecurityPolicy.value: "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: *"
+# Set to true to enable the Content-Security-Policy-Report-Only header (this will report in the user agent console instead of actually blocking the requests)
+studio.security.headers.contentSecurityPolicy.reportOnly: true
+# Indicates if HTTP Basic auth should be enabled for the API
+studio.security.http.basic.enabled: false
+# Value for the X-PERMITTED-CROSS-DOMAIN-POLICIES header
+studio.security.headers.permittedCrossDomainPolicies.value: none
+# Value for Referrer-Policy header.
+# Possible values are defined in org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy
+studio.security.headers.referrerPolicy.value: NO_REFERRER
+
+# The maximum number of users to keep in the cache
+studio.security.db.cache.maxSize: 20
+# The maximum time to keep users in the cache
+studio.security.db.cache.timeToLive: 300
+
+# Issuer for the generated access tokens
+studio.security.token.issuer: Crafter Studio
+# List of accepted issuers for validation of access tokens (separated by commas)
+studio.security.token.validIssuers: Crafter Studio
+# The audience for generation and validation of access tokens (if empty the instance id will be used)
+studio.security.token.audience: ''
+# Time in minutes for the expiration of the access tokens
+studio.security.token.timeout: 5
+# Password for signing the access tokens (needs to be equal or greater than 512 bits in length)
+studio.security.token.password.sign: E1oEGMMEaxvUQJTFePPyniOLNxVLHuoPHGaedqMe1tQqXa28u3MvRTBgTZfRqIzM
+# Password for encrypting the access tokens
+studio.security.token.password.encrypt: fEo7tQCXX1RYHE2ODOtjtBzmL0zzonSI
+
+##############################################################
+##                   Refresh Token Cookie                   ##
+##############################################################
+# Name of the cookie to store the refresh token
+studio.security.token.cookie.name: refresh_token
+# Time in seconds for the expiration of the refresh token cookie
+studio.security.token.cookie.maxAge: 300
+# The path used to set the refresh token cookie
+studio.security.token.cookie.path: /studio
+# The domain used to set the refresh token cookie (if set to null or empty the domain will be detected from the request)
+studio.security.token.cookie.domain: null
+# Indicates if the refresh token cookie should be secure (should be true for production environments behind HTTPS)
+studio.security.token.cookie.secure: false
+# Indicates if the refresh token cookie should be HTTPOnly
+studio.security.token.cookie.httpOnly: true
+
+##############################################################
+##                      Preview Cookie                      ##
+##############################################################
+# Name of the preview
+studio.security.token.previewCookie.name: crafterPreview
+# Time in seconds for the expiration of the preview cookie
+studio.security.token.previewCookie.maxAge: 600
+# The path used to set the preview cookie
+studio.security.token.previewCookie.path: /
+# The domain used to set the preview cookie (if set to null or empty the domain will be detected from the request)
+studio.security.token.previewCookie.domain: null
+# Indicates if the preview cookie should be secure (should be true for production environments behind HTTPS)
+studio.security.token.previewCookie.secure: false
+# Indicates if the preview cookie should be HTTPOnly
+studio.security.token.previewCookie.httpOnly: true
+
+# Use base domain instead of subdomain for the crafterSite cookie
+studio.cookie.useBaseDomain: false
+
+# Cron expression for the scheduled job that cleans expired refresh tokens
+studio.security.token.cleanup.cron: 0 * * * * ?
+
+# The path of the folder used for the SSH configuration
+studio.security.ssh.config: ./ssh
+
+# Whether to enable user account locking after failed login attempts
+studio.security.login.lock.enabled: true
+# Maximum number of tracked usernames for failed login attempts
+studio.security.login.lock.maxTrackedUsernames: 10000
+# User login will be restricted after failed login attempts
+# The lock time period will be calculated as follows:
+#  min( baseTimeSeconds ^ (failedAttempts - 1), maxTimeSeconds )
+# Time in seconds to lock the user out after the maximum number of failed login attempts
+studio.security.login.lock.baseTimeSeconds: 2
+# Maximum time in seconds to lock the user out after a failed login attempt
+studio.security.login.lock.maxTimeSeconds: 3600
+
+###############################################################
+##               Page Navigation Order Service               ##
+###############################################################
+# Defines base increment for page navigation order when new content is created.
+studio.pageNavigationOrder.increment: 1000
+
+############################################################
+##                   Content Processors                   ##
+############################################################
+# Location where groovy script for content lifecycle processor is stored.
+studio.contentProcessor.contentLifeCycle.scriptLocation: /config/studio/content-types/{content-type}/controller.groovy
+
+#######################################################
+##                   Email Service                   ##
+#######################################################
+# Default value for from header when sending emails.
+studio.mail.from.default: admin@example.com
+# SMTP server name to send emails.
+studio.mail.host: localhost
+# SMTP port number to send emails.
+studio.mail.port: 25
+# SMTP username for authenticated access when sending emails.
+studio.mail.username:
+# SMTP password for authenticated access when sending emails.
+studio.mail.password:
+# Turn on/off (value true/false) SMTP authenticated access protocol.
+studio.mail.smtp.auth: false
+# Enable/disable (value true/false) SMTP TLS protocol when sending emails.
+studio.mail.smtp.starttls.enable: true
+# Enable/disable (value true/false) SMTP EHLO protocol when sending emails.
+studio.mail.smtp.ehlo: true
+# Enable/disable (value true/false) debug mode for email service. Enabling debug mode allows tracking/debugging communication between email service and SMTP server.
+studio.mail.debug: false
+
+######################################################################
+##                   Content Type Filter Patterns                   ##
+######################################################################
+# Define dashboard filter pattern for pages. Value is regular expression executed against content path.
+studio.contentTypes.filter.pages.includePattern: ^/page/.*
+# Define dashboard filter pattern for components. Value is regular expression executed against content path.
+studio.contentTypes.filter.components.includePattern: ^/component/.*
+# Define dashboard filter pattern for documents. Value is regular expression executed against content path.
+studio.contentTypes.filter.documents.includePattern: ^/document/.*
+
+############################################################
+##                    Preview Deployer                    ##
+############################################################
+# Default preview deployer URL (can be overridden per site)
+studio.preview.defaultPreviewDeployerUrl: http://localhost:9191/api/1/target/deploy/{siteEnv}/{siteName}
+# Default preview create target URL (can be overridden per site)
+studio.preview.createTargetUrl: http://localhost:9191/api/1/target/create_if_not_exists
+# Default preview create target URL (can be overridden per site)
+studio.preview.deleteTargetUrl: http://localhost:9191/api/1/target/delete-if-exists/{siteEnv}/{siteName}
+# Preview duplicate target URL
+studio.preview.duplicateTargetUrl: http://localhost:9191/api/1/target/duplicate/{siteEnv}/{siteName}
+# URL to the preview repository (aka Sandbox) where authors save work-in-progress
+studio.preview.repoUrl: ${env:CRAFTER_DATA_DIR}/repos/sites/{siteName}/sandbox
+# Name of template to use with the deployer for preview
+studio.preview.templateName: local
+# Replace existing configuration if one exists?
+studio.preview.replace: false
+# Disable deploy cron job for preview target
+studio.preview.disableDeployCron: true
+# Response timeout in seconds for deployer http requests
+studio.deployer.request.timeoutSeconds: 300
+
+# Replace existing configuration if one exists?
+studio.authoring.replace: false
+# Disable deploy cron job for preview target
+studio.authoring.disableDeployCron: true
+# Name of the template to use with the deployer for authoring
+studio.authoring.templateName: authoring
+
+############################################################
+##                   Publishing Manager                   ##
+############################################################
+# Defines file name for index files (page containers). Default value is index.xml
+studio.publishingManager.indexFile: index.xml
+
+##################################################
+##                   Database                   ##
+##################################################
+# Embedded database configuration
+# JDBC driver and Java class used for accessing crafter database
+studio.db.driver: org.mariadb.jdbc.Driver
+# Database schema name
+studio.db.schema: crafter
+# Database user
+studio.db.user: ${env:MARIADB_USER}
+# Database password:
+studio.db.password: ${env:MARIADB_PASSWD}
+# Connection string used when connecting database with JDBC driver
+# Format:
+# jdbc:DATABASE_PLATFORM;databaseName=DATABASE_NAME;create=true;user=DATABASE_USERNAME;password=DATABASE_USER_PASSWORD
+# Note that a relative path is not suitable for a production deployment
+studio.db.url: jdbc:mariadb://127.0.0.1:33306/crafter?user=crafter&password=crafter&socketTimeout=60000
+studio.db.scriptRunnerUrl: jdbc:mariadb://127.0.0.1:33306/crafter?user=crafter&password=crafter&socketTimeout=60000&allowMultiQueries=true
+# Defines initial number of database connections in database connection pool
+studio.db.pool.initialConnections: 10
+# Defines maximum number of active database connections in database connection pool
+studio.db.pool.maxActiveConnections: 100
+# Defines maximum number of idle database connections to retain in database connection pool.
+studio.db.pool.maxIdleConnections: 30
+# Defines minimum number of idle database connections to retain in database connection pool.
+studio.db.pool.minIdleConnections: 10
+# Defines maximum waiting time for a database connection to become available (value is in milliseconds).
+studio.db.pool.maxWaitTime: 10000
+# Flags to remove abandoned connections if they exceed the removeAbandonedTimout.
+# If removeAbandonedOnBorrow is true, abandoned connections are removed each time a connection is borrowed from the pool, with the additional requirements that
+#    getNumActive() > getMaxTotal() - 3; and
+#    getNumIdle() < 2
+studio.db.pool.removeAbandonedOnBorrow: false
+# Timeout in seconds before an abandoned connection can be removed.
+studio.db.pool.removeAbandonedTimeout: 300
+# Setting removeAbandonedOnMaintenance to true removes abandoned connections on the maintenance cycle (when eviction ends).
+# This property has no effect unless maintenance is enabled by setting timeBetweenEvictionRunsMillis to a positive value
+studio.db.pool.removeAbandonedOnMaintenance: false
+# The number of milliseconds to sleep between runs of the idle object evictor thread.
+# When non-positive, no idle object evictor thread will be run.
+studio.db.pool.timeBetweenEvictionRunsMillis: -1
+
+# Turn database initializer on (value true) or off (value false).
+# When initializer is turned off, system will not try to initialize database on startup.
+# When system is starting for the first time initializer must be turned on.
+# When database already exists, initializer can be turned off for faster startup. If database is deleted or dropped
+# for any reason, initializer needs to be turned on.
+studio.db.initializer.enabled: true
+# Connection string used to initialize database
+studio.db.initializer.url: jdbc:mariadb://127.0.0.1:33306?user=root&password=${env:MARIADB_ROOT_PASSWD}&socketTimeout=60000
+# Create schema SQL script location
+studio.db.initializer.createSchemaScriptLocation: crafter/studio/database/createSchema.sql
+# Create database SQL script location
+studio.db.initializer.createDbscriptLocation: crafter/studio/database/createDDL.sql
+# Enable random admin password generation
+studio.db.initializer.randomAdminPassword.enabled: false
+# Random admin password length
+studio.db.initializer.randomAdminPassword.length: 16
+# Random admin password allowed chars
+studio.db.initializer.randomAdminPassword.chars: ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*_=+-/
+# Test database connections retrieved from the pool before being used (value true).
+# If value is set to false database connection will not be tested before being used.
+studio.db.testOnBorrow: true
+# The SQL query to validate the connection for database
+studio.db.validationQuery: SELECT 1
+# Defines the amount of time, in seconds, that connection validation will wait for a response from the database when executing a validation query.
+# Use a value less than or equal to 0 for no timeout.
+studio.db.validationInterval: 1
+# Base folder for the embedded database
+studio.db.basePath: ${sys:crafter.bin.dir}/dbms
+# Data folder for the embedded database
+studio.db.dataPath: ${env:CRAFTER_DATA_DIR}/db
+# Port number for the embedded database (note this must match what's in the connection URLs in this config file)
+studio.db.port: 33306
+# Socket path for the embedded database
+studio.db.socket: /tmp/MariaDB4j.33306.sock
+# Max DB connections for embedded database
+studio.db.maxConnections: 500
+# Max allowed packet size (MariaDB setting)
+studio.db.maxAllowedPacket: 128M
+# Max number of retries for retrying operation
+studio.db.retryingOperation.maxAttempts: 50
+# Max sleep time in milliseconds between retries
+studio.db.retryingOperation.maxSleep: 1000
+# Number of lines to read from sql script file for buffered execution
+studio.db.scriptRunner.bufferSize: 10000
+# Batch size for bulk operations
+studio.db.bulkOperations.batchSize: 1000
+# DB max_recursive_iterations value. This property should be set to a value between 0 and 20 (hard limit)
+studio.db.maxRecursiveIterations: 10
+##########################################################
+##                   Asset Processing                   ##
+##########################################################
+# The global Tinify API key used for image processing (empty by default)
+studio.configuration.asset.processing.tinify.apiKey:
+
+##########################################################
+##             Upgrade Configuration                    ##
+##########################################################
+
+# Name of the branch to do upgrade commits
+studio.upgrade.branchName: site-upgrade
+# Message for the merge commit after upgrading
+studio.upgrade.commitMessage: Successful site upgrade
+# Path for the site version file
+studio.upgrade.versionFile: /config/studio/studio_version.xml
+# Path for the site version default file
+studio.upgrade.versionDefault: classpath:crafter/studio/upgrade/studio_version.xml
+# XPath for querying the version
+studio.upgrade.versionXPath: '/*[1]/version'
+# XML element name for querying the version from XML files
+studio.upgrade.versionElemName: "version"
+# Default version for sites when there is none (avoid any upgrade)
+studio.upgrade.defaultVersion.site: 3.0.x
+# Default version for files when there is none (the format is: <crafter major>.<crafter minor>.<file version>)
+studio.upgrade.defaultVersion.file: 4.0.1
+# Pipelines configuration file
+studio.upgrade.configurationFile: classpath:crafter/studio/upgrade/pipelines.yaml
+# Common prefix for the pipelines
+studio.upgrade.pipeline.prefix: pipelines.
+# Name for the system pipeline
+studio.upgrade.pipeline.system: system
+# Name for the site pipeline
+studio.upgrade.pipeline.site: site
+# Name for the blueprint pipeline
+studio.upgrade.pipeline.blueprint: blueprint
+# Prefix for the configuration file pipeline
+studio.upgrade.pipeline.configurations: configurations.
+# Folder to look for database scripts
+studio.upgrade.scriptFolder: crafter/studio/database/
+
+studio.upgrade.xpath.contentType: '*/content-type'
+studio.upgrade.template.formDefinition: config/studio/content-types{name}/form-definition.xml
+
+# Upgrade (Populate DB) thread pool
+studio.upgrade.db.population.threadCount: 50
+studio.upgrade.db.population.timeoutSeconds: 7200
+
+# Number of threads for site upgrades (meaning the number of sites that will be upgraded in parallel)
+studio.upgrade.sites.threadCount: 10
+studio.upgrade.sites.timeoutSeconds: 7200
+
+################################################################
+##                             CORS                           ##
+################################################################
+# This is configured as permissive by default for ease of deployment
+# Remember to tighten this up for production
+
+# Disable CORS headers completely
+studio.cors.disable: false
+# Value for the Access-Control-Allow-Origin header
+studio.cors.origins: '*'
+# Value for the Access-Control-Allow-Headers header
+studio.cors.headers: '*'
+# Value for the Access-Control-Allow-Methods header
+studio.cors.methods: '*'
+# Value for the Access-Control-Allow-Credentials header
+studio.cors.credentials: true
+# Value for the Access-Control-Max-Age header
+studio.cors.maxage: -1
+
+
+################################################################
+##                           Search                           ##
+################################################################
+# URLs to connect to Search
+studio.search.urls: http://localhost:9201
+# The username for search
+studio.search.username: ''
+# The password for search
+studio.search.password: ''
+# The connection timeout in milliseconds, if set to -1 the default will be used
+studio.search.timeout.connect: -1
+# The socket timeout in milliseconds, if set to -1 the default will be used
+studio.search.timeout.socket: -1
+# The number of threads to use, if set to -1 the default will be used
+studio.search.threads: -1
+# The number of threads to use, if set to -1 the default will be used
+studio.search.keepAlive: false
+# The max total connections, if set to -1 the default will be used
+studio.search.maxTotalConnections: -1
+# The max connections per route, if set to -1 the default will be used
+studio.search.maxConnectionsPerRoute: -1
+# Suffix added to the name for authoring indexes
+studio.search.index.suffix: -authoring
+# Name of the field for paths
+studio.search.field.path: localId
+# Name of the field for internal name
+studio.search.field.name: internalName
+# Name of the field for last edit date
+studio.search.field.edit: lastEditedOn
+# Name of the field for last edit user
+studio.search.field.editor: lastEditedBy
+# Name of the field for file size
+studio.search.field.size: contentLength
+# Name of the field for mimeType
+studio.search.field.mimeType: contentType
+# Map of fields to include in the search with their boosting
+studio.search.fields.search:
+  - name: internalName.text
+    boost: 1.6
+  - name: title.text
+    boost: 1.5
+  - name: content
+    boost: 1.0
+  - name: '*_html'
+    boost: 1.0
+  - name: '*_t'
+    boost: 1.0
+  - name: '*_txt'
+    boost: 1.0
+# List of fields to include for highlighting
+studio.search.fields.highlight: internal-name, title, content, *_html, *_t, *_txt
+# The size of each highlight snippet
+studio.search.snippets.size: 50
+# The number of highlight snippets to generate
+studio.search.snippets.number: 1
+# The default value for unknown types
+studio.search.default.type: Other
+# The type mapping to use during search
+studio.search.types:
+    # The label that will be returned
+  - name: Image
+    # The field that will be compared
+    field: contentType
+    # The regex that will be compared
+    matches: ^image/.*$
+  - name: Video
+    field: contentType
+    matches: ^video/.*$
+  - name: CSS
+    field: contentType
+    matches: ^text/css$
+  - name: JavaScript
+    field: contentType
+    matches: ^text/javascript$
+  - name: Groovy
+    field: contentType
+    matches: ^text/x-groovy$
+  - name: Template
+    field: contentType
+    matches: ^text/x-freemarker$
+  - name: PDF
+    field: contentType
+    matches: ^application/pdf$
+  - name: MS Word
+    field: contentType
+    matches: ^application/(msword|vnd.openxmlformats-officedocument.wordprocessingml.document)$
+  - name: MS Excel
+    field: contentType
+    matches: ^application/(vnd.ms-excel|vnd.openxmlformats-officedocument.spreadsheetml.sheet)$
+  - name: MS PowerPoint
+    field: contentType
+    matches: ^application/(vnd.ms-powerpoint|vnd.openxmlformats-officedocument.presentationml.presentation)$
+  - name: Page
+    field: content-type
+    matches: ^/page/.*$
+  - name: Component
+    field: content-type
+    matches: ^/component/.*$
+  - name: Taxonomy
+    field: content-type
+    matches: ^/taxonomy$
+# The list of field facets to return
+studio.search.facets:
+    # The label that will be returned
+  - name: content-type
+    # The field that will be used
+    field: content-type
+    multiple: true
+  - name: mime-type
+    field: contentType
+    multiple: true
+  - name: size
+    field: contentLength
+    # The list of ranges to search
+    ranges:
+      - to: 1024
+      - from: 1024
+        to: 25600
+      - from: 25600
+        to: 256000
+      - from: 256000
+        to: 1048576
+      - from: 1048576
+        to: 5242880
+      - from: 5242880
+        to: 1073741824
+      - from: 1073741824
+  - name: width
+    field: width
+    ranges:
+      - to: 64
+      - from: 64
+        to: 160
+      - from: 160
+        to: 480
+      - from: 480
+        to: 800
+      - from: 800
+        to: 1280
+      - from: 1280
+        to: 1600
+      - from: 1600
+  - name: height
+    field: height
+    ranges:
+      - to: 64
+      - from: 64
+        to: 120
+      - from: 120
+        to: 320
+      - from: 320
+        to: 480
+      - from: 480
+        to: 800
+      - from: 800
+        to: 1200
+      - from: 1200
+  - name: last-edit-date
+    field: lastEditedOn
+    date: true
+    ranges:
+      - label: today
+        from: now-1d
+        to: now+1d
+      - label: in-last-week
+        from: now/d-7d
+        to: now/d-1d
+      - label: over-a-month-ago
+        to: now/d-30d
+      - label: over-six-months-ago
+        to: now/d-180d
+      - label: over-a-week-ago
+        to: now/d-8d
+      - label: over-a-year-ago
+        to: now/d-365d
+studio.search.keyword.split.regex: "[!@#$%&\\*\\s\\(\\)\\'\\\"]+"
+
+################################################################
+##                           AWS                              ##
+################################################################
+studio.aws.s3.delimiter: /
+studio.aws.s3.url.pattern: /remote-assets/s3/%s/%s
+studio.aws.mediaconvert.extension.hls: m3u8
+studio.aws.mediaconvert.extension.dash: mpd
+studio.aws.mediaconvert.extension.smooth: ism
+
+################################################################
+##                         WebDav                             ##
+################################################################
+studio.webdav.url.pattern: /remote-assets/webdav/%s/%s
+
+##########################################################
+##                 Serverless Delivery                  ##
+##########################################################
+# Indicates if serverless delivery is enabled
+studio.serverless.delivery.enabled: false
+# The URL for the serverless delivery deployer create URL
+studio.serverless.delivery.deployer.target.createUrl: ${studio.preview.createTargetUrl}
+# The URL for the serverless delivery deployer delete URL
+studio.serverless.delivery.deployer.target.deleteUrl: ${studio.preview.deleteTargetUrl}
+# The env string for the serverless deployer targets
+studio.serverless.delivery.deployer.target.env: serverless-delivery
+# The template name for serverless deployer targets
+studio.serverless.delivery.deployer.target.template: aws-cloudformed-s3
+# Replace existing target configuration if one exists?
+studio.serverless.delivery.deployer.target.replace: false
+# The URL the deployer will use to clone/pull the site's published repo. When the deployer is in a separate node
+# (because of clustering), this URL should be an SSH/HTTP URL to the load balancer in front of the Studios
+studio.serverless.delivery.deployer.target.remoteRepoUrl: ${env:CRAFTER_DATA_DIR}/repos/sites/{siteName}/published
+# The deployer's local path where it will store the clone of the published site. This property is not needed if
+# the deployer is not the preview deployer, so you can leave an empty string ('') instead
+studio.serverless.delivery.deployer.target.localRepoPath: ${env:CRAFTER_DATA_DIR}/repos/aws/{siteName}
+# Parameters for the target template. Please check the deployer template documentation for the possible parameters.
+# The following parameters will be sent automatically, and you don't need to specify them: env, site_name, replace,
+# disable_deploy_cron, local_repo_path, repo_url
+studio.serverless.delivery.deployer.target.template.params:
+  aws:
+    cloudformation:
+      namespace: craftercms
+
+##################################################
+##                 Marketplace                  ##
+##################################################
+# The full URL for the Marketplace
+studio.marketplace.url: https://mp.craftercms.org
+# Indicates if the search should include plugins pending of approval
+studio.marketplace.search.pending: false
+# The path in the repository for the plugin registry file
+studio.marketplace.plugin.registry.path: config/plugins/registry.yaml
+# The list of plugin types that can be installed
+studio.marketplace.plugin.installable:
+  - site
+# The name of the sub-folder to copy plugin files
+studio.marketplace.plugin.folder: plugins
+# The mapping of folders to copy files from the plugin folder to the site
+studio.marketplace.plugin.mapping:
+  - delivery/templates: templates
+  - delivery/static-assets: static-assets
+  - delivery/scripts/components: scripts/components
+  - delivery/scripts/filters: scripts/filters
+  - delivery/scripts/pages: scripts/pages
+  - delivery/scripts/rest: scripts/rest
+  - delivery/scripts/classes: scripts/classes
+  - delivery/scripts/controllers: scripts/controllers
+  - authoring/content-types/component: config/studio/content-types/component
+  - authoring/content-types/page: config/studio/content-types/page
+  - authoring/static-assets: config/studio/static-assets
+  - authoring/scripts/classes: config/studio/scripts/classes
+  - authoring/scripts/rest: config/studio/scripts/rest
+  - sources: sources
+# The module used for the plugin configuration file
+studio.marketplace.plugin.config.module: plugins
+# The filename used for the plugin configuration file
+studio.marketplace.plugin.config.filename: config.xml
+# The pattern to use for loading plugins installed from the marketplace
+studio.marketplace.plugin.basePath: '/config/studio/static-assets/plugins/${id}/${type}/${name}'
+# Mapping used to wire plugin files into the site configuration
+studio.marketplace.plugin.wire.mapping:
+  preview-app:
+    module: studio
+    path: ui.xml
+    template: crafter/studio/marketplace/wiring/ui.xslt
+  form-control:
+    module: studio
+    path: administration/site-config-tools.xml
+    template: crafter/studio/marketplace/wiring/control.xslt
+  form-datasource:
+    module: studio
+    path: administration/site-config-tools.xml
+    template: crafter/studio/marketplace/wiring/datasource.xslt
+  site-filter:
+    module: engine
+    path: site-config.xml
+    template: crafter/studio/marketplace/wiring/engine-filter.xslt
+  site-context:
+    module: engine
+    path: application-context.xml
+    template: crafter/studio/marketplace/wiring/engine-context.xslt
+studio.marketplace.plugin.wire.remove: crafter/studio/marketplace/wiring/remove.xslt
+# Mapping used to wire plugin files into the site templates
+studio.marketplace.plugin.template.mapping:
+  - systemPath: templates/system/plugins/definitions.ftl
+    pluginPattern: templates/plugins/${pluginPath}/definitions.ftl
+  - systemPath: templates/system/plugins/head.ftl
+    pluginPattern: templates/plugins/${pluginPath}/head.ftl
+  - systemPath: templates/system/plugins/body_top.ftl
+    pluginPattern: templates/plugins/${pluginPath}/body_top.ftl
+  - systemPath: templates/system/plugins/body_bottom.ftl
+    pluginPattern: templates/plugins/${pluginPath}/body_bottom.ftl
+# Code injected in the templates for each plugin
+studio.marketplace.plugin.template.code: '<@plugin_include "${pluginId}" "/${path}"/>'
+# Comment added in the templates for each plugin
+studio.marketplace.plugin.template.comment: '<#-- pluginId:${pluginId} -->'
+studio.marketplace.plugin.contentType.pattern: '/config/studio/content-types(/.+?)/form-definition\.xml'
+
+##################################################
+##                    Cache                     ##
+##################################################
+# If Studio should cache its FreeMarker templates
+studio.cache.templates: true
+# Indicates if the browser should cache responses for static-assets
+studio.cache.assets.enabled: true
+# The max age in seconds that the browser should cache responses for requests matching `studio.cache.assets.maxAge.includeUrls`
+studio.cache.assets.maxAge: 3600
+# The urls that should include max-age=<studio.cache.assets.maxAge> in Cache-Control header. Other urls will be set to default max-age=0, must-revalidate
+studio.cache.assets.maxAge.includeUrls: /static-assets/**
+
+##################################################
+##             Forwarded Headers                ##
+##################################################
+# Indicates if Forwarded or X-Forwarded headers should be used when resolving the client-originated protocol and
+# address. Enable when Studio is behind a reverse proxy or load balancer that sends these
+studio.forwarded.headers.enabled: false
+
+##################################################
+##             Studio Clock Tasks               ##
+##################################################
+# Studio Clock job ticking frequency
+studio.clockJob.frequency: 5000
+# Studio Clock Job thread pool core size
+studio.clockJob.taskExecutor.corePoolSize: 50
+# Studio Clock Job thread pool maximum size
+studio.clockJob.taskExecutor.maxPoolSize: 500
+# Studio Clock Job thread pool queue capacity
+studio.clockJob.taskExecutor.queueCapacity: 2000
+# Publisher execute every N cycles
+studio.clockJob.task.publisher.executeEveryNCycles: 2
+# Publisher max retry count in case if content not found
+studio.clockJob.task.publisher.maxRetryCount: 5
+
+##################################################
+##             Studio Task Executor             ##
+##################################################
+# These properties configure the main Studio task executor, used
+# for running background tasks and other asynchronous operations.
+studio.taskExecutor.corePoolSize: 5
+studio.taskExecutor.maxPoolSize: 10
+studio.taskExecutor.queueCapacity: 25
+
+##################################################
+##           Studio Groovy Scripts              ##
+##################################################
+# Content lifecycle scripts classpath
+studio.scripting.lifecycle.classpath: default-site
+# Indicates if the sandbox should be enabled
+studio.scripting.sandbox.enable: true
+# Indicates if the blacklist should be enabled (this will have no effect if the sandbox is disabled)
+studio.scripting.sandbox.blacklist.enable: true
+# The location of the default blacklist to use (this will have no effect if the sandbox is disabled)
+studio.scripting.sandbox.blacklist.path: classpath:crafter/studio/groovy/blacklist
+# Indicates if the whitelist should be enabled (this will have no effect if the sandbox is disabled)
+studio.scripting.sandbox.whitelist.enable: false
+# The location of the default whitelist to use (this will have no effect if the sandbox is disabled)
+studio.scripting.sandbox.whitelist.path: classpath:crafter/studio/groovy/whitelist
+# List of patterns for that is allowed to call as `staticMethod java.lang.System getenv java.lang.String` parameter (regexes separated by commas)
+studio.scripting.sandbox.whitelist.getenvRegex: crafter_.*
+# The extension for the script files
+studio.scripting.script.extension: groovy
+# The format for the name of the script files
+studio.scripting.script.path.format: '%s.%s.%s'
+# The base path for the classpath of the scripts
+studio.scripting.classes.path: /config/studio/scripts/classes
+# The base path for the rest scripts
+studio.scripting.rest.path: /config/studio/scripts/rest
+# Indicates if access to beans should be restricted
+studio.scripting.restrictBeans: false
+# List of patterns for bean names that should be accessible for the scripts (regexes separated by commas)
+studio.scripting.allowedBeans: ''
+
+# Indicates if @Grab annotations should download grapes
+# If false, only already downloaded grapes will be available
+studio.scripting.grapes.download.enabled: false
+
+##################################################
+##           Dashboard Service                  ##
+##################################################
+
+# Search query to retrieve content expiring
+studio.configuration.dashboard.contentExpiringQuery: expired_dt:[{dateFrom} TO {dateTo}] AND NOT _exists_:metadataPath
+# Search query to retrieve content expired
+studio.configuration.dashboard.contentExpiredQuery: expired_dt:[* TO now] AND NOT _exists_:metadataPath
+# Search query to retrieve content expired sort by field
+studio.configuration.dashboard.contentExpiredQuery.sortBy: expired_dt
+
+##################################################
+##         Startup tasks and checks             ##
+##################################################
+studio.configuration.site.startup.cleanup.enabled: true
+# Number of threads for site startup cleanup (meaning the number of sites that will be cleaned in parallel on startup)
+studio.configuration.site.startup.cleanup.threadCount: 10
+studio.configuration.site.startup.cleanup.timeoutSeconds: 7200

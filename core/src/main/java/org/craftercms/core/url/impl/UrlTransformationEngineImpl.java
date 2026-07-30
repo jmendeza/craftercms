@@ -1,0 +1,66 @@
+/*
+ * Copyright (C) 2007-2022 Crafter Software Corporation. All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.craftercms.core.url.impl;
+
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.craftercms.core.exception.UrlTransformationException;
+import org.craftercms.core.service.CachingOptions;
+import org.craftercms.core.service.Context;
+import org.craftercms.core.url.UrlTransformer;
+import org.craftercms.core.util.cache.CacheTemplate;
+
+/**
+ * Class description goes HERE
+ *
+ * @author Sumer Jabri
+ * @author Alfonso Vásquez
+ */
+public class UrlTransformationEngineImpl extends AbstractCachedUrlTransformationEngine {
+
+    private static final Log logger = LogFactory.getLog(UrlTransformationEngineImpl.class);
+
+    private Map<String, UrlTransformer> transformers;
+
+    public UrlTransformationEngineImpl(Map<String, UrlTransformer> transformers, CacheTemplate cacheTemplate) {
+        super(cacheTemplate);
+        this.transformers = transformers;
+    }
+
+    @Override
+    protected String doTransformUrl(Context context, CachingOptions cachingOptions, String transformerName,
+                                    String url) throws UrlTransformationException {
+        UrlTransformer transformer = transformers.get(transformerName);
+        if (transformer == null) {
+            throw new UrlTransformationException("Url transformer " + transformerName + " not found");
+        }
+
+        String result = transformer.transformUrl(context, cachingOptions, url);
+        if (StringUtils.isEmpty(result)) {
+            result = "/";
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Transformation in: " + url + ", Transformation out: " + result);
+        }
+
+        return result;
+    }
+
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2024 Crafter Software Corporation. All Rights Reserved.
+ * Copyright (C) 2007-2026 Crafter Software Corporation. All Rights Reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as published by
@@ -15,13 +15,15 @@
  */
 
 plugins {
+	// The "de.undercouch.download" plugin allows Gradle to download files from the internet during the build process,
+	// making it easy to automate the retrieval of external dependencies, resources, or other files as part of your build.
 	id "de.undercouch.download" version "${undercouchDownloadVersion}"
 }
 
 apply plugin: "groovy"
 apply plugin: 'de.undercouch.download'
 
-project.version = "4.5.2-SNAPSHOT" // craftercms version flag
+project.version = craftercmsVersion
 
 apply from: "global-settings.gradle"
 apply from: "commons.gradle"
@@ -31,6 +33,7 @@ apply from: "downloads.gradle"
 apply from: "deploy.gradle"
 apply from: "run.gradle"
 apply from: "docker.gradle"
+apply from: "release.gradle"
 
 task splash() {
 	description = 'Displays splash screen'
@@ -47,13 +50,8 @@ task preFlightCheck() {
 			throw new GradleException("The java version used ${JavaVersion.current()} is not the expected version ${project.targetCompatibility}.")
 		}
 
-		def command = "mvn -v"
-		if (!command.execute()) {
-			throw new GradleException("Maven ('mvn') not found, please make sure it is installed and accessible.")
-		}
-
-		command = "lsof -v"
-		if (!command.execute()) {
+		def lsofCheck = "lsof -v"
+		if (!lsofCheck.execute()) {
 			throw new GradleException("'lsof' command not found, please make sure it is installed and accessible.")
 		}
 	}
@@ -87,87 +85,17 @@ task download() {
 	}
 }
 
-task clone() {
-	description = 'Clones the modules if required.'
-	dependsOn = ["preFlightCheck"]
-	doFirst {
-		getAllModules().each { module ->
-			cloneModule(module, gitUrl, shallowClone, gitBranch, gitRemote)
-		}
-	}
-}
-
 task selfUpdate() {
 	description = 'Updates the CrafterCMS parent project.'
-	dependsOn = ["clone"]
+	dependsOn = ["preFlightCheck"]
 	doFirst {
 		execCommand(["git", "pull", gitRemote, gitBranch], "${projectDir}")
 	}
 }
 
-task update() {
-	description = 'Updates the modules.'
-	dependsOn = ["clone"]
-	doFirst {
-		getAllModules().each { module ->
-			println "Updating $module"
-
-			updateModule(module, gitRemote, gitBranch)
-		}
-	}
-}
-
-clean() {
-	description = 'Cleans the modules.'
-	mustRunAfter update
-	dependsOn = ["clone", "installPomFiles"]
-	doFirst {
-		getBuildModules().each { module ->
-			println "Cleaning $module"
-
-			cleanModule(module)
-		}
-	}
-}
-
-task installPomFiles() {
-	description = 'Installs the main POMs.'
-	mustRunAfter selfUpdate
-	dependsOn = ["preFlightCheck"]
-	doFirst {
-		println "Installing main POMs"
-		installPoms()
-	}
-}
-
-build() {
-	description = 'Builds the modules and prepares the binaries for deployment.'
-	mustRunAfter clean
-	dependsOn = ["clone", "installPomFiles"]
-	doFirst {
-		getBuildModules().each { module ->
-			println "Building $module"
-
-			buildModule(module, unitTest)
-		}
-	}
-}
-
-task deployToMaven() {
-	description = 'Deploys the modules to Maven Central.'
-	dependsOn = ["clone", "installPomFiles"]
-	doFirst {
-		getDeployToMavenModules().each { module ->
-			println "Deploying $module"
-
-			deployModule(module, unitTest)
-		}
-	}
-}
-
 task buildBaseEnvs() {
 	description = 'Build base target environments.'
-	dependsOn = ["clone", "download"]
+	dependsOn = ["download"]
 	doFirst {
 		getEnvironments().each { environment ->
 			println "Deploying the foundation of $environment"
@@ -179,11 +107,10 @@ task buildBaseEnvs() {
 
 task buildBom() {
 	description = 'Builds the Software Bill of Materials (BOM).'
-	dependsOn = ["clone", "installPomFiles"]
+	dependsOn = ["preFlightCheck"]
 	doFirst {
 		println "Build the Software Bill of Materials (BOM)"
 
-		// TODO Switch to all modules
 		getBuildModules().each { module ->
 			println "Building BOM for $module"
 			buildBom(module)
@@ -194,20 +121,17 @@ task buildBom() {
 }
 
 task deploy() {
-	description = 'Deploys the module artifacts prepares the authoring/delivery environments.'
+	group = 'deployment'
+	description = 'Deploys module artifacts and prepares the authoring/delivery environments. ' +
+		'Use :<module>:deploy (e.g. :studio:deploy -Penv=authoring) to deploy a single module.'
 	mustRunAfter build
 	dependsOn = ["buildBaseEnvs"]
-	doFirst {
-		getEnvironments().each { environment ->
-			println "Deploying $environment"
-			deployEnvironment(environment, getDeployModules(), overwriteChangedFiles, profileRequired, socialRequired)
-		}
-	}
+	// Module deploy tasks are attached in deploy.gradle (projectsEvaluated).
 }
 
 task upgrade() {
 	description = 'Upgrades all modules and redeploys them'
-	dependsOn = ["installPomFiles", "update", "clean", "build", "deploy"]
+	dependsOn = ["selfUpdate", "clean", "build", "deploy"]
 }
 
 task start() {

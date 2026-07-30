@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (C) 2007-2022 Crafter Software Corporation. All Rights Reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License version 3 as published by
+  ~ the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<component>
+	<content-type>/component/author</content-type>	<display-template/>
+	<merge-strategy>inherit-levels</merge-strategy>
+	<objectGroupId>6da4</objectGroupId>
+	<objectId>6da4e193-6109-0b9f-91b6-d439fc64c5dc</objectId>
+	<file-name>6da4e193-6109-0b9f-91b6-d439fc64c5dc.xml</file-name>
+	<internal-name>Jane Doe (Intern)</internal-name>
+	<createdDate>2017-05-9T23:13:7.000Z</createdDate>
+	<createdDate_dt>2017-05-9T23:13:7.000Z</createdDate_dt>
+	<lastModifiedDate>2017-05-10T21:32:18.000Z</lastModifiedDate>
+	<lastModifiedDate_dt>2017-05-10T21:32:18.000Z</lastModifiedDate_dt>
+	<disabled>false</disabled>
+	<name_s>Jane Doe</name_s>
+	<website_s>https://www.example.com/</website_s>
+	<photo_s>/static-assets/images/avatars/gal.png</photo_s>
+	<biography_html>&lt;p&gt;Sed posuere consectetur est at lobortis. Integer posuere erat a ante venenatis dapibus posuere velit aliquet. Aenean eu leo quam. Pellentesque ornare sem lacinia quam venenatis vestibulum. Maecenas faucibus mollis interdum. Etiam porta sem malesuada magna mollis euismod.&lt;/p&gt;</biography_html>
+</component>

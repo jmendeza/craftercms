@@ -1,0 +1,117 @@
+/*
+ * Copyright (C) 2007-2024 Crafter Software Corporation. All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.craftercms.deployer.utils.core;
+
+import org.craftercms.core.service.ContentStoreService;
+import org.craftercms.core.service.Context;
+import org.craftercms.core.store.impl.filesystem.FileSystemContentStoreAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.ObjectFactory;
+
+import java.util.Map;
+
+/**
+ * Factory for a singleton Core {@link Context}. The context is created on the first {@link #getObject()} call, and
+ * destroyed when the factory is destroyed.
+ *
+ * <p>
+ * This class is not thread safe and should only be called by a single deployment thread.
+ * </p>
+ *
+ * @author avasquez
+ */
+public class SingletonContextFactory implements ObjectFactory<Context>, DisposableBean {
+
+    private static final String SITE_NAME_CONFIG_VARIABLE = "siteName";
+    private static final String SITE_ID_CONFIG_VARIABLE = "siteId";
+
+    private static final Logger logger = LoggerFactory.getLogger(SingletonContextFactory.class);
+
+    private String targetId;
+    private String siteName;
+    private String localRepoUrl;
+    private ContentStoreService contentStoreService;
+    private boolean xmlMergingEnabled;
+    private boolean enableCache = false;
+    private int maxAllowedItemsInCache = 0;
+
+    private Context context;
+
+    public void setTargetId(final String targetId) {
+        this.targetId = targetId;
+    }
+
+    public void setSiteName(final String siteName) {
+        this.siteName = siteName;
+    }
+
+    public void setLocalRepoUrl(String localRepoUrl) {
+        this.localRepoUrl = localRepoUrl;
+    }
+
+    public void setContentStoreService(ContentStoreService contentStoreService) {
+        this.contentStoreService = contentStoreService;
+    }
+
+    public void setXmlMergingEnabled(boolean xmlMergingEnabled) {
+        this.xmlMergingEnabled = xmlMergingEnabled;
+    }
+
+    public void setEnableCache(final boolean enableCache) {
+        this.enableCache = enableCache;
+    }
+
+    public void setMaxAllowedItemsInCache(final int maxAllowedItemsInCache) {
+        this.maxAllowedItemsInCache = maxAllowedItemsInCache;
+    }
+
+    @Override
+    public Context getObject() throws BeansException {
+        if (context == null) {
+            try {
+                Map<String, String> configVariables =
+                        Map.of(SITE_NAME_CONFIG_VARIABLE, siteName,
+                                SITE_ID_CONFIG_VARIABLE, siteName);
+                context = contentStoreService.getContext(targetId, FileSystemContentStoreAdapter.STORE_TYPE,
+                        localRepoUrl, xmlMergingEnabled, enableCache, maxAllowedItemsInCache,
+                        Context.DEFAULT_IGNORE_HIDDEN_FILES, configVariables);
+
+                logger.debug("Content store context created: {}", context);
+            } catch (Exception e) {
+                throw new BeanCreationException("Unable to create context for content store @ " + localRepoUrl, e);
+            }
+        }
+
+        return context;
+    }
+
+    public void destroy() {
+        if (context != null) {
+            try {
+                contentStoreService.destroyContext(context);
+
+                logger.debug("Content store context destroyed: {}", context);
+            } catch (Exception e) {
+                logger.warn("Unable to destroy context " + context, e);
+            }
+        }
+    }
+
+}

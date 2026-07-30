@@ -1,0 +1,87 @@
+/*
+ * Copyright (C) 2007-2026 Crafter Software Corporation. All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*
+ * Maven publishing for module artifacts.
+ *
+ * Local:  ./gradlew publishToMavenLocal
+ * GitHub: ./gradlew publishMavenPublicationToGitHubPackagesRepository
+ *         (requires GITHUB_ACTOR + GITHUB_TOKEN, or -Pgpr.user= / -Pgpr.key=)
+ *
+ * Repository defaults to https://maven.pkg.github.com/craftercms/craftercms
+ * Override with -Pgpr.owner= / -Pgpr.repo=
+ */
+
+def configureMavenPublishing = {
+	if (plugins.hasPlugin('maven-publish')) {
+		return
+	}
+	apply plugin: 'maven-publish'
+
+	def gprUser = System.getenv('GITHUB_ACTOR') ?: findProperty('gpr.user')
+	def gprKey = System.getenv('GITHUB_TOKEN') ?: System.getenv('GPR_TOKEN') ?: findProperty('gpr.key')
+	def gprOwner = findProperty('gpr.owner') ?: 'craftercms'
+	def gprRepo = findProperty('gpr.repo') ?: 'craftercms'
+
+	publishing {
+		repositories {
+			mavenLocal()
+			if (gprUser && gprKey) {
+				maven {
+					name = 'GitHubPackages'
+					url = uri("https://maven.pkg.github.com/${gprOwner}/${gprRepo}")
+					credentials {
+						username = gprUser.toString()
+						password = gprKey.toString()
+					}
+				}
+			}
+		}
+	}
+
+	afterEvaluate {
+		if (publishing.publications.findByName('maven')) {
+			return
+		}
+
+		publishing {
+			publications {
+				register('maven', MavenPublication) {
+					groupId = project.group.toString()
+					artifactId = project.base.archivesName.get()
+					version = project.version.toString()
+
+					if (plugins.hasPlugin('war')) {
+						from components.web
+						artifact(tasks.named('classesJar'))
+					} else if (plugins.hasPlugin('org.springframework.boot')) {
+						artifact(tasks.named('bootJar'))
+					} else {
+						from components.java
+					}
+				}
+			}
+		}
+	}
+}
+
+if (plugins.hasPlugin('java')) {
+	configureMavenPublishing()
+} else {
+	pluginManager.withPlugin('java') {
+		configureMavenPublishing()
+	}
+}

@@ -1,0 +1,37 @@
+{
+  "name": "@craftercms/sdk",
+  "version": "4.3.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "description": "Crafter CMS SDK for JavaScript",
+  "scripts": {
+    "build": "./build.sh",
+    "prettier:all": "prettier -w packages/*/src/**/*.ts prettier -w packages/*/test/**/*.ts",
+    "prettier:packages": "prettier -w packages/*/src/**/*.ts",
+    "prettier:tests": "prettier -w packages/*/test/**/*.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/craftercms/craftercms-sdk-js.git"
+  },
+  "keywords": [
+    "content",
+    "mananagement",
+    "crafter",
+    "craftercms"
+  ],
+  "author": "CrafterCMS",
+  "license": "LGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/craftercms/craftercms/issues"
+  },
+  "homepage": "https://github.com/craftercms/craftercms-sdk-js#readme",
+  "devDependencies": {
+    "prettier": "^3.0.3",
+    "react": "^18.2.0",
+    "typescript": "^5.5.4"
+  },
+  "packageManager": "yarn@4.0.2"
+}

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (C) 2007-2022 Crafter Software Corporation. All Rights Reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License version 3 as published by
+  ~ the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<component>
+	<content-type>/component/company</content-type>	<display-template/>
+	<merge-strategy>inherit-levels</merge-strategy>
+	<objectGroupId>9ea0</objectGroupId>
+	<objectId>9ea03b5c-e199-5e07-aa60-1997dcefbd4c</objectId>
+	<file-name>9ea03b5c-e199-5e07-aa60-1997dcefbd4c.xml</file-name>
+	<internal-name>Company 2</internal-name>
+	<name_s>Company 2</name_s>
+	<website_s>https://www.example.com/</website_s>
+	<email_s>info@example.com</email_s>
+	<phone_s>+1 123 123 1234</phone_s>
+	<logo_s>/static-assets/images/companies/company2.jpeg</logo_s>
+	<description_html>&lt;p&gt;Makes all kind of toys.&lt;/p&gt;</description_html>
+	<createdDate>2017-05-12T16:19:19.000Z</createdDate>
+	<createdDate_dt>2017-05-12T16:19:19.000Z</createdDate_dt>
+	<lastModifiedDate>2017-05-23T23:11:41.000Z</lastModifiedDate>
+	<lastModifiedDate_dt>2017-05-23T23:11:41.000Z</lastModifiedDate_dt>
+</component>
