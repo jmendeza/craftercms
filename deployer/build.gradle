@@ -31,6 +31,9 @@ base {
 
 ext.crafterManifestTitle = 'Crafter Deployer'
 
+// Override Spring Boot BOM-managed versions (matches former spring-boot/pom.xml)
+ext['log4j2.version'] = libs.versions.log4j.get()
+
 dependencies {
 	implementation project(':commons:utilities')
 	implementation project(':commons:validation')
