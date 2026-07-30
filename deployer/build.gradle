@@ -31,6 +31,12 @@ base {
 
 ext.crafterManifestTitle = 'Crafter Deployer'
 
+// Override Spring Boot BOM-managed versions (matches former spring-boot/pom.xml)
+ext['httpclient5.version'] = libs.versions.httpclient5.get()
+ext['tomcat.version'] = libs.versions.tomcat.embed.get()
+ext['netty.version'] = libs.versions.netty.get()
+ext['log4j2.version'] = libs.versions.log4j.get()
+
 dependencies {
 	implementation project(':commons:utilities')
 	implementation project(':commons:validation')

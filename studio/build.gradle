@@ -141,6 +141,7 @@ dependencies {
 	implementation libs.rome.utils
 	implementation platform("org.apache.groovy:groovy-bom:${groovyVersion}")
 	implementation 'org.apache.groovy:groovy-jsr223'
+	implementation 'org.apache.groovy:groovy-json'
 
 	testImplementation project(path: ':engine', configuration: 'classes')
 	testImplementation libs.jgit.junit
