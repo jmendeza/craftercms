@@ -57,7 +57,7 @@ public class SitePermissionMappingsImplTest {
 
 	@Test
 	public void getAvailableActionsUsesDirectUserRoleMappingWithoutGroups() {
-		SitePermissionMappingsImpl userMapped = new SitePermissionMappingsImpl();
+		SitePermissionMappingsImpl userMapped = new SitePermissionMappingsImpl(false);
 		userMapped.addGroupToRolesMapping(new NormalizedGroup("jane"),
 			List.of(new NormalizedRole("author")));
 		userMapped.addRolePermissionMapping("author", authorRoleMappings());
@@ -77,7 +77,7 @@ public class SitePermissionMappingsImplTest {
 
 	@Test
 	public void isSiteAdminReturnsTrueWhenUserHasAdminRole() {
-		SitePermissionMappingsImpl adminMappings = new SitePermissionMappingsImpl();
+		SitePermissionMappingsImpl adminMappings = new SitePermissionMappingsImpl(false);
 		adminMappings.addGroupToRolesMapping(new NormalizedGroup("site_admin"),
 			List.of(new NormalizedRole("admin")));
 		adminMappings.addRolePermissionMapping("admin", authorRoleMappings());
@@ -129,7 +129,7 @@ public class SitePermissionMappingsImplTest {
 		authorRules.addRuleContentItemPermissionsMapping("/site/components/.*",
 			List.of(PERMISSION_CONTENT_WRITE));
 
-		SitePermissionMappingsImpl siteMappings = new SitePermissionMappingsImpl();
+		SitePermissionMappingsImpl siteMappings = new SitePermissionMappingsImpl(false);
 		siteMappings.addGroupToRolesMapping(new NormalizedGroup("site_author"),
 			List.of(new NormalizedRole("author")));
 		siteMappings.addRolePermissionMapping("author", authorRules);
@@ -158,7 +158,7 @@ public class SitePermissionMappingsImplTest {
 
 	@Test
 	public void getUserPermissionsReturnsEmptySetWhenSiteHasNoRoles() {
-		SitePermissionMappingsImpl siteMappings = new SitePermissionMappingsImpl();
+		SitePermissionMappingsImpl siteMappings = new SitePermissionMappingsImpl(false);
 
 		Set<String> sitePermissions = siteMappings.getUserPermissions("jane", Collections.emptyList(), false);
 		Set<String> pathPermissions = siteMappings.getUserPermissions("jane", Collections.emptyList(),
@@ -179,7 +179,7 @@ public class SitePermissionMappingsImplTest {
 	}
 
 	private static SitePermissionMappingsImpl editorialSiteMappings() {
-		SitePermissionMappingsImpl siteMappings = new SitePermissionMappingsImpl();
+		SitePermissionMappingsImpl siteMappings = new SitePermissionMappingsImpl(false);
 		siteMappings.addGroupToRolesMapping(new NormalizedGroup("site_author"),
 			List.of(new NormalizedRole("author")));
 		siteMappings.addRolePermissionMapping("author", authorRoleMappings());
