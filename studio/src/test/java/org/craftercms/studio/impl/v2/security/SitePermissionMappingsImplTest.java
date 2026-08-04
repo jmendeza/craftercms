@@ -178,13 +178,31 @@ public class SitePermissionMappingsImplTest {
 		assertEquals(Set.of(PERMISSION_GET_CHILDREN, PERMISSION_CONTENT_READ), pathPermissions);
 	}
 
+	@Test
+	public void noMembershipUserHasNoReadPermission() {
+		List<Group> groups = List.of(group("test1"));
+		Set<String> sitePermissions = mappings.getUserPermissions("testuser", groups, false);
+		Set<String> pathPermissions = mappings.getUserPermissions("testuser", groups, "/site/website/index.xml", false);
+
+		assertTrue(sitePermissions.isEmpty());
+		assertTrue(pathPermissions.isEmpty());
+	}
+
 	private static SitePermissionMappingsImpl editorialSiteMappings() {
-		SitePermissionMappingsImpl siteMappings = new SitePermissionMappingsImpl(false);
+		SitePermissionMappingsImpl siteMappings = new SitePermissionMappingsImpl(globalPermissionMappingsMappings());
 		siteMappings.addGroupToRolesMapping(new NormalizedGroup("site_author"),
 			List.of(new NormalizedRole("author")));
 		siteMappings.addRolePermissionMapping("author", authorRoleMappings());
 		siteMappings.addRolePermissionMapping("*", wildcardRoleMappings());
 		siteMappings.addGroupToRolesMapping(new NormalizedGroup("no_permissions"), List.of(new NormalizedRole("no_permissions")));
+		return siteMappings;
+	}
+
+	private static SitePermissionMappingsImpl globalPermissionMappingsMappings() {
+		SitePermissionMappingsImpl siteMappings = new SitePermissionMappingsImpl(true);
+		siteMappings.addGroupToRolesMapping(new NormalizedGroup("test1"),
+			List.of(new NormalizedRole("test1")));
+		siteMappings.addGroupToRolesMapping(new NormalizedGroup("test1"), List.of(new NormalizedRole("test1")));
 		return siteMappings;
 	}
 
