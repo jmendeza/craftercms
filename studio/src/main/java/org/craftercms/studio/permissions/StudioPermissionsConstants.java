@@ -43,8 +43,7 @@ public final class StudioPermissionsConstants {
 	public static final String PERMISSION_PUBLISH_STATUS = "publish_status";
 
 	public static final String PERMISSION_PUBLISH_CANCEL = "publish_cancel";
-	public static final String PERMISSION_PUBLISH_APPROVE = "publish_approve";
-	public static final String PERMISSION_PUBLISH_REJECT = "publish_reject";
+	public static final String PERMISSION_PUBLISH_REVIEW = "publish_review";
 	public static final String PERMISSION_PUBLISH_REQUEST = "publish_request";
 	public static final String PERMISSION_PUBLISH_GET_QUEUE = "publish_get_queue";
 	public static final String PERMISSION_PULL_FROM_REMOTE = "pull_from_remote";

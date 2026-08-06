@@ -94,7 +94,7 @@ public class PublishServiceImpl implements PublishService {
 
 	@Override
 	@RequireSiteReady
-	@HasAllPermissions(type = CompositePermission.class, actions = {PERMISSION_PUBLISH_REQUEST, PERMISSION_PUBLISH_APPROVE})
+	@HasAllPermissions(type = CompositePermission.class, actions = {PERMISSION_PUBLISH_REQUEST, PERMISSION_PUBLISH_REVIEW})
 	@PeerReviewCapable
 	public long publish(@SiteId String siteId, String publishingTarget, List<PublishRequestPath> paths,
 						List<String> commitIds, Instant schedule, String title, String comment, boolean submitAll)

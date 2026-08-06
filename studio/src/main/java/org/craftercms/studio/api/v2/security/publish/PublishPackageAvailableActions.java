@@ -42,11 +42,8 @@ public final class PublishPackageAvailableActions {
 	 */
 	public static long mapSiteWidePermissionsToPackageAvailableActions(final Collection<String> permissions) {
 		long result = 0;
-		if (permissions.contains(PERMISSION_PUBLISH_APPROVE)) {
-			result |= APPROVE;
-		}
-		if (permissions.contains(PERMISSION_PUBLISH_REJECT)) {
-			result |= REJECT;
+		if (permissions.contains(PERMISSION_PUBLISH_REVIEW)) {
+			result |= APPROVE | REJECT;
 		}
 		if (permissions.contains(PERMISSION_PUBLISH_CANCEL)) {
 			result |= CANCEL;

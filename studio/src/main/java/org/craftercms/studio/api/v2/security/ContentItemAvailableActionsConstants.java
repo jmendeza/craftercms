@@ -201,7 +201,7 @@ public final class ContentItemAvailableActionsConstants {
 		long result = 0;
 		if (permissions.contains(PERMISSION_PUBLISH_REQUEST)) {
 			result |= PUBLISH_REQUEST;
-			if (permissions.contains(PERMISSION_PUBLISH_REQUEST) && permissions.contains(PERMISSION_PUBLISH_APPROVE)) {
+			if (permissions.contains(PERMISSION_PUBLISH_REVIEW)) {
 				result |= PUBLISH;
 			}
 		}

@@ -6146,7 +6146,7 @@ paths:
             summary: Publishes the given content to the target (staging or live)
             description: |
                     Module: Studio <br>
-                    Required permission "publish_request". Additionally requires "publish_approve" when requestApproval is false. <br />
+                    Required permission "publish_request". Additionally requires "publish_review" when requestApproval is false. <br />
             operationId: publish
             parameters:
                 -   name: siteId
@@ -8004,7 +8004,7 @@ paths:
             summary: Approve request publish submission
             description: |
                     Module: Studio <br>
-                    Required permission "publish_approve"
+                    Required permission "publish_review"
             operationId: workflowApprove
             parameters:
                 -   name: site
@@ -8068,7 +8068,7 @@ paths:
             summary: Reject publish package
             description: |
                     Module: Studio <br>
-                    Required permission "publish_cancel"
+                    Required permission "publish_review"
             operationId: workflowReject
             parameters:
                 -   name: site

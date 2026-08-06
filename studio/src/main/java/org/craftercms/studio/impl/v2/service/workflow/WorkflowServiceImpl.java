@@ -85,7 +85,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	@Override
 	@RequireSiteExists
-	@HasPermission(type = DefaultPermission.class, action = PERMISSION_PUBLISH_APPROVE)
+	@HasPermission(type = DefaultPermission.class, action = PERMISSION_PUBLISH_REVIEW)
 	@PeerReviewCapable
 	public void approvePackages(@SiteId String siteId, @PackageIds Collection<Long> packageIds, Instant schedule, boolean updateSchedule, String comment)
 		throws AuthenticationException, ServiceLayerException {
@@ -94,7 +94,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	@Override
 	@RequireSiteExists
-	@HasPermission(type = DefaultPermission.class, action = PERMISSION_PUBLISH_REJECT)
+	@HasPermission(type = DefaultPermission.class, action = PERMISSION_PUBLISH_REVIEW)
 	public void rejectPackages(@SiteId String siteId, Collection<Long> packageIds, String comment) throws ServiceLayerException, AuthenticationException {
 		workflowServiceInternal.rejectPackages(siteId, packageIds, comment);
 	}
