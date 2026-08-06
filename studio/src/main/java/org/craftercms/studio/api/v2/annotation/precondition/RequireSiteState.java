@@ -14,12 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.craftercms.studio.api.v2.annotation;
+package org.craftercms.studio.api.v2.annotation.precondition;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
+import org.craftercms.studio.api.v2.annotation.resourceids.SiteId;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 

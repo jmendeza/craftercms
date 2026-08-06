@@ -92,6 +92,7 @@ public final class StudioPermissionsConstants {
 
 	public static final String SITE_ID_RESOURCE_ID = "siteId";
 	public static final String PATH_RESOURCE_ID = "path";
+	public static final String PATH_LIST_RESOURCE_ID = "pathList";
 	public static final String DEFAULT_PATH_RESOURCE_VALUE = "/";
 
 	public static final Set<String> SITE_WIDE_RULE_REGEXES = Set.of(".*", "/.*");

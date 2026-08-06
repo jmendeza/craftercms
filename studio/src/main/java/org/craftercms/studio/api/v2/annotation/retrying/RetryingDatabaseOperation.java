@@ -14,25 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.craftercms.studio.impl.v2.dal;
+package org.craftercms.studio.api.v2.annotation.retrying;
 
-import org.craftercms.studio.api.v2.annotation.retrying.RetryingDatabaseOperation;
-import org.craftercms.studio.api.v2.dal.RetryingDatabaseOperationFacade;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import java.util.function.Supplier;
+@Target({ElementType.METHOD, ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface RetryingDatabaseOperation {
 
-@RetryingDatabaseOperation
-@SuppressWarnings("rawtypes")
-public class RetryingDatabaseOperationFacadeImpl implements RetryingDatabaseOperationFacade {
-
-	@Override
-	public void retry(final Runnable op) {
-		op.run();
-	}
-
-	@Override
-	public <T> T retry(final Supplier<T> op) {
-		return op.get();
-	}
 }
-

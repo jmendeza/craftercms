@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.craftercms.studio.api.v2.annotation;
+package org.craftercms.studio.api.v2.annotation.retrying;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -50,8 +50,8 @@ public class RetryingDatabaseOperationAnnotationHandler {
 		this.maxSleep = maxSleep;
 	}
 
-	@Around("@within(org.craftercms.studio.api.v2.annotation.RetryingDatabaseOperation) || " +
-		"@annotation(org.craftercms.studio.api.v2.annotation.RetryingDatabaseOperation)")
+	@Around("@within(org.craftercms.studio.api.v2.annotation.retrying.RetryingDatabaseOperation) || " +
+		"@annotation(org.craftercms.studio.api.v2.annotation.retrying.RetryingDatabaseOperation)")
 	// TODO: AV - This has the same problem as the old RetryingRepositoryOperationAnnotationHandler. We can just copy
 	// the fixed code or consolidate the code
 	public Object doRetryingOperation(ProceedingJoinPoint pjp) throws Throwable {
