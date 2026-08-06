@@ -230,7 +230,7 @@ import org.craftercms.studio.model.rest.content.WriteContentResult;
 import org.craftercms.studio.model.rest.content.WriteContentResult.WriteContentResultItem;
 import org.craftercms.studio.model.rest.content.order.ItemOrder;
 import org.craftercms.studio.model.rest.content.order.ReorderItemRequest;
-import static org.craftercms.studio.permissions.CompositePermissionResolverImpl.PATH_LIST_RESOURCE_ID;
+import static org.craftercms.studio.permissions.StudioPermissionsConstants.PATH_LIST_RESOURCE_ID;
 import static org.craftercms.studio.permissions.StudioPermissionsConstants.PATH_RESOURCE_ID;
 import static org.craftercms.studio.permissions.StudioPermissionsConstants.PERMISSION_CONTENT_DELETE;
 import static org.craftercms.studio.permissions.StudioPermissionsConstants.PERMISSION_CONTENT_WRITE;

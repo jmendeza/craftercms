@@ -13,7 +13,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.craftercms.studio.api.v2.annotation;
+
+package org.craftercms.studio.api.v2.annotation.precondition;
+
+import org.craftercms.studio.api.v2.dal.Site;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -24,11 +27,11 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Indicates that the annotated method requires the site bootstrap process to be completed.
+ * {@link RequireSiteState} specialization that requires the site state to be 'READY'.
  */
 @Inherited
 @Retention(RUNTIME)
 @Target({METHOD, ElementType.TYPE})
-@RequireSiteExists
-public @interface RequireSiteBootstrapComplete {
+@RequireSiteState(Site.State.READY)
+public @interface RequireSiteReady {
 }

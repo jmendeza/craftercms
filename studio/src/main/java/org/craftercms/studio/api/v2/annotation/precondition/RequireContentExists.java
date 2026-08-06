@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.craftercms.studio.api.v2.annotation;
+package org.craftercms.studio.api.v2.annotation.precondition;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

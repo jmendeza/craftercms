@@ -19,7 +19,7 @@ import java.beans.ConstructorProperties;
 
 import org.craftercms.commons.validation.annotations.param.ValidSiteId;
 import org.craftercms.studio.api.v1.exception.ServiceLayerException;
-import org.craftercms.studio.api.v2.annotation.LogExecutionTime;
+import org.craftercms.studio.api.v2.annotation.logging.LogExecutionTime;
 import org.craftercms.studio.api.v2.service.content.ContentTypeService;
 import org.craftercms.studio.model.contentType.ModelDefinitions;
 import static org.craftercms.studio.model.rest.ApiResponse.OK;

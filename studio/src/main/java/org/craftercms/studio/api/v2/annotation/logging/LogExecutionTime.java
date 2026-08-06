@@ -13,28 +13,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.craftercms.studio.api.v2.annotation;
 
-import org.craftercms.commons.security.permissions.annotations.ProtectedResourceId;
+package org.craftercms.studio.api.v2.annotation.logging;
 
-import java.lang.annotation.Inherited;
+import org.slf4j.event.Level;
+
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.craftercms.studio.permissions.StudioPermissionsConstants.SITE_ID_RESOURCE_ID;
-
 /**
- * Annotation to mark the parameter containing the value of the site id
- *
- * @author joseross
- * @since 4.0.0
+ * Annotation to trace execution time of methods.
+ * This annotation only works with public method with external calls as a limitation of Spring AOP.
+ * If the tracing method is an internal call, consider using {@link org.craftercms.studio.impl.v2.utils.TimeUtils} instead
  */
-@Inherited
-@Target({PARAMETER, ANNOTATION_TYPE})
-@Retention(RUNTIME)
-@ProtectedResourceId(SITE_ID_RESOURCE_ID)
-public @interface SiteId {
+@Target({ElementType.METHOD, ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface LogExecutionTime {
+	/**
+	 * The log level to use for the execution time logging.
+	 * Defaults to TRACE if not specified.
+	 */
+	Level value() default Level.TRACE;
 }

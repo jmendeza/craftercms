@@ -1265,7 +1265,7 @@
 	</bean>
 
 	<bean id="requireSiteReadyHandler"
-	      class="org.craftercms.studio.api.v2.annotation.RequireSiteStateAnnotationHandler">
+	      class="org.craftercms.studio.api.v2.annotation.precondition.RequireSiteStateAnnotationHandler">
 		<constructor-arg name="sitesService" ref="sitesService"/>
 	</bean>
 

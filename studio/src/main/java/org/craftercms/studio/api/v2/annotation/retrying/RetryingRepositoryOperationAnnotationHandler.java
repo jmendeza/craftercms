@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.craftercms.studio.api.v2.annotation;
+package org.craftercms.studio.api.v2.annotation.retrying;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -61,8 +61,8 @@ public class RetryingRepositoryOperationAnnotationHandler {
 		this.maxSleep = maxSleep;
 	}
 
-	@Around("@within(org.craftercms.studio.api.v2.annotation.RetryingRepositoryOperation) || " +
-		"@annotation(org.craftercms.studio.api.v2.annotation.RetryingRepositoryOperation)")
+	@Around("@within(org.craftercms.studio.api.v2.annotation.retrying.RetryingRepositoryOperation) || " +
+		"@annotation(org.craftercms.studio.api.v2.annotation.retrying.RetryingRepositoryOperation)")
 	public Object doRetryingOperation(ProceedingJoinPoint pjp) throws Throwable {
 		Method method = AopUtils.getActualMethod(pjp);
 		Exception lastException;

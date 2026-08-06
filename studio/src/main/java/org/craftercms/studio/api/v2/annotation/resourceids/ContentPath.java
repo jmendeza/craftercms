@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2026 Crafter Software Corporation. All Rights Reserved.
+ * Copyright (C) 2007-2024 Crafter Software Corporation. All Rights Reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as published by
@@ -14,24 +14,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.craftercms.studio.api.v2.annotation;
+package org.craftercms.studio.api.v2.annotation.resourceids;
 
-import org.craftercms.studio.api.v2.dal.Site;
+import org.craftercms.commons.security.permissions.annotations.ProtectedResourceId;
 
-import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.craftercms.studio.permissions.StudioPermissionsConstants.PATH_RESOURCE_ID;
 
 /**
- * {@link RequireSiteState} specialization that requires the site state to be 'READY'.
+ * Annotation to mark the parameter containing the value of the path
  */
 @Inherited
+@Target({PARAMETER, ANNOTATION_TYPE})
 @Retention(RUNTIME)
-@Target({METHOD, ElementType.TYPE})
-@RequireSiteState(Site.State.READY)
-public @interface RequireSiteReady {
+@ProtectedResourceId(PATH_RESOURCE_ID)
+public @interface ContentPath {
 }
