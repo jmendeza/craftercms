@@ -263,10 +263,10 @@ public interface PublishService {
 	 * @param siteId    the site id
 	 * @param packageId the package id
 	 * @param offset    the offset to start from
-	 * @param limit     the max number of items to return
+	 * @param limit     the max number of items to return (null to return all items)
 	 * @return the publish items
 	 */
-	Collection<PublishItem> getPublishItems(String siteId, long packageId, int offset, int limit) throws PublishPackageNotFoundException, SiteNotFoundException;
+	Collection<PublishItem> getPublishItems(String siteId, long packageId, Integer offset, Integer limit) throws PublishPackageNotFoundException, SiteNotFoundException;
 
 	/**
 	 * Get the failed publish items for a package
@@ -275,10 +275,10 @@ public interface PublishService {
 	 * @param siteId    the site id
 	 * @param packageId the package id
 	 * @param offset    the offset to start from
-	 * @param limit     the max number of items to return
+	 * @param limit     the max number of items to return (null to return all items)
 	 * @return the failed publish items
 	 */
-	Collection<PublishItem> getFailedPublishItems(String siteId, long packageId, int offset, int limit);
+	Collection<PublishItem> getFailedPublishItems(String siteId, long packageId, Integer offset, Integer limit);
 
 	/**
 	 * Get the total number of published items in the last <code>days</code>number of days matching the action

@@ -315,12 +315,12 @@ public class PublishServiceInternalImpl implements PublishService, ApplicationCo
 
 	@Override
 	public Collection<PublishItem> getPublishItems(final String siteId, final long packageId,
-												   final int offset, final int limit) {
+												   final Integer offset, final Integer limit) {
 		return publishDao.getPublishItems(siteId, packageId, offset, limit);
 	}
 
 	@Override
-	public Collection<PublishItem> getFailedPublishItems(String siteId, long packageId, int offset, int limit) {
+	public Collection<PublishItem> getFailedPublishItems(String siteId, long packageId, Integer offset, Integer limit) {
 		return publishDao.getFailedPublishItems(siteId, packageId, offset, limit);
 	}
 

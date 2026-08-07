@@ -218,6 +218,8 @@ public final class ContentItemAvailableActionsConstants {
 			case PERMISSION_FOLDER_CREATE -> BITMAP_FOLDER_CREATE;
 			case PERMISSION_CONTENT_DELETE -> BITMAP_CONTENT_DELETE;
 			case PERMISSION_ITEM_UNLOCK -> BITMAP_ITEM_UNLOCK;
+			case PERMISSION_PUBLISH_REQUEST -> PUBLISH_REQUEST;
+			case PERMISSION_PUBLISH_REVIEW -> PUBLISH;
 			default -> {
 				logger.debug("Permission '{}' is not declared with content item available actions", permission);
 				yield BITMAP_UNDEFINED;

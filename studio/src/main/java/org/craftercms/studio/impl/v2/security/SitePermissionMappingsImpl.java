@@ -27,13 +27,15 @@ import java.util.Set;
 import org.apache.commons.collections4.CollectionUtils;
 import static org.craftercms.studio.api.v1.constant.StudioConstants.ADMIN_NORMALIZED_ROLE;
 import org.craftercms.studio.api.v2.dal.Group;
+import org.craftercms.studio.api.v2.dal.publish.PublishItem;
 import org.craftercms.studio.api.v2.dal.security.NormalizedGroup;
 import org.craftercms.studio.api.v2.dal.security.NormalizedRole;
 import static org.craftercms.studio.api.v2.dal.security.NormalizedRole.WILDCARD_ROLE;
 import static org.craftercms.studio.api.v2.security.ContentItemAvailableActionsConstants.mapSiteWidePermissionsToItemAvailableActions;
 import org.craftercms.studio.api.v2.security.RolePermissionMappings;
 import org.craftercms.studio.api.v2.security.SitePermissionMappings;
-import static org.craftercms.studio.api.v2.security.publish.PublishPackageAvailableActions.mapSiteWidePermissionsToPackageAvailableActions;
+import org.craftercms.studio.api.v2.security.publish.PublishPackageAvailableActions;
+
 import static org.craftercms.studio.permissions.StudioPermissionsConstants.PERMISSION_CONTENT_READ;
 
 /**
@@ -86,12 +88,13 @@ public class SitePermissionMappingsImpl implements SitePermissionMappings {
 	}
 
 	@Override
-	public long getPublishPackageAvailableActions(String username, List<Group> groups) {
-		Set<String> permissions = new HashSet<>(getSiteWidePermissions(username, groups));
-		if (parent != null) {
-			permissions.addAll(parent.getSiteWidePermissions(username, groups));
-		}
-		return mapSiteWidePermissionsToPackageAvailableActions(permissions);
+	public long getPublishPackageAvailableActions(String username, List<Group> groups, Collection<PublishItem> publishItems, boolean isSystemAdmin) {
+		long result = 0;
+		result = publishItems.stream()
+				.map(pi-> getUserPermissions(username, groups, pi.getPath(), isSystemAdmin))
+				.map(PublishPackageAvailableActions::mapPermissionsToPackageAvailableActions)
+				.reduce((a, b) -> a & b).orElse(0L);
+		return result;
 	}
 
 	@Override

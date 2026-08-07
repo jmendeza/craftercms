@@ -6589,7 +6589,7 @@ paths:
             summary: Get available publishing targets for site
             description: |
                     Module: Studio <br>
-                    Required permission "publish_request"
+                    Required permission "content_read"
             operationId: getAvailablePublishingTargets
             parameters:
                 -   name: siteId
