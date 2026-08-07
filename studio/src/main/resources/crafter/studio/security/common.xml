@@ -284,6 +284,7 @@
 		<property name="contentTypeService" ref="contentTypeServiceInternal"/>
 		<property name="userService" ref="userServiceInternal"/>
 		<property name="itemDAO" ref="itemDao"/>
+		<property name="siteDAO" ref="siteDao"/>
 	</bean>
 
 	<bean id="studio.loginPageFilter"

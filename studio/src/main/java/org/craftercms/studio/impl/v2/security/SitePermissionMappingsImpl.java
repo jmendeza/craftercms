@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections4.CollectionUtils;
+
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.craftercms.studio.api.v1.constant.StudioConstants.ADMIN_NORMALIZED_ROLE;
 import org.craftercms.studio.api.v2.dal.Group;
 import org.craftercms.studio.api.v2.dal.publish.PublishItem;
@@ -81,19 +83,23 @@ public class SitePermissionMappingsImpl implements SitePermissionMappings {
 	@Override
 	public long getSiteWideItemAvailableActions(String username, List<Group> groups) {
 		Set<String> permissions = new HashSet<>(getSiteWidePermissions(username, groups));
-		if (parent != null) {
-			permissions.addAll(parent.getSiteWidePermissions(username, groups));
-		}
 		return mapSiteWidePermissionsToItemAvailableActions(permissions);
 	}
 
 	@Override
-	public long getPublishPackageAvailableActions(String username, List<Group> groups, Collection<PublishItem> publishItems, boolean isSystemAdmin) {
+	public long getPublishPackageAvailableActions(String username, List<Group> groups,
+			Collection<PublishItem> publishItems, boolean isSystemAdmin) {
 		long result = 0;
-		result = publishItems.stream()
-				.map(pi-> getUserPermissions(username, groups, pi.getPath(), isSystemAdmin))
-				.map(PublishPackageAvailableActions::mapPermissionsToPackageAvailableActions)
-				.reduce((a, b) -> a & b).orElse(0L);
+		// List is empty for initial publish
+		if (isEmpty(publishItems)) {
+			Collection<String> siteWidePermissions = getSiteWidePermissions(username, groups);
+			result = PublishPackageAvailableActions.mapPermissionsToPackageAvailableActions(siteWidePermissions);
+		} else {
+			result = publishItems.stream()
+					.map(pi -> getUserPermissions(username, groups, pi.getPath(), isSystemAdmin))
+					.map(PublishPackageAvailableActions::mapPermissionsToPackageAvailableActions)
+					.reduce((a, b) -> a & b).orElse(0L);
+		}
 		return result;
 	}
 
@@ -111,6 +117,9 @@ public class SitePermissionMappingsImpl implements SitePermissionMappings {
 			if (rolePermissionMappings != null) {
 				permissions.addAll(rolePermissionMappings.getSiteWidePermissions());
 			}
+		}
+		if (parent != null) {
+			permissions.addAll(parent.getSiteWidePermissions(username, groups));
 		}
 		return permissions;
 	}

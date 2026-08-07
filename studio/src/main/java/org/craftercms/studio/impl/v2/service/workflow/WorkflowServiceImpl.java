@@ -94,7 +94,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	@Override
 	@RequireSiteExists
-	@HasPermission(type = DefaultPermission.class, action = PERMISSION_PUBLISH_REVIEW)
+	@HasPermission(type = DefaultPermission.class, action = PERMISSION_CONTENT_READ)
 	public void rejectPackages(@SiteId String siteId, Collection<Long> packageIds, String comment) throws ServiceLayerException, AuthenticationException {
 		workflowServiceInternal.rejectPackages(siteId, packageIds, comment);
 	}
