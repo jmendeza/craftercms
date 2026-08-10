@@ -42,6 +42,7 @@ import org.craftercms.studio.api.v2.exception.publish.InvalidTargetException;
 import org.craftercms.studio.api.v2.exception.repository.RepositoryException;
 import org.craftercms.studio.api.v2.repository.GitContentRepository;
 import org.craftercms.studio.api.v2.security.PermissionCheckingUtils;
+import org.craftercms.studio.api.v2.security.SemanticsAvailableActionsResolver;
 import org.craftercms.studio.api.v2.security.publish.PublishPackageAvailableActionResolver;
 import org.craftercms.studio.api.v2.service.audit.ActivityStreamService;
 import org.craftercms.studio.api.v2.service.audit.AuditService;
@@ -118,7 +119,8 @@ public class PublishServiceInternalImpl implements PublishService, ApplicationCo
 
 	@ConstructorProperties({"contentRepository", "retryingDatabaseOperationFacade", "itemService", "servicesConfig",
 			"auditService", "dependencyService", "publishDao", "itemTargetDao", "siteService",
-			"generalLockService", "publishPackageAvailableActionResolver", "activityService", "permissionEvaluator"})
+			"generalLockService", "publishPackageAvailableActionResolver",
+			"activityService", "permissionEvaluator"})
 	public PublishServiceInternalImpl(GitContentRepository contentRepository, RetryingDatabaseOperationFacade retryingDatabaseOperationFacade,
 									  ItemService itemService, ServicesConfig servicesConfig, AuditService auditService,
 									  DependencyService dependencyService, PublishDAO publishDao,
@@ -255,7 +257,27 @@ public class PublishServiceInternalImpl implements PublishService, ApplicationCo
 		// Get hard deps of them all
 		Collection<LightItem> hardDependencies = dependencyService.getHardDependencies(siteId, target, corePackagePaths);
 		Collection<LightItem> coreItems = isNotEmpty(corePackagePaths) ? publishDao.getMetadata(siteId, corePackagePaths) : emptyList();
-		return new CalculatedPublishPackageResult(coreItems, deletedPaths, hardDependencies, softDependencies);
+		return new CalculatedPublishPackageResult(getPublishDependencies(siteId, coreItems), deletedPaths,
+		 getPublishDependencies(siteId, hardDependencies), getPublishDependencies(siteId, softDependencies));
+	}
+
+	/**
+	 * Map LightItem List to PublishDependency List
+	 *
+	 * @param siteId the site id
+	 * @param items  the LightItem List
+	 * @return the PublishDependency List, contains canApprove and canRequestPublish
+	 *         for each item
+	 */
+	private Collection<PublishDependency> getPublishDependencies(String siteId, Collection<LightItem> items) {
+		return items.stream()
+				.map(item -> {
+					Object resource = PermissionCheckingUtils.getSecuredResource(siteId, List.of(item.getPath()));
+					boolean canApprove = permissionEvaluator.isAllowed(resource, PERMISSION_PUBLISH_REVIEW);
+					boolean canRequestPublish = permissionEvaluator.isAllowed(resource, PERMISSION_PUBLISH_REQUEST);
+					return new PublishDependency(item, canApprove, canRequestPublish);
+				})
+				.collect(toList());
 	}
 
 	@Override
