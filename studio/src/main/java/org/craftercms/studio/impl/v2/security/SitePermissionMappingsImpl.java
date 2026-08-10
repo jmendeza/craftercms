@@ -81,8 +81,8 @@ public class SitePermissionMappingsImpl implements SitePermissionMappings {
 	}
 
 	@Override
-	public long getSiteWideItemAvailableActions(String username, List<Group> groups) {
-		Set<String> permissions = new HashSet<>(getSiteWidePermissions(username, groups));
+	public long getSiteWideItemAvailableActions(String username, List<Group> groups, boolean isSystemAdmin) {
+		Set<String> permissions = new HashSet<>(getSiteWidePermissions(username, groups, isSystemAdmin));
 		return mapSiteWidePermissionsToItemAvailableActions(permissions);
 	}
 
@@ -92,7 +92,7 @@ public class SitePermissionMappingsImpl implements SitePermissionMappings {
 		long result = 0;
 		// List is empty for initial publish
 		if (isEmpty(publishItems)) {
-			Collection<String> siteWidePermissions = getSiteWidePermissions(username, groups);
+			Collection<String> siteWidePermissions = getSiteWidePermissions(username, groups, isSystemAdmin);
 			result = PublishPackageAvailableActions.mapPermissionsToPackageAvailableActions(siteWidePermissions);
 		} else {
 			result = publishItems.stream()
@@ -109,17 +109,23 @@ public class SitePermissionMappingsImpl implements SitePermissionMappings {
 				|| (parent != null && parent.isSiteAdmin(username, groups));
 	}
 
-	private Collection<String> getSiteWidePermissions(String username, Collection<Group> groups) {
+	private Collection<String> getSiteWidePermissions(String username, Collection<Group> groups, boolean isSystemAdmin) {
 		List<NormalizedRole> rolesList = getRolesForUser(username, groups);
 		Set<String> permissions = new HashSet<>();
-		for (NormalizedRole role : rolesList) {
-			RolePermissionMappings rolePermissionMappings = rolePermissions.get(role);
-			if (rolePermissionMappings != null) {
+		if (isSystemAdmin) {
+			rolePermissions.values().forEach(rolePermissionMappings -> {
 				permissions.addAll(rolePermissionMappings.getSiteWidePermissions());
+			});
+		} else {
+			for (NormalizedRole role : rolesList) {
+				RolePermissionMappings rolePermissionMappings = rolePermissions.get(role);
+				if (rolePermissionMappings != null) {
+					permissions.addAll(rolePermissionMappings.getSiteWidePermissions());
+				}
 			}
 		}
 		if (parent != null) {
-			permissions.addAll(parent.getSiteWidePermissions(username, groups));
+			permissions.addAll(parent.getSiteWidePermissions(username, groups, isSystemAdmin));
 		}
 		return permissions;
 	}

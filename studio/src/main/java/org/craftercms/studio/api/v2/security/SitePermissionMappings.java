@@ -22,7 +22,6 @@ import java.util.Set;
 
 import org.craftercms.studio.api.v2.dal.Group;
 import org.craftercms.studio.api.v2.dal.publish.PublishItem;
-import org.craftercms.studio.api.v2.dal.publish.PublishPackage;
 
 /**
  * Read-only mapping of user groups to available actions for a given site.
@@ -48,9 +47,10 @@ public interface SitePermissionMappings {
 	 *
 	 * @param username username of the user
 	 * @param groups groups the user belongs to
+	 * @param isSystemAdmin true if the user is a system admin, false otherwise
 	 * @return available actions bitmap
 	 */
-	long getSiteWideItemAvailableActions(String username, List<Group> groups);
+	long getSiteWideItemAvailableActions(String username, List<Group> groups, boolean isSystemAdmin);
 
 	/**
 	 * Get the actions a user has permissions to perform on publish packages
