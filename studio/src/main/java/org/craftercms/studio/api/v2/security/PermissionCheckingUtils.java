@@ -26,6 +26,9 @@ import java.util.Map;
 import org.craftercms.commons.security.exception.ActionDeniedException;
 import org.craftercms.commons.security.permissions.PermissionEvaluator;
 
+/**
+ * Utility class for checking permissions.
+ */
 public class PermissionCheckingUtils {
 
 	/**
