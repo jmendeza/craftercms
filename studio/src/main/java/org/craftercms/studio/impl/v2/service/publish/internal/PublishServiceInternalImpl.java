@@ -761,7 +761,7 @@ public class PublishServiceInternalImpl implements PublishService, ApplicationCo
 	protected long buildInitialPublishPackage(Site site, String publishingTarget, boolean requestApproval, String title,
 			String comment)
 			throws AuthenticationException, ServiceLayerException {
-		checkPublishAllPermissions(site.getSiteId(), requestApproval);
+		checkPublishPermissions(site.getSiteId(), requestApproval, emptyList());
 
 		return buildPublishPackage(site, publishingTarget, INITIAL_PUBLISH, emptyList(), emptyList(), requestApproval,
 				null, title, comment, emptyList());
@@ -769,20 +769,31 @@ public class PublishServiceInternalImpl implements PublishService, ApplicationCo
 
 	/**
 	 * Check if the current user has the necessary permissions to submit a publish
-	 * all (or initial publish) operation.
+	 * operation.
+	 * It checks the user has the right permissions for each path. If paths is empty
+	 * (publish all or initial publish), it checks the user has the right
+	 * permissions for the site.
 	 *
 	 * @param siteId          the site id
 	 * @param requestApproval whether to request approval
+	 * @param paths           the paths to check permissions for, empty for publish
+	 *                        all or initial publish
 	 * @throws ActionDeniedException if the current user does not have the necessary
 	 *                               permissions
 	 */
-	protected void checkPublishAllPermissions(String siteId, boolean requestApproval) {
+	protected void checkPublishPermissions(String siteId, boolean requestApproval, Collection<String> paths) {
 		List<String> actions = requestApproval ? List.of(PERMISSION_PUBLISH_REQUEST)
 				: List.of(PERMISSION_PUBLISH_REQUEST, PERMISSION_PUBLISH_REVIEW);
 
-		PermissionCheckingUtils.checkPermissions(permissionEvaluator,
-				PermissionCheckingUtils.getSecuredResource(siteId),
-				actions);
+		if (isEmpty(paths)) {
+			PermissionCheckingUtils.checkPermissions(permissionEvaluator,
+					PermissionCheckingUtils.getSecuredResource(siteId),
+					actions);
+		} else {
+			PermissionCheckingUtils.checkPermissions(permissionEvaluator,
+					PermissionCheckingUtils.getSecuredResource(siteId, paths),
+					actions);
+		}
 	}
 
 	/**
@@ -821,7 +832,7 @@ public class PublishServiceInternalImpl implements PublishService, ApplicationCo
 	 */
 	protected long buildPublishAllPackage(Site site, String publishingTarget, String title,
 			String comment) throws AuthenticationException, ServiceLayerException {
-		checkPublishAllPermissions(site.getSiteId(), false);
+		checkPublishPermissions(site.getSiteId(), false, emptyList());
 
 		return buildPublishPackage(site, publishingTarget, PUBLISH_ALL, emptyList(), emptyList(),
 			false, null, title, comment, getPublishAllItems(site));
@@ -879,12 +890,7 @@ public class PublishServiceInternalImpl implements PublishService, ApplicationCo
 				.map(PublishItem::getPath)
 				.collect(toSet());
 
-		List<String> actions = requestApproval ? List.of(PERMISSION_PUBLISH_REQUEST)
-				: List.of(PERMISSION_PUBLISH_REQUEST, PERMISSION_PUBLISH_REVIEW);
-
-		PermissionCheckingUtils.checkPermissions(permissionEvaluator,
-				PermissionCheckingUtils.getSecuredResource(site.getSiteId(), publishPaths),
-				actions);
+		checkPublishPermissions(site.getSiteId(), requestApproval, publishPaths);
 
 		return buildPublishPackage(site, target, ITEM_LIST, paths, commitIds, requestApproval, schedule, title, comment,
 				publishItems);
