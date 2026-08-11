@@ -105,6 +105,7 @@ jakarta-servlet-jsp-api = "4.0.0"
 jakarta-servlet-jsp-jstl-api = "3.0.2"
 httpmime = "4.5.14"
 spring-boot = "4.1.0"
+spring-dependency-management = "1.1.7"
 spring-data-commons = "4.1.0"
 spring-ldap-core = "4.1.0"
 commons-dbcp2 = "2.14.0"
@@ -299,3 +300,7 @@ aws-cloudformation = { module = "software.amazon.awssdk:cloudformation", version
 aws-elastictranscoder = { module = "software.amazon.awssdk:elastictranscoder", version.ref = "aws-sdk-elastictranscoder" }
 aws-mediaconvert = { module = "software.amazon.awssdk:mediaconvert", version.ref = "aws-sdk" }
 rome-utils = { module = "com.rometools:rome-utils", version.ref = "rome-utils" }
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }
