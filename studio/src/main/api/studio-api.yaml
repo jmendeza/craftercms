@@ -1281,35 +1281,6 @@ paths:
                 '500':
                     $ref: '#/components/responses/InternalServerError'
 
-    /api/2/users/me/logout/sso/url:
-        get:
-            tags:
-                - users
-            summary: Get the SSO Service Provide logout URL for the current authenticated user
-            description: |
-                Module: Studio <br>
-
-                * Required Permission: "LOGGED_IN"
-                * The system should redirect to this logout URL `AFTER` local logout. Response entity can be null if user is
-                  not authenticated through SSO or if logout is disabled
-            operationId: getCurrentUserSsoLogoutUrl
-            responses:
-                '200':
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                type: object
-                                properties:
-                                    response:
-                                        $ref: '#/components/schemas/ApiResponse'
-                                    logoutUrl:
-                                        type: string
-                '401':
-                    $ref: '#/components/responses/Unauthorized'
-                '500':
-                    $ref: '#/components/responses/InternalServerError'
-
     /api/2/users/me/change_password:
         post:
             tags:

@@ -42,6 +42,7 @@ guava-collections = "r03"
 aspectj = "1.9.25.1"
 freemarker = "2.3.34"
 jackson = "2.22.1"
+jackson3 = "3.1.4"
 jackson-annotations = "2.22"
 groovy = "5.0.8"
 findbugs = "3.0.1"
@@ -161,6 +162,7 @@ aspectjrt = { module = "org.aspectj:aspectjrt", version.ref = "aspectj" }
 aspectjweaver = { module = "org.aspectj:aspectjweaver", version.ref = "aspectj" }
 freemarker = { module = "org.freemarker:freemarker", version.ref = "freemarker" }
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+jackson3-databind = { module = "tools.jackson.core:jackson-databind", version.ref = "jackson3" }
 jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson" }
 jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version.ref = "jackson-annotations" }
 jackson-dataformat-cbor = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor", version.ref = "jackson" }

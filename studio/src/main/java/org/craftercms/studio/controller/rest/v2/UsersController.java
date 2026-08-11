@@ -368,23 +368,6 @@ public class UsersController {
 		return result;
 	}
 
-	/**
-	 * Get the SSO SP logout URL for the current authenticated user. The system should redirect to this logout URL
-	 * <strong>AFTER</strong> local logout. Response entity can be null if user is not authenticated through SSO
-	 * or if logout is disabled
-	 *
-	 * @return Response containing SSO logout URL for the current authenticated user
-	 * @deprecated since 3.2, all logout redirects are now handled by Spring Security
-	 */
-	@GetMapping(ME + LOGOUT_SSO_URL)
-	@ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
-	public Result getCurrentUserSsoLogoutUrl() {
-		Result result = new Result();
-		result.setResponse(DEPRECATED);
-
-		return result;
-	}
-
 	@GetMapping(FORGOT_PASSWORD)
 	public ResultOne<String> forgotPassword(@NotBlank @RequestParam(value = REQUEST_PARAM_USERNAME) String username) {
 		int delay = studioConfiguration.getProperty(SECURITY_SET_PASSWORD_DELAY, Integer.class);
