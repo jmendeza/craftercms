@@ -6071,12 +6071,14 @@ paths:
                                             items:
                                                 type: array
                                                 items:
-                                                    $ref: '#/components/schemas/LightItem'
+                                                    $ref: '#/components/schemas/PublishDependency'
                                                 example:
                                                     - path: "/site/website/article1/index.xml"
                                                       label: "Article 1"
                                                       systemType: page
                                                       mimeType: application/xml
+                                                      canApprove: true
+                                                      canRequestPublish: true
                                             deletedItems:
                                                 type: array
                                                 items:
@@ -6086,21 +6088,25 @@ paths:
                                             hardDependencies:
                                                 type: array
                                                 items:
-                                                    $ref: '#/components/schemas/LightItem'
+                                                    $ref: '#/components/schemas/PublishDependency'
                                                 example:
                                                     - path: "/templates/web/article.ftl"
                                                       label: article.ftl
                                                       systemType: renderingTemplate
                                                       mimeType: text/x-freemarker
+                                                      canApprove: true
+                                                      canRequestPublish: false
                                             softDependencies:
                                                 type: array
                                                 items:
-                                                    $ref: '#/components/schemas/LightItem'
+                                                    $ref: '#/components/schemas/PublishDependency'
                                                 example:
                                                     - path: "/static-assets/images/background.png"
                                                       label: background.png
                                                       systemType: asset
                                                       mimeType: image/png
+                                                      canApprove: false
+                                                      canRequestPublish: true
                 '400':
                     $ref: '#/components/responses/BadRequest'
                 '401':
@@ -6117,7 +6123,7 @@ paths:
             summary: Publishes the given content to the target (staging or live)
             description: |
                     Module: Studio <br>
-                    Required permission "publish_request". Additionally requires "publish_approve" when requestApproval is false. <br />
+                    Required permission "publish_request". Additionally requires "publish_review" when requestApproval is false. <br />
             operationId: publish
             parameters:
                 -   name: siteId
@@ -6477,12 +6483,14 @@ paths:
                                             items:
                                                 type: array
                                                 items:
-                                                    $ref: '#/components/schemas/LightItem'
+                                                    $ref: '#/components/schemas/PublishDependency'
                                                 example:
                                                     - path: "/site/website/article1/index.xml"
                                                       label: "Article 1"
                                                       systemType: page
                                                       mimeType: application/xml
+                                                      canApprove: true
+                                                      canRequestPublish: true
                                             deletedItems:
                                                 type: array
                                                 items:
@@ -6492,21 +6500,25 @@ paths:
                                             hardDependencies:
                                                 type: array
                                                 items:
-                                                    $ref: '#/components/schemas/LightItem'
+                                                    $ref: '#/components/schemas/PublishDependency'
                                                 example:
                                                     - path: "/templates/web/article.ftl"
                                                       label: article.ftl
                                                       systemType: renderingTemplate
                                                       mimeType: text/x-freemarker
+                                                      canApprove: true
+                                                      canRequestPublish: false
                                             softDependencies:
                                                 type: array
                                                 items:
-                                                    $ref: '#/components/schemas/LightItem'
+                                                    $ref: '#/components/schemas/PublishDependency'
                                                 example:
                                                     - path: "/static-assets/images/background.png"
                                                       label: background.png
                                                       systemType: asset
                                                       mimeType: image/png
+                                                      canApprove: false
+                                                      canRequestPublish: true
                 '400':
                     $ref: '#/components/responses/BadRequest'
                 '401':
@@ -6560,7 +6572,7 @@ paths:
             summary: Get available publishing targets for site
             description: |
                     Module: Studio <br>
-                    Required permission "publish_request"
+                    Required permission "content_read"
             operationId: getAvailablePublishingTargets
             parameters:
                 -   name: siteId
@@ -7975,7 +7987,7 @@ paths:
             summary: Approve request publish submission
             description: |
                     Module: Studio <br>
-                    Required permission "publish_approve"
+                    Required permission "publish_review"
             operationId: workflowApprove
             parameters:
                 -   name: site
@@ -8039,7 +8051,7 @@ paths:
             summary: Reject publish package
             description: |
                     Module: Studio <br>
-                    Required permission "publish_cancel"
+                    Required permission "publish_review"
             operationId: workflowReject
             parameters:
                 -   name: site
@@ -9938,6 +9950,20 @@ components:
                 mimeType:
                     type: string
                     description: MIME-type of the content item file
+
+        PublishDependency:
+            type: object
+            description: publish dependency object
+            allOf:
+                -   $ref: '#/components/schemas/LightItem'
+                -   type: object
+                    properties:
+                        canApprove:
+                            type: boolean
+                            description: true if current user can approve the publish dependency, otherwise false
+                        canRequestPublish:
+                            type: boolean
+                            description: true if current user can request publish for the publish dependency, otherwise false
 
         PublishTaskProgress:
             type: object

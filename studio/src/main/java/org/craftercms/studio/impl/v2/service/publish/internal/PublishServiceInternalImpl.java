@@ -19,6 +19,8 @@ package org.craftercms.studio.impl.v2.service.publish.internal;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.craftercms.commons.rest.parameters.SortField;
+import org.craftercms.commons.security.exception.ActionDeniedException;
+import org.craftercms.commons.security.permissions.PermissionEvaluator;
 import org.craftercms.commons.security.permissions.annotations.ProtectedResourceId;
 import org.craftercms.studio.api.v1.constant.DmConstants;
 import org.craftercms.studio.api.v1.exception.ServiceLayerException;
@@ -39,6 +41,8 @@ import org.craftercms.studio.api.v2.exception.InvalidParametersException;
 import org.craftercms.studio.api.v2.exception.publish.InvalidTargetException;
 import org.craftercms.studio.api.v2.exception.repository.RepositoryException;
 import org.craftercms.studio.api.v2.repository.GitContentRepository;
+import org.craftercms.studio.api.v2.security.PermissionCheckingUtils;
+import org.craftercms.studio.api.v2.security.SemanticsAvailableActionsResolver;
 import org.craftercms.studio.api.v2.security.publish.PublishPackageAvailableActionResolver;
 import org.craftercms.studio.api.v2.service.audit.ActivityStreamService;
 import org.craftercms.studio.api.v2.service.audit.AuditService;
@@ -86,6 +90,8 @@ import static org.craftercms.studio.api.v2.utils.StudioUtils.getSandboxRepoLockK
 import static org.craftercms.studio.impl.v1.repository.git.GitContentRepositoryConstants.IGNORE_FILES;
 import static org.craftercms.studio.impl.v2.utils.security.SecurityUtils.getAuthentication;
 import static org.craftercms.studio.impl.v2.utils.security.SecurityUtils.getCurrentUsername;
+import static org.craftercms.studio.permissions.StudioPermissionsConstants.PERMISSION_PUBLISH_REQUEST;
+import static org.craftercms.studio.permissions.StudioPermissionsConstants.PERMISSION_PUBLISH_REVIEW;
 import static org.craftercms.studio.permissions.StudioPermissionsConstants.SITE_ID_RESOURCE_ID;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
@@ -109,17 +115,19 @@ public class PublishServiceInternalImpl implements PublishService, ApplicationCo
 	private final GeneralLockService generalLockService;
 	private final PublishPackageAvailableActionResolver publishPackageAvailableActionResolver;
 	private final ActivityStreamService activityService;
+	private final PermissionEvaluator<String, Object> permissionEvaluator;
 
 	@ConstructorProperties({"contentRepository", "retryingDatabaseOperationFacade", "itemService", "servicesConfig",
 			"auditService", "dependencyService", "publishDao", "itemTargetDao", "siteService",
-			"generalLockService", "publishPackageAvailableActionResolver", "activityService"})
+			"generalLockService", "publishPackageAvailableActionResolver",
+			"activityService", "permissionEvaluator"})
 	public PublishServiceInternalImpl(GitContentRepository contentRepository, RetryingDatabaseOperationFacade retryingDatabaseOperationFacade,
 									  ItemService itemService, ServicesConfig servicesConfig, AuditService auditService,
 									  DependencyService dependencyService, PublishDAO publishDao,
 									  ItemTargetDAO itemTargetDao,
 									  SitesService siteService, GeneralLockService generalLockService,
 									  PublishPackageAvailableActionResolver publishPackageAvailableActionResolver,
-									  ActivityStreamService activityService) {
+									  ActivityStreamService activityService, PermissionEvaluator<String, Object> permissionEvaluator) {
 		this.contentRepository = contentRepository;
 		this.retryingDatabaseOperationFacade = retryingDatabaseOperationFacade;
 		this.itemService = itemService;
@@ -132,6 +140,7 @@ public class PublishServiceInternalImpl implements PublishService, ApplicationCo
 		this.generalLockService = generalLockService;
 		this.publishPackageAvailableActionResolver = publishPackageAvailableActionResolver;
 		this.activityService = activityService;
+		this.permissionEvaluator = permissionEvaluator;
 	}
 
 	@Override
@@ -248,7 +257,27 @@ public class PublishServiceInternalImpl implements PublishService, ApplicationCo
 		// Get hard deps of them all
 		Collection<LightItem> hardDependencies = dependencyService.getHardDependencies(siteId, target, corePackagePaths);
 		Collection<LightItem> coreItems = isNotEmpty(corePackagePaths) ? publishDao.getMetadata(siteId, corePackagePaths) : emptyList();
-		return new CalculatedPublishPackageResult(coreItems, deletedPaths, hardDependencies, softDependencies);
+		return new CalculatedPublishPackageResult(getPublishDependencies(siteId, coreItems), deletedPaths,
+		 getPublishDependencies(siteId, hardDependencies), getPublishDependencies(siteId, softDependencies));
+	}
+
+	/**
+	 * Map LightItem List to PublishDependency List
+	 *
+	 * @param siteId the site id
+	 * @param items  the LightItem List
+	 * @return the PublishDependency List, contains canApprove and canRequestPublish
+	 *         for each item
+	 */
+	private Collection<PublishDependency> getPublishDependencies(String siteId, Collection<LightItem> items) {
+		return items.stream()
+				.map(item -> {
+					Object resource = PermissionCheckingUtils.getSecuredResource(siteId, List.of(item.getPath()));
+					boolean canApprove = permissionEvaluator.isAllowed(resource, PERMISSION_PUBLISH_REVIEW);
+					boolean canRequestPublish = permissionEvaluator.isAllowed(resource, PERMISSION_PUBLISH_REQUEST);
+					return new PublishDependency(item, canApprove, canRequestPublish);
+				})
+				.collect(toList());
 	}
 
 	@Override
@@ -315,12 +344,12 @@ public class PublishServiceInternalImpl implements PublishService, ApplicationCo
 
 	@Override
 	public Collection<PublishItem> getPublishItems(final String siteId, final long packageId,
-												   final int offset, final int limit) {
+												   final Integer offset, final Integer limit) {
 		return publishDao.getPublishItems(siteId, packageId, offset, limit);
 	}
 
 	@Override
-	public Collection<PublishItem> getFailedPublishItems(String siteId, long packageId, int offset, int limit) {
+	public Collection<PublishItem> getFailedPublishItems(String siteId, long packageId, Integer offset, Integer limit) {
 		return publishDao.getFailedPublishItems(siteId, packageId, offset, limit);
 	}
 
@@ -581,7 +610,10 @@ public class PublishServiceInternalImpl implements PublishService, ApplicationCo
 				if (schedule != null) {
 					throw new InvalidParametersException("Failed to submit publish package: Cannot schedule a publish all operation");
 				}
-				return buildPublishAllPackage(site, publishingTarget, requestApproval, title, comment);
+				if(requestApproval) {
+					throw new InvalidParametersException("Failed to submit publish package: Cannot submit a publish all operation for approval");
+				}
+				return buildPublishAllPackage(site, publishingTarget, title, comment);
 			}
 
 			return buildItemListPackage(site, publishingTarget,
@@ -659,27 +691,20 @@ public class PublishServiceInternalImpl implements PublishService, ApplicationCo
 									   final boolean requestApproval,
 									   final Instant schedule,
 									   final String title,
-									   final String comment,
-									   final GetPublishItems getPublishItemsFunction)
-		throws ServiceLayerException, AuthenticationException {
-		try {
-			// Combine list of paths and list of commit changes
-			Collection<PublishItem> publishItems = getPublishItemsFunction.get(site, paths, commitIds, target);
-			PublishPackage publishPackage = submitPublishPackage(site, target, packageType, requestApproval,
+			final String comment,
+			final Collection<PublishItem> publishItems)
+			throws ServiceLayerException, AuthenticationException {
+		PublishPackage publishPackage = submitPublishPackage(site, target, packageType, requestApproval,
 				schedule, title, comment, publishItems);
 
-			auditPublishSubmission(publishPackage, requestApproval ? OPERATION_REQUEST_PUBLISH : OPERATION_PUBLISH);
+		auditPublishSubmission(publishPackage, requestApproval ? OPERATION_REQUEST_PUBLISH : OPERATION_PUBLISH);
 
-			applicationContext.publishEvent(new WorkflowEvent(getAuthentication(),
-					site.getSiteId(), publishPackage.getId(), requestApproval ? SUBMIT : DIRECT_PUBLISH));
-			if (!requestApproval) {
-				notifyPublisher(publishPackage, site);
-			}
-			return publishPackage.getId();
-		} catch (IOException e) {
-			logger.error("Failed to submit publish package", e);
-			throw new ServiceLayerException("Failed to submit publish package", e);
+		applicationContext.publishEvent(new WorkflowEvent(getAuthentication(),
+				site.getSiteId(), publishPackage.getId(), requestApproval ? SUBMIT : DIRECT_PUBLISH));
+		if (!requestApproval) {
+			notifyPublisher(publishPackage, site);
 		}
+		return publishPackage.getId();
 	}
 
 	private PublishPackage submitPublishPackage(Site site, String target, PackageType packageType, boolean requestApproval,
@@ -725,19 +750,6 @@ public class PublishServiceInternalImpl implements PublishService, ApplicationCo
 	}
 
 	/**
-	 * Functional interface for a method that creates a collection of {@link PublishItem} objects
-	 * for a given request
-	 */
-	@FunctionalInterface
-	protected interface GetPublishItems {
-		Collection<PublishItem> get(final Site site,
-									final Collection<PublishRequestPath> paths,
-									final Collection<String> commitIds,
-									final String target)
-			throws ServiceLayerException, IOException;
-	}
-
-	/**
 	 * Build an initial publish package for a site.
 	 *
 	 * @param site             the site
@@ -746,9 +758,42 @@ public class PublishServiceInternalImpl implements PublishService, ApplicationCo
 	 * @param comment          the comment
 	 * @return created package id
 	 */
-	protected long buildInitialPublishPackage(Site site, String publishingTarget, boolean requestApproval, String title, String comment)
-		throws AuthenticationException, ServiceLayerException {
-		return buildPublishPackage(site, publishingTarget, INITIAL_PUBLISH, emptyList(), emptyList(), requestApproval, null, title, comment, (s, p, c, t) -> emptyList());
+	protected long buildInitialPublishPackage(Site site, String publishingTarget, boolean requestApproval, String title,
+			String comment)
+			throws AuthenticationException, ServiceLayerException {
+		checkPublishPermissions(site.getSiteId(), requestApproval, emptyList());
+
+		return buildPublishPackage(site, publishingTarget, INITIAL_PUBLISH, emptyList(), emptyList(), requestApproval,
+				null, title, comment, emptyList());
+	}
+
+	/**
+	 * Check if the current user has the necessary permissions to submit a publish
+	 * operation.
+	 * It checks the user has the right permissions for each path. If paths is empty
+	 * (publish all or initial publish), it checks the user has the right
+	 * permissions for the site.
+	 *
+	 * @param siteId          the site id
+	 * @param requestApproval whether to request approval
+	 * @param paths           the paths to check permissions for, empty for publish
+	 *                        all or initial publish
+	 * @throws ActionDeniedException if the current user does not have the necessary
+	 *                               permissions
+	 */
+	protected void checkPublishPermissions(String siteId, boolean requestApproval, Collection<String> paths) {
+		List<String> actions = requestApproval ? List.of(PERMISSION_PUBLISH_REQUEST)
+				: List.of(PERMISSION_PUBLISH_REQUEST, PERMISSION_PUBLISH_REVIEW);
+
+		if (isEmpty(paths)) {
+			PermissionCheckingUtils.checkPermissions(permissionEvaluator,
+					PermissionCheckingUtils.getSecuredResource(siteId),
+					actions);
+		} else {
+			PermissionCheckingUtils.checkPermissions(permissionEvaluator,
+					PermissionCheckingUtils.getSecuredResource(siteId, paths),
+					actions);
+		}
 	}
 
 	/**
@@ -781,13 +826,16 @@ public class PublishServiceInternalImpl implements PublishService, ApplicationCo
 	 *
 	 * @param site             the site
 	 * @param publishingTarget the publishing target
-	 * @param requestApproval  whether to request approval
+	 * @param title            the title
 	 * @param comment          the comment
 	 * @return created package id
 	 */
-	protected long buildPublishAllPackage(Site site, String publishingTarget, boolean requestApproval, String title, String comment) throws AuthenticationException, ServiceLayerException {
+	protected long buildPublishAllPackage(Site site, String publishingTarget, String title,
+			String comment) throws AuthenticationException, ServiceLayerException {
+		checkPublishPermissions(site.getSiteId(), false, emptyList());
+
 		return buildPublishPackage(site, publishingTarget, PUBLISH_ALL, emptyList(), emptyList(),
-			requestApproval, null, title, comment, (siteId, __, ___, ____) -> getPublishAllItems(siteId));
+			false, null, title, comment, getPublishAllItems(site));
 	}
 
 	/**
@@ -826,10 +874,26 @@ public class PublishServiceInternalImpl implements PublishService, ApplicationCo
 	 * @return created package id
 	 */
 	protected long buildItemListPackage(Site site, String target, Collection<PublishRequestPath> paths,
-										Collection<String> commitIds, boolean requestApproval, Instant schedule,
-										String title, String comment)
-		throws ServiceLayerException, AuthenticationException {
-		return buildPublishPackage(site, target, ITEM_LIST, paths, commitIds, requestApproval, schedule, title, comment, this::getItemListPackageItems);
+			Collection<String> commitIds, boolean requestApproval, Instant schedule,
+			String title, String comment)
+			throws ServiceLayerException, AuthenticationException {
+
+		Collection<PublishItem> publishItems;
+		try {
+			publishItems = getItemListPackageItems(site, paths, commitIds, target);
+		} catch (IOException e) {
+			logger.error("Failed to submit publish package", e);
+			throw new ServiceLayerException("Failed to submit publish package", e);
+		}
+
+		Collection<String> publishPaths = publishItems.stream()
+				.map(PublishItem::getPath)
+				.collect(toSet());
+
+		checkPublishPermissions(site.getSiteId(), requestApproval, publishPaths);
+
+		return buildPublishPackage(site, target, ITEM_LIST, paths, commitIds, requestApproval, schedule, title, comment,
+				publishItems);
 	}
 
 }

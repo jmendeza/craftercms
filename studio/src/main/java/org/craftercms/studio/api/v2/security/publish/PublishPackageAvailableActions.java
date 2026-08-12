@@ -35,18 +35,15 @@ public final class PublishPackageAvailableActions {
 	public static final long RESUBMIT = 1L << 3;
 
 	/**
-	 * Map site wide permissions to package available actions
+	 * Map  permissions to package available actions
 	 *
-	 * @param permissions site wide permissions
+	 * @param permissions permissions
 	 * @return bitmap of available actions
 	 */
-	public static long mapSiteWidePermissionsToPackageAvailableActions(final Collection<String> permissions) {
+	public static long mapPermissionsToPackageAvailableActions(final Collection<String> permissions) {
 		long result = 0;
-		if (permissions.contains(PERMISSION_PUBLISH_APPROVE)) {
-			result |= APPROVE;
-		}
-		if (permissions.contains(PERMISSION_PUBLISH_REJECT)) {
-			result |= REJECT;
+		if (permissions.contains(PERMISSION_PUBLISH_REVIEW)) {
+			result |= APPROVE | REJECT;
 		}
 		if (permissions.contains(PERMISSION_PUBLISH_CANCEL)) {
 			result |= CANCEL;

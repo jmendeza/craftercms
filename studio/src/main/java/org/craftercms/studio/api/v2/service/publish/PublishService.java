@@ -33,6 +33,9 @@ import org.craftercms.studio.impl.v2.publish.Publisher;
 import org.craftercms.studio.api.v2.dal.item.LightItem;
 import org.craftercms.studio.model.publish.PublishingTarget;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
+
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Collection;
@@ -263,10 +266,10 @@ public interface PublishService {
 	 * @param siteId    the site id
 	 * @param packageId the package id
 	 * @param offset    the offset to start from
-	 * @param limit     the max number of items to return
+	 * @param limit     the max number of items to return (null to return all items)
 	 * @return the publish items
 	 */
-	Collection<PublishItem> getPublishItems(String siteId, long packageId, int offset, int limit) throws PublishPackageNotFoundException, SiteNotFoundException;
+	Collection<PublishItem> getPublishItems(String siteId, long packageId, Integer offset, Integer limit) throws PublishPackageNotFoundException, SiteNotFoundException;
 
 	/**
 	 * Get the failed publish items for a package
@@ -275,10 +278,10 @@ public interface PublishService {
 	 * @param siteId    the site id
 	 * @param packageId the package id
 	 * @param offset    the offset to start from
-	 * @param limit     the max number of items to return
+	 * @param limit     the max number of items to return (null to return all items)
 	 * @return the failed publish items
 	 */
-	Collection<PublishItem> getFailedPublishItems(String siteId, long packageId, int offset, int limit);
+	Collection<PublishItem> getFailedPublishItems(String siteId, long packageId, Integer offset, Integer limit);
 
 	/**
 	 * Get the total number of published items in the last <code>days</code>number of days matching the action
@@ -310,8 +313,38 @@ public interface PublishService {
 	 * @param hardDependencies the hard dependencies of the items
 	 * @param softDependencies the soft dependencies of the items
 	 */
-	record CalculatedPublishPackageResult(Collection<LightItem> items, Collection<String> deletedItems,
-										  Collection<LightItem> hardDependencies,
-										  Collection<LightItem> softDependencies) {
+	record CalculatedPublishPackageResult(Collection<PublishDependency> items, Collection<String> deletedItems,
+										  Collection<PublishDependency> hardDependencies,
+										  Collection<PublishDependency> softDependencies) {
+	}
+
+	/**
+	 * LightItem wrapper with flags to indicate if the current user can approve or request publish for the item
+	 */
+	public static class PublishDependency {
+		@JsonUnwrapped
+		private final LightItem item;
+		@JsonProperty
+		private final boolean canApprove;
+		@JsonProperty
+		private final boolean canRequestPublish;
+
+		public PublishDependency(LightItem item, boolean canApprove, boolean canRequestPublish) {
+			this.item = item;
+			this.canApprove = canApprove;
+			this.canRequestPublish = canRequestPublish;
+		}
+
+		public LightItem getItem() {
+			return item;
+		}
+
+		public boolean canApprove() {
+			return canApprove;
+		}
+
+		public boolean canRequestPublish() {
+			return canRequestPublish;
+		}
 	}
 }
