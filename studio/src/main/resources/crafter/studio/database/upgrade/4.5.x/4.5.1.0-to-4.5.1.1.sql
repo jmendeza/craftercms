@@ -17,6 +17,8 @@
 ALTER TABLE `audit` DROP COLUMN IF EXISTS `organization_id` ;
 
 ALTER TABLE `group`
+	DROP FOREIGN KEY IF EXISTS `group_ibfk_1`,
+	DROP INDEX IF EXISTS `group_ibfk_1`,
 	DROP FOREIGN KEY IF EXISTS `group_ix_org_id`,
 	DROP INDEX IF EXISTS `group_ix_org_id`,
 	DROP COLUMN IF EXISTS `org_id` ;
