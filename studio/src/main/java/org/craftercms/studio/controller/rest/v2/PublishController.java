@@ -30,6 +30,7 @@ import org.craftercms.studio.api.v1.exception.security.UserNotFoundException;
 import org.craftercms.studio.api.v2.dal.PublishStatus;
 import org.craftercms.studio.api.v2.dal.publish.PublishItemWithMetadata;
 import org.craftercms.studio.api.v2.dal.publish.PublishPackage;
+import org.craftercms.studio.api.v2.exception.publish.InvalidPackageStateException;
 import org.craftercms.studio.api.v2.exception.publish.PublishPackageNotFoundException;
 import org.craftercms.studio.api.v2.exception.repository.RepositoryException;
 import org.craftercms.studio.api.v2.service.publish.PublishService;
@@ -121,6 +122,17 @@ public class PublishController {
 		PublishPackage publishPackage = publishService.getPackage(site, packageId);
 		TaskProgress<PublishTask.PublishTaskId, Long> progress = sitesService.getPublishingTaskProgress(site, packageId);
 		GetPackageResult result = new GetPackageResult(progress, publishPackage);
+		result.setResponse(OK);
+		return result;
+	}
+
+	@PostMapping(PATH_PARAM_SITE + PACKAGE + PATH_PARAM_PACKAGE)
+	public Result updatePublishPackage(@PathVariable @ValidSiteId String site,
+			@PathVariable @Positive long packageId, @Validated @RequestBody UpdatePackageRequest request)
+			throws InvalidPackageStateException, SiteNotFoundException, AuthenticationException {
+		publishService.updatePublishPackage(site, packageId, request.getSchedule(), request.isUpdateSchedule(),
+				request.getComment(), request.getTitle(), request.isRequestApproval());
+		Result result = new Result();
 		result.setResponse(OK);
 		return result;
 	}
