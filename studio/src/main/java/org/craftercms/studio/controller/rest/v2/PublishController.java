@@ -52,7 +52,7 @@ import static org.craftercms.studio.controller.rest.v2.RequestMappingConstants.*
 import static org.craftercms.studio.controller.rest.v2.ResultConstants.*;
 import static org.craftercms.studio.model.rest.ApiResponse.COMPLETED_WITH_ERRORS;
 import static org.craftercms.studio.model.rest.ApiResponse.OK;
-import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Validated
 @RestController
@@ -111,7 +111,7 @@ public class PublishController {
         return responseBody;
     }
 
-    @PostMapping(CANCEL)
+    @PostMapping(value = CANCEL, consumes = APPLICATION_JSON_VALUE)
     public ResponseBody cancelPublishingPackages(
             @Valid @RequestBody CancelPublishingPackagesRequest cancelPublishingPackagesRequest)
             throws ServiceLayerException, UserNotFoundException {
@@ -183,7 +183,7 @@ public class PublishController {
         return responseBody;
     }
 
-    @PostMapping("/all")
+    @PostMapping(value = "/all", consumes = APPLICATION_JSON_VALUE)
     public Result publishAll(@Valid @RequestBody PublishAllRequest request)
             throws ServiceLayerException, UserNotFoundException {
         RepositoryChanges changes = publishService.publishAll(request.getSiteId(), request.getPublishingTarget(), request.getSubmissionComment());

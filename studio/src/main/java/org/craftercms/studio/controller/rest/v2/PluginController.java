@@ -48,6 +48,7 @@ import static org.apache.commons.io.FilenameUtils.removeExtension;
 import static org.apache.commons.lang3.StringUtils.removeStart;
 import static org.craftercms.studio.controller.rest.v2.ResultConstants.RESULT_KEY_RESULT;
 import static org.craftercms.studio.model.rest.ApiResponse.OK;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 /**
  * Controller that executes Rest scripts from plugins
@@ -83,7 +84,7 @@ public class PluginController extends ManagementTokenAware {
         return responseBody;
     }
 
-    @PostMapping("/write_configuration")
+    @PostMapping(value = "/write_configuration", consumes = APPLICATION_JSON_VALUE)
     public ResponseBody writeConfiguration(@Valid @RequestBody WriteConfigurationRequest request)
             throws UserNotFoundException, ServiceLayerException {
         marketplaceService.writePluginConfiguration(request.getSiteId(), request.getPluginId(), request.getContent());

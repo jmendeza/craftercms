@@ -114,7 +114,7 @@ public class ContentController {
     }
 
     @Valid
-    @PostMapping(GET_DELETE_PACKAGE)
+    @PostMapping(value = GET_DELETE_PACKAGE, consumes = APPLICATION_JSON_VALUE)
     public ResponseBody getDeletePackage(@RequestBody @Valid GetDeletePackageRequestBody request) throws SiteNotFoundException {
         List<String> childItems = contentService.getChildItems(request.getSiteId(), request.getPaths());
         List<String> dependentItems = dependencyService.getDependentPaths(request.getSiteId(), request.getPaths());
@@ -143,7 +143,7 @@ public class ContentController {
         return responseBody;
     }
 
-    @PostMapping(value = GET_CHILDREN_BY_PATHS, produces = APPLICATION_JSON_VALUE)
+    @PostMapping(value = GET_CHILDREN_BY_PATHS, produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public Result getChildrenByPaths(@PathVariable @ValidSiteId String siteId, @Valid @RequestBody GetChildrenBulkRequest request)
             throws ServiceLayerException, UserNotFoundException {
         Map<String, PathParams> paramsMap = request.getPaths().stream()
@@ -157,7 +157,7 @@ public class ContentController {
 
     @Valid
     @Deprecated
-    @PostMapping(value = GET_CHILDREN_BY_PATH, produces = APPLICATION_JSON_VALUE)
+    @PostMapping(value = GET_CHILDREN_BY_PATH, produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public Result getChildrenByPath(@RequestBody @Valid GetChildrenByPathRequestBody request)
             throws ServiceLayerException, UserNotFoundException {
         GetChildrenResult children = contentService.getChildrenByPath(
@@ -182,7 +182,7 @@ public class ContentController {
     }
 
     @Valid
-    @PostMapping(value = PASTE_ITEMS, produces = APPLICATION_JSON_VALUE)
+    @PostMapping(value = PASTE_ITEMS, produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public ResponseBody pasteItems(@Valid @RequestBody PasteRequest request) throws Exception {
         var result = new ResultList<String>();
         result.setResponse(OK);
@@ -197,7 +197,7 @@ public class ContentController {
     }
 
     @Valid
-    @PostMapping(value = DUPLICATE_ITEM, produces = APPLICATION_JSON_VALUE)
+    @PostMapping(value = DUPLICATE_ITEM, produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public ResponseBody duplicateItem(@Valid @RequestBody DuplicateRequest request) throws Exception {
         var result = new ResultOne<String>();
         result.setResponse(OK);
@@ -228,7 +228,7 @@ public class ContentController {
         return responseBody;
     }
 
-    @PostMapping(value = SANDBOX_ITEMS_BY_PATH, produces = APPLICATION_JSON_VALUE)
+    @PostMapping(value = SANDBOX_ITEMS_BY_PATH, produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public ResponseBody getSandboxItemsByPath(@RequestBody @Valid GetSandboxItemsByPathRequestBody request)
             throws ServiceLayerException, UserNotFoundException {
         String siteId = request.getSiteId();
@@ -256,7 +256,7 @@ public class ContentController {
     }
 
     @Valid
-    @PostMapping(ITEM_LOCK_BY_PATH)
+    @PostMapping(value = ITEM_LOCK_BY_PATH, consumes = APPLICATION_JSON_VALUE)
     public ResponseBody itemLockByPath(@RequestBody @Valid LockItemByPathRequest request)
             throws UserNotFoundException, ServiceLayerException {
         contentService.lockContent(request.getSiteId(), request.getPath());
@@ -268,7 +268,7 @@ public class ContentController {
     }
 
     @Valid
-    @PostMapping(ITEM_UNLOCK_BY_PATH)
+    @PostMapping(value = ITEM_UNLOCK_BY_PATH, consumes = APPLICATION_JSON_VALUE)
     public ResponseBody itemUnlockByPath(@RequestBody @Valid UnlockItemByPathRequest request)
             throws ContentNotFoundException, SiteNotFoundException {
         contentService.unlockContent(request.getSiteId(), request.getPath());
