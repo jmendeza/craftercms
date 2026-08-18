@@ -16,7 +16,13 @@
 
 package org.craftercms.studio.model.rest.publish;
 
+import static org.craftercms.studio.api.v2.service.publish.PublishService.PACKAGE_COMMENT_MAX_LENGTH;
+import static org.craftercms.studio.api.v2.service.publish.PublishService.PACKAGE_TITLE_MAX_LENGTH;
+
 import java.time.Instant;
+
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 
 /**
  * Request to update a publish package
@@ -24,7 +30,11 @@ import java.time.Instant;
 public class UpdatePackageRequest {
 	private Instant schedule;
 	private boolean updateSchedule;
+	@NotEmpty
+	@Size(max = PACKAGE_COMMENT_MAX_LENGTH)
 	private String comment;
+	@NotEmpty
+	@Size(max = PACKAGE_TITLE_MAX_LENGTH)
 	private String title;
 	private boolean requestApproval;
 

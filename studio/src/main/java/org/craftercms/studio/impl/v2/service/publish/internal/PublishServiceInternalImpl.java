@@ -80,7 +80,6 @@ import static org.craftercms.studio.api.v2.dal.AuditLog.createAuditLogEntry;
 import static org.craftercms.studio.api.v2.dal.AuditLogConstants.*;
 import static org.craftercms.studio.api.v2.dal.ItemState.IN_WORKFLOW;
 import static org.craftercms.studio.api.v2.dal.ItemState.isNew;
-import static org.craftercms.studio.api.v2.dal.QueryParameterNames.WORKFLOW;
 import static org.craftercms.studio.api.v2.dal.publish.PublishDAO.ACTIVE_APPROVAL_STATES;
 import static org.craftercms.studio.api.v2.dal.publish.PublishItem.Action.*;
 import static org.craftercms.studio.api.v2.dal.publish.PublishPackage.ApprovalState.APPROVED;
@@ -637,9 +636,10 @@ public class PublishServiceInternalImpl implements PublishService, ApplicationCo
 			if (updateSchedule) {
 				publishPackage.setSchedule(schedule);
 			}
-			publishDao.updatePackage(publishPackage);
+			retryingDatabaseOperationFacade.retry(() -> publishDao.updatePackage(publishPackage));
 			if (resubmit) {
-				publishDao.updateItemStateBits(publishPackage.getId(), IN_WORKFLOW.value, 0L);
+				retryingDatabaseOperationFacade.retry(() ->
+								publishDao.updateItemStateBits(publishPackage.getId(), IN_WORKFLOW.value, 0L));
 				auditPublishSubmission(publishPackage, OPERATION_REQUEST_PUBLISH);
 				applicationContext.publishEvent(new WorkflowEvent(getAuthentication(), siteId, packageId, SUBMIT));
 			} else {

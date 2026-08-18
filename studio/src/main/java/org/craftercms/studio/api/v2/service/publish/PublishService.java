@@ -303,7 +303,7 @@ public interface PublishService {
 	 * approve all the items in the package. Notice this path will fail if peer review is enabled
 	 * for the site (since the current user is required to be the submitter of the package)
 	 *
-	 * @param site             the site id
+	 * @param siteId             the site id
 	 * @param packageId        the package id
 	 * @param schedule         publish schedule date
 	 * @param updateSchedule   if true, the schedule will be updated
