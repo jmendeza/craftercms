@@ -388,7 +388,7 @@ public class UsersController {
 		return result;
 	}
 
-	@PostMapping(ME + CHANGE_PASSWORD)
+	@PostMapping(value = ME + CHANGE_PASSWORD, consumes = APPLICATION_JSON_VALUE)
 	public ResultOne<UserResponse> changePassword(@Valid @RequestBody ChangePasswordRequest changePasswordRequest)
 		throws PasswordDoesNotMatchException, ServiceLayerException, UserExternallyManagedException,
 		AuthenticationException, UserNotFoundException {
@@ -407,7 +407,7 @@ public class UsersController {
 		return result;
 	}
 
-	@PostMapping(SET_PASSWORD)
+	@PostMapping(value = SET_PASSWORD, consumes = APPLICATION_JSON_VALUE)
 	public ResultOne<UserResponse> setPassword(@Valid @RequestBody SetPasswordRequest setPasswordRequest)
 		throws UserNotFoundException, UserExternallyManagedException, ServiceLayerException {
 		int delay = studioConfiguration.getProperty(SECURITY_SET_PASSWORD_DELAY, Integer.class);
@@ -424,7 +424,7 @@ public class UsersController {
 		return result;
 	}
 
-	@PostMapping(PATH_PARAM_ID + RESET_PASSWORD)
+	@PostMapping(value = PATH_PARAM_ID + RESET_PASSWORD, consumes = APPLICATION_JSON_VALUE)
 	public Result resetPassword(@NotBlank @EsapiValidatedParam(type = USERNAME) @PathVariable(REQUEST_PARAM_ID) String userId,
 				    @Valid @RequestBody ResetPasswordRequest resetPasswordRequest)
 		throws UserNotFoundException, UserExternallyManagedException, ServiceLayerException {

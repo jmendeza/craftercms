@@ -44,6 +44,7 @@ import static org.craftercms.studio.controller.rest.v2.ResultConstants.RESULT_KE
 import static org.craftercms.studio.controller.rest.v2.ResultConstants.RESULT_KEY_HISTORY;
 import org.craftercms.studio.model.config.TranslationConfiguration;
 import static org.craftercms.studio.model.rest.ApiResponse.OK;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import org.craftercms.studio.model.rest.ConfigurationHistory;
 import org.craftercms.studio.model.rest.Result;
 import org.craftercms.studio.model.rest.ResultOne;
@@ -98,7 +99,7 @@ public class ConfigurationController {
 		return result;
 	}
 
-	@PostMapping(WRITE_CONFIGURATION)
+	@PostMapping(value = WRITE_CONFIGURATION, consumes = APPLICATION_JSON_VALUE)
 	public Result writeConfiguration(@Validated @RequestBody WriteConfigurationRequest wcRequest)
 		throws ServiceLayerException, UserNotFoundException, AuthenticationException {
 		InputStream is = IOUtils.toInputStream(wcRequest.getContent(), UTF_8);

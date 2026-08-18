@@ -58,6 +58,7 @@ import java.util.List;
 import static org.craftercms.studio.controller.rest.v2.RequestMappingConstants.*;
 import static org.craftercms.studio.controller.rest.v2.ResultConstants.*;
 import static org.craftercms.studio.model.rest.ApiResponse.OK;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Validated
 @RestController
@@ -87,7 +88,7 @@ public class SitesController {
 		return result;
 	}
 
-	@PostMapping("/create_site_from_marketplace")
+	@PostMapping(value = "/create_site_from_marketplace", consumes = APPLICATION_JSON_VALUE)
 	@ResponseStatus(code = HttpStatus.CREATED)
 	public Result createSite(@Valid @RequestBody CreateSiteFromMarketplaceRequest request)
 			throws RemoteRepositoryNotFoundException, InvalidRemoteRepositoryException, ServiceLayerException,
@@ -100,7 +101,7 @@ public class SitesController {
 		return result;
 	}
 
-	@PostMapping
+	@PostMapping(consumes = APPLICATION_JSON_VALUE)
 	@ResponseStatus(code = HttpStatus.CREATED)
 	public Result createSite(@Valid @RequestBody CreateSiteRequest request)
 			throws ServiceLayerException, InvalidRemoteRepositoryCredentialsException, RemoteRepositoryNotFoundException, InvalidRemoteRepositoryException {
@@ -110,7 +111,7 @@ public class SitesController {
 		return result;
 	}
 
-	@PostMapping("/{siteId}")
+	@PostMapping(value = "/{siteId}", consumes = APPLICATION_JSON_VALUE)
 	public Result updateSite(@ValidSiteId @PathVariable String siteId,
 							 @Valid @RequestBody UpdateSiteRequest request)
 			throws SiteNotFoundException, SiteAlreadyExistsException, InvalidParametersException {
@@ -140,7 +141,7 @@ public class SitesController {
 		return result;
 	}
 
-	@PostMapping("/{siteId}/policy/validate")
+	@PostMapping(value = "/{siteId}/policy/validate", consumes = APPLICATION_JSON_VALUE)
 	public ResultList<ValidationResult> validatePolicy(@ValidSiteId @PathVariable String siteId,
 													   @Valid @RequestBody ValidatePolicyRequest request)
 			throws ConfigurationException, IOException, ContentNotFoundException {
@@ -152,7 +153,7 @@ public class SitesController {
 		return result;
 	}
 
-	@PostMapping("/{siteId}/duplicate")
+	@PostMapping(value = "/{siteId}/duplicate", consumes = APPLICATION_JSON_VALUE)
 	@ResponseStatus(code = HttpStatus.CREATED)
 	public Result duplicateSite(@ValidSiteId @PathVariable("siteId") String sourceSiteId, @Valid @RequestBody DuplicateSiteRequest request)
 			throws ServiceLayerException {

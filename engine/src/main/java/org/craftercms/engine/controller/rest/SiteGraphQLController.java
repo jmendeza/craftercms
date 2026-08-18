@@ -38,6 +38,7 @@ import java.util.Objects;
 
 import static graphql.ExecutionInput.newExecutionInput;
 import static java.lang.String.format;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 /**
  * Exposes the current site {@link GraphQL} instance to perform queries.
@@ -67,7 +68,7 @@ public class SiteGraphQLController extends RestControllerBase {
 		return handleRequest(query, operationName, variables);
 	}
 
-	@PostMapping
+	@PostMapping(consumes = APPLICATION_JSON_VALUE)
 	public Map<String, Object> query(@RequestBody QueryRequest request) {
 		Map<String, Object> variables = Objects.isNull(request.getVariables()) ?
 			Collections.emptyMap() :

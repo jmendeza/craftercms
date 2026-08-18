@@ -40,6 +40,7 @@ import static org.craftercms.studio.api.v2.service.system.SystemPropertiesServic
 import static org.craftercms.studio.controller.rest.v2.RequestMappingConstants.*;
 import static org.craftercms.studio.controller.rest.v2.ResultConstants.RESULT_KEY_LANGUAGES;
 import static org.craftercms.studio.model.rest.ApiResponse.OK;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 /**
  * Provides access to system properties
@@ -68,7 +69,7 @@ public class SystemController {
 		return result;
 	}
 
-	@PostMapping(PROPERTIES)
+	@PostMapping(value = PROPERTIES, consumes = APPLICATION_JSON_VALUE)
 	public Result setSystemProperties(@Valid @RequestBody UpdateSystemPropertiesRequest request) {
 		systemPropertiesService.setSystemProperties(request.getProperties());
 		Result result = new Result();

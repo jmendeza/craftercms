@@ -32,6 +32,7 @@ import java.beans.ConstructorProperties;
 import static org.craftercms.studio.controller.rest.v2.LoggerController.ROOT_URL;
 import static org.craftercms.studio.controller.rest.v2.ResultConstants.RESULT_KEY_RESULT;
 import static org.craftercms.studio.controller.rest.v2.ResultConstants.RESULT_KEY_RESULTS;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 /**
  * REST controller that provides access to Logger related operations.
@@ -62,7 +63,7 @@ public class LoggerController {
 	}
 
 	@Valid
-	@PostMapping(value = LOGGER_LEVEL)
+	@PostMapping(value = LOGGER_LEVEL, consumes = APPLICATION_JSON_VALUE)
 	public ResultOne<LoggerConfig> setLoggerLevel(@Valid @RequestBody LoggerConfigRequest loggerConfig) throws ServiceLayerException {
 		ResultOne<LoggerConfig> result = new ResultOne<>();
 		result.setResponse(ApiResponse.OK);

@@ -47,6 +47,7 @@ import static org.craftercms.studio.controller.rest.v2.RequestMappingConstants.*
 import static org.craftercms.studio.controller.rest.v2.ResultConstants.*;
 import static org.craftercms.studio.model.rest.ApiResponse.DELETED;
 import static org.craftercms.studio.model.rest.ApiResponse.OK;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Validated
 @RestController
@@ -109,7 +110,7 @@ public class ContentTypeController {
 		return result;
 	}
 
-	@DeleteMapping
+	@DeleteMapping(consumes = APPLICATION_JSON_VALUE)
 	public Result deleteContentType(@ValidSiteId @PathVariable String siteId, @RequestBody @Valid DeleteContentTypeRequest request)
 			throws ServiceLayerException, AuthenticationException, UserNotFoundException {
 		contentTypeService.deleteContentType(siteId, request.getContentType(),

@@ -44,6 +44,7 @@ import java.util.Map;
 import static org.craftercms.commons.validation.annotations.param.EsapiValidationType.SEARCH_KEYWORDS;
 import static org.craftercms.studio.controller.rest.v2.ResultConstants.RESULT_KEY_ITEMS;
 import static org.craftercms.studio.controller.rest.v2.ResultConstants.RESULT_KEY_PLUGINS;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 /**
  * REST controller that provides access to Marketplace operations
@@ -93,7 +94,7 @@ public class MarketplaceController {
 		return result;
 	}
 
-	@PostMapping("/install")
+	@PostMapping(value = "/install", consumes = APPLICATION_JSON_VALUE)
 	public Result installPlugin(@Valid @RequestBody InstallPluginRequest request) throws MarketplaceException {
 		marketplaceService.installPlugin(request.getSiteId(), request.getPluginId(), request.getPluginVersion(),
 			request.getParameters());
@@ -112,7 +113,7 @@ public class MarketplaceController {
 		return result;
 	}
 
-	@PostMapping("/remove")
+	@PostMapping(value = "/remove", consumes = APPLICATION_JSON_VALUE)
 	public Result removePlugin(@Valid @RequestBody RemovePluginRequest request) throws ServiceLayerException {
 		marketplaceService.removePlugin(request.getSiteId(), request.getPluginId(), request.isForce());
 
@@ -159,7 +160,7 @@ public class MarketplaceController {
 
 	}
 
-	@PostMapping("copy")
+	@PostMapping(value = "copy", consumes = APPLICATION_JSON_VALUE)
 	public Result copyPlugin(@Valid @RequestBody CopyPluginRequest request) throws MarketplaceException {
 		marketplaceService.copyPlugin(request.getSiteId(), request.getPath(), request.getParameters());
 
