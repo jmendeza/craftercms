@@ -55,6 +55,7 @@ import static org.craftercms.studio.api.v2.utils.StudioConfiguration.CONFIGURATI
 import static org.craftercms.studio.controller.rest.v2.ResultConstants.*;
 import static org.craftercms.studio.model.rest.ApiResponse.DELETED;
 import static org.craftercms.studio.model.rest.ApiResponse.OK;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Validated
 @RestController
@@ -106,7 +107,7 @@ public class ConfigurationController {
     }
 
     @Valid
-    @PostMapping("/write_configuration")
+    @PostMapping(value = "/write_configuration", consumes = APPLICATION_JSON_VALUE)
     public ResponseBody writeConfiguration(@Validated @RequestBody WriteConfigurationRequest wcRequest)
             throws ServiceLayerException, UserNotFoundException {
         InputStream is = IOUtils.toInputStream(wcRequest.getContent(), UTF_8);
@@ -189,7 +190,7 @@ public class ConfigurationController {
     }
 
 
-    @PostMapping("content-type/delete")
+    @PostMapping(value = "content-type/delete", consumes = APPLICATION_JSON_VALUE)
     public ResponseBody deleteContentType(@RequestBody @Valid DeleteContentTypeRequest request)
             throws ServiceLayerException, AuthenticationException, DeploymentException, UserNotFoundException {
         contentTypeService.deleteContentType(request.getSiteId(), request.getContentType(),

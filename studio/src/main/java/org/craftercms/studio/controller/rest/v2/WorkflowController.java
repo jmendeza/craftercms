@@ -96,7 +96,7 @@ public class WorkflowController {
         return toRet;
     }
 
-    @PostMapping(value = ITEM_STATES, produces = APPLICATION_JSON_VALUE)
+    @PostMapping(value = ITEM_STATES, produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public Result updateItemStates(@Valid @RequestBody ItemStatesPostRequestBody requestBody)
             throws SiteNotFoundException {
         ItemStatesUpdate update = requestBody.getUpdate();
@@ -109,7 +109,7 @@ public class WorkflowController {
         return result;
     }
 
-    @PostMapping(value = UPDATE_ITEM_STATES_BY_QUERY, produces = APPLICATION_JSON_VALUE)
+    @PostMapping(value = UPDATE_ITEM_STATES_BY_QUERY, produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public Result updateItemStatesByQuery(@Valid @RequestBody UpdateItemStatesByQueryRequestBody requestBody)
             throws SiteNotFoundException {
         UpdateItemStatesByQueryRequestBody.Query query = requestBody.getQuery();

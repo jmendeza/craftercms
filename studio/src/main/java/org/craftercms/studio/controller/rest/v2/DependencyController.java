@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 import static org.craftercms.studio.controller.rest.v2.RequestMappingConstants.*;
 import static org.craftercms.studio.controller.rest.v2.ResultConstants.*;
 import static org.craftercms.studio.model.rest.ApiResponse.OK;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequestMapping(API_2 + DEPENDENCY)
@@ -48,7 +49,7 @@ public class DependencyController {
     }
 
     @Valid
-    @PostMapping(DEPENDENCIES)
+    @PostMapping(value = DEPENDENCIES, consumes = APPLICATION_JSON_VALUE)
     public ResponseBody getDependencies(@RequestBody @Valid GetSoftDependenciesRequestBody request)
             throws ServiceLayerException {
         Collection<String> softDeps = dependencyService.getSoftDependencies(request.getSiteId(), request.getPaths());
