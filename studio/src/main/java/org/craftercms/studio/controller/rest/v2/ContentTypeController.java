@@ -60,7 +60,7 @@ public class ContentTypeController {
 		this.contentTypeService = contentTypeService;
 	}
 
-	@GetMapping(USAGE)
+	@GetMapping(value = USAGE, produces = APPLICATION_JSON_VALUE)
 	public ResultOne<Object> getContentTypeUsage(@ValidSiteId @PathVariable String siteId,
 												 @ValidConfigurationPath @RequestParam String contentType)
 			throws Exception {
@@ -86,7 +86,7 @@ public class ContentTypeController {
 		return getResourceResponse(resource.getKey(), resource.getValue());
 	}
 
-	@GetMapping
+	@GetMapping(produces = APPLICATION_JSON_VALUE)
 	public ResultList<ContentType> getContentTypes(@ValidSiteId @PathVariable String siteId,
 												   @ValidConfigurationPath @RequestParam(required = false) String contentTypeId) throws ServiceLayerException {
 		var result = new ResultList<ContentType>();
@@ -102,7 +102,7 @@ public class ContentTypeController {
 		return result;
 	}
 
-	@GetMapping(ALLOWED_TYPES)
+	@GetMapping(value = ALLOWED_TYPES, produces = APPLICATION_JSON_VALUE)
 	public ResultList<String> getAllowedContentTypes(@ValidSiteId @PathVariable String siteId, @ValidExistingContentPath @RequestParam String path) throws ServiceLayerException {
 		ResultList<String> result = new ResultList<>();
 		result.setResponse(OK);
@@ -110,7 +110,7 @@ public class ContentTypeController {
 		return result;
 	}
 
-	@DeleteMapping(consumes = APPLICATION_JSON_VALUE)
+	@DeleteMapping(consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
 	public Result deleteContentType(@ValidSiteId @PathVariable String siteId, @RequestBody @Valid DeleteContentTypeRequest request)
 			throws ServiceLayerException, AuthenticationException, UserNotFoundException {
 		contentTypeService.deleteContentType(siteId, request.getContentType(),

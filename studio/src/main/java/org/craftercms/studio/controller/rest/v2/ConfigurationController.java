@@ -71,7 +71,7 @@ public class ConfigurationController {
 		this.studioConfiguration = studioConfiguration;
 	}
 
-	@GetMapping(CLEAR_CACHE)
+	@GetMapping(value = CLEAR_CACHE, produces = APPLICATION_JSON_VALUE)
 	public Result clearCache(@ValidSiteId @RequestParam String siteId) {
 		configurationService.invalidateConfiguration(siteId);
 		var result = new Result();
@@ -79,7 +79,7 @@ public class ConfigurationController {
 		return result;
 	}
 
-	@GetMapping(GET_CONFIGURATION)
+	@GetMapping(value = GET_CONFIGURATION, produces = APPLICATION_JSON_VALUE)
 	@LogExecutionTime
 	public ResultOne<String> getConfiguration(@ValidSiteId @RequestParam(name = "siteId", required = true) String siteId,
 						  @EsapiValidatedParam(type = ALPHANUMERIC) @RequestParam(name = "module", required = true) String module,
@@ -99,7 +99,7 @@ public class ConfigurationController {
 		return result;
 	}
 
-	@PostMapping(value = WRITE_CONFIGURATION, consumes = APPLICATION_JSON_VALUE)
+	@PostMapping(value = WRITE_CONFIGURATION, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
 	public Result writeConfiguration(@Validated @RequestBody WriteConfigurationRequest wcRequest)
 		throws ServiceLayerException, UserNotFoundException, AuthenticationException {
 		InputStream is = IOUtils.toInputStream(wcRequest.getContent(), UTF_8);
@@ -115,7 +115,7 @@ public class ConfigurationController {
 		return result;
 	}
 
-	@GetMapping(GET_CONFIGURATION_HISTORY)
+	@GetMapping(value = GET_CONFIGURATION_HISTORY, produces = APPLICATION_JSON_VALUE)
 	public ResultOne<ConfigurationHistory> getConfigurationHistory(@ValidSiteId @RequestParam(name = "siteId", required = true) String siteId,
 								       @EsapiValidatedParam(type = ALPHANUMERIC) @RequestParam(name = "module", required = true) String module,
 								       @ValidConfigurationPath @RequestParam(name = "path", required = true) String path,
@@ -129,7 +129,7 @@ public class ConfigurationController {
 		return result;
 	}
 
-	@GetMapping(TRANSLATION)
+	@GetMapping(value = TRANSLATION, produces = APPLICATION_JSON_VALUE)
 	public ResultOne<TranslationConfiguration> getTranslationConfiguration(@ValidSiteId @RequestParam String siteId) throws ServiceLayerException {
 		ResultOne<TranslationConfiguration> result = new ResultOne<>();
 		result.setEntity(RESULT_KEY_CONFIG, configurationService.getTranslationConfiguration(siteId));

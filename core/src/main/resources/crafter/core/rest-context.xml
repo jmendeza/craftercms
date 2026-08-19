@@ -47,7 +47,6 @@
 		<property name="defaultViews">
 			<list>
 				<ref bean="crafter.jsonView"/>
-				<ref bean="crafter.xmlView"/>
 			</list>
 		</property>
 	</bean>
@@ -99,8 +98,5 @@
 		</property>
 	</bean>
 
-	<bean id="crafter.xmlView" class="org.springframework.web.servlet.view.xml.MarshallingView">
-		<constructor-arg index="0" ref="crafter.xmlMarshaller"/>
-	</bean>
 
 </beans>

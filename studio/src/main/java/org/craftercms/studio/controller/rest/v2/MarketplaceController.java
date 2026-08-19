@@ -65,7 +65,7 @@ public class MarketplaceController {
 	}
 
 	@SuppressWarnings("unchecked")
-	@GetMapping("/search")
+	@GetMapping(value = "/search", produces = APPLICATION_JSON_VALUE)
 	public PaginatedResultList<Map<String, Object>> searchPlugins(@RequestParam(required = false) String type,
 								      @EsapiValidatedParam(type = SEARCH_KEYWORDS)
 								      @RequestParam(required = false) String keywords,
@@ -86,7 +86,7 @@ public class MarketplaceController {
 		return result;
 	}
 
-	@GetMapping("/installed")
+	@GetMapping(value = "/installed", produces = APPLICATION_JSON_VALUE)
 	public ResultList<PluginRecord> getInstalledPlugins(@RequestParam @ValidSiteId String siteId) throws MarketplaceException {
 		ResultList<PluginRecord> result = new ResultList<>();
 		result.setResponse(ApiResponse.OK);
@@ -94,7 +94,7 @@ public class MarketplaceController {
 		return result;
 	}
 
-	@PostMapping(value = "/install", consumes = APPLICATION_JSON_VALUE)
+	@PostMapping(value = "/install", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
 	public Result installPlugin(@Valid @RequestBody InstallPluginRequest request) throws MarketplaceException {
 		marketplaceService.installPlugin(request.getSiteId(), request.getPluginId(), request.getPluginVersion(),
 			request.getParameters());
@@ -104,7 +104,7 @@ public class MarketplaceController {
 		return result;
 	}
 
-	@GetMapping("/usage")
+	@GetMapping(value = "/usage", produces = APPLICATION_JSON_VALUE)
 	public ResultList<String> getDependantItems(@RequestParam @ValidSiteId String siteId, @RequestParam String pluginId)
 		throws ServiceLayerException {
 		ResultList<String> result = new ResultList<>();
@@ -113,7 +113,7 @@ public class MarketplaceController {
 		return result;
 	}
 
-	@PostMapping(value = "/remove", consumes = APPLICATION_JSON_VALUE)
+	@PostMapping(value = "/remove", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
 	public Result removePlugin(@Valid @RequestBody RemovePluginRequest request) throws ServiceLayerException {
 		marketplaceService.removePlugin(request.getSiteId(), request.getPluginId(), request.isForce());
 
@@ -160,7 +160,7 @@ public class MarketplaceController {
 
 	}
 
-	@PostMapping(value = "copy", consumes = APPLICATION_JSON_VALUE)
+	@PostMapping(value = "copy", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
 	public Result copyPlugin(@Valid @RequestBody CopyPluginRequest request) throws MarketplaceException {
 		marketplaceService.copyPlugin(request.getSiteId(), request.getPath(), request.getParameters());
 

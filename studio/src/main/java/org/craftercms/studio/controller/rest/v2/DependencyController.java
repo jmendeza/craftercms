@@ -51,7 +51,7 @@ public class DependencyController {
 		this.dependencyService = dependencyService;
 	}
 
-	@PostMapping(value = PATH_PARAM_SITE + PUBLISH_DEPENDENCIES, consumes = APPLICATION_JSON_VALUE)
+	@PostMapping(value = PATH_PARAM_SITE + PUBLISH_DEPENDENCIES, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
 	public ResultOne<Map<String, Collection<LightItem>>> getPublishDependencies(@PathVariable @ValidSiteId String site,
 																				@RequestBody @Valid GetPublishDependenciesRequestBody request) throws SiteNotFoundException {
 		Collection<LightItem> softDeps = dependencyService.getSoftDependencies(site, request.getPaths());
@@ -68,7 +68,7 @@ public class DependencyController {
 		return result;
 	}
 
-	@PostMapping(value = PATH_PARAM_SITE + DEPENDENT_ITEMS, consumes = APPLICATION_JSON_VALUE)
+	@PostMapping(value = PATH_PARAM_SITE + DEPENDENT_ITEMS, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
 	public ResultOne<Collection<LightItem>> getDependentItems(@PathVariable @ValidSiteId String site,
 															  @RequestBody @Valid GetDependentsRequestBody request)
 			throws ServiceLayerException {
@@ -79,7 +79,7 @@ public class DependencyController {
 		return result;
 	}
 
-	@PostMapping(value = PATH_PARAM_SITE + DEPENDENCIES, consumes = APPLICATION_JSON_VALUE)
+	@PostMapping(value = PATH_PARAM_SITE + DEPENDENCIES, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
 	public ResultOne<Collection<LightItem>> getDependencies(@PathVariable @ValidSiteId String site,
 															@RequestBody @Valid GetDependenciesRequestBody request)
 			throws ServiceLayerException {

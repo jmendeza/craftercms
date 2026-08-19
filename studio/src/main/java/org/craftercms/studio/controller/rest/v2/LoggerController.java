@@ -54,7 +54,7 @@ public class LoggerController {
 		this.loggerService = logService;
 	}
 
-	@GetMapping
+	@GetMapping(produces = APPLICATION_JSON_VALUE)
 	public ResultList<LoggerConfig> getLoggers() throws ServiceLayerException {
 		ResultList<LoggerConfig> result = new ResultList<>();
 		result.setResponse(ApiResponse.OK);
@@ -63,7 +63,7 @@ public class LoggerController {
 	}
 
 	@Valid
-	@PostMapping(value = LOGGER_LEVEL, consumes = APPLICATION_JSON_VALUE)
+	@PostMapping(value = LOGGER_LEVEL, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
 	public ResultOne<LoggerConfig> setLoggerLevel(@Valid @RequestBody LoggerConfigRequest loggerConfig) throws ServiceLayerException {
 		ResultOne<LoggerConfig> result = new ResultOne<>();
 		result.setResponse(ApiResponse.OK);

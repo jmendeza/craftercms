@@ -60,7 +60,7 @@ public class SystemController {
 		this.configurationService = configurationService;
 	}
 
-	@GetMapping(PROPERTIES)
+	@GetMapping(value = PROPERTIES, produces = APPLICATION_JSON_VALUE)
 	public ResultOne<Map<String, String>> getSystemProperties(@RequestParam @NotEmpty
 															  List<@Size(max = 50) @ValidateNoTagsParam @ValidateStringParam(whitelistedPatterns = PROPERTY_NAME_ALLOWED_PATTERN) String> properties) {
 		ResultOne<Map<String, String>> result = new ResultOne<>();
@@ -69,7 +69,7 @@ public class SystemController {
 		return result;
 	}
 
-	@PostMapping(value = PROPERTIES, consumes = APPLICATION_JSON_VALUE)
+	@PostMapping(value = PROPERTIES, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
 	public Result setSystemProperties(@Valid @RequestBody UpdateSystemPropertiesRequest request) {
 		systemPropertiesService.setSystemProperties(request.getProperties());
 		Result result = new Result();
@@ -77,7 +77,7 @@ public class SystemController {
 		return result;
 	}
 
-	@GetMapping(AVAILABLE_LANGUAGES)
+	@GetMapping(value = AVAILABLE_LANGUAGES, produces = APPLICATION_JSON_VALUE)
 	public ResultList<Language> getAvailableLanguages() throws ServiceLayerException {
 		var result = new ResultList<Language>();
 		result.setEntities(RESULT_KEY_LANGUAGES, configurationService.getAvailableLanguages());

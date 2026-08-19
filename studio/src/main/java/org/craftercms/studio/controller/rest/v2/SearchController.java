@@ -54,7 +54,7 @@ public class SearchController {
 		this.searchService = searchService;
 	}
 
-	@PostMapping(value = "/search", consumes = APPLICATION_JSON_VALUE)
+	@PostMapping(value = "/search", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
 	public ResultOne<SearchResult> search(@ValidSiteId @RequestParam String siteId, @Valid @RequestBody SearchParams params)
 		throws AuthenticationException, ServiceLayerException {
 		SearchResult searchResult = searchService.search(siteId, params);

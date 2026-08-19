@@ -71,7 +71,7 @@ public class PluginController extends ManagementTokenAware {
 		this.marketplaceService = marketplaceService;
 	}
 
-	@GetMapping("/get_configuration")
+	@GetMapping(value = "/get_configuration", produces = APPLICATION_JSON_VALUE)
 	public ResultOne<String> getPluginConfiguration(@ValidSiteId String siteId, String pluginId) throws ServiceLayerException {
 		String content = marketplaceService.getPluginConfigurationAsString(siteId, pluginId);
 
@@ -81,7 +81,7 @@ public class PluginController extends ManagementTokenAware {
 		return result;
 	}
 
-	@PostMapping(value = "/write_configuration", consumes = APPLICATION_JSON_VALUE)
+	@PostMapping(value = "/write_configuration", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
 	public Result writeConfiguration(@Valid @RequestBody WriteConfigurationRequest request)
 		throws UserNotFoundException, ServiceLayerException, AuthenticationException {
 		marketplaceService.writePluginConfiguration(request.getSiteId(), request.getPluginId(), request.getContent());
@@ -94,7 +94,7 @@ public class PluginController extends ManagementTokenAware {
 	/**
 	 * Reloads the groovy classes for the given site
 	 */
-	@GetMapping("/script/reload")
+	@GetMapping(value = "/script/reload", produces = APPLICATION_JSON_VALUE)
 	public Result reloadClasses(@ValidSiteId @RequestParam String siteId, @RequestParam String token)
 		throws InvalidParametersException, InvalidManagementTokenException {
 		validateToken(token);
@@ -110,7 +110,7 @@ public class PluginController extends ManagementTokenAware {
 	/**
 	 * Executes a rest script for the given site
 	 */
-	@RequestMapping("/script/**")
+	@RequestMapping(value = "/script/**", produces = APPLICATION_JSON_VALUE)
 	public ResultOne<Object> runScript(@ValidSiteId @RequestParam String siteId, HttpServletRequest request, HttpServletResponse response)
 		throws ResourceException, ScriptException, ConfigurationException {
 		// No better way to do this for now, later can be replaced by "/script/{*scriptUrl}"

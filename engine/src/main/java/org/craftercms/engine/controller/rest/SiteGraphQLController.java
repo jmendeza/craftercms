@@ -56,7 +56,7 @@ public class SiteGraphQLController extends RestControllerBase {
 
 	protected ObjectMapper objectMapper = new ObjectMapper();
 
-	@GetMapping
+	@GetMapping(produces = APPLICATION_JSON_VALUE)
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> query(@RequestParam String query, @RequestParam(required = false) String operationName,
 					 @RequestParam(required = false) String variablesStr) throws IOException {
@@ -68,7 +68,7 @@ public class SiteGraphQLController extends RestControllerBase {
 		return handleRequest(query, operationName, variables);
 	}
 
-	@PostMapping(consumes = APPLICATION_JSON_VALUE)
+	@PostMapping(consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
 	public Map<String, Object> query(@RequestBody QueryRequest request) {
 		Map<String, Object> variables = Objects.isNull(request.getVariables()) ?
 			Collections.emptyMap() :
