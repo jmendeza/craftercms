@@ -348,7 +348,6 @@ ext.commonConfUpdatePatterns = [
 					'crt-core-*.jar,\\\n' +
 					'curvesapi-*.jar,\\\n' +
 					'cxf-*.jar,\\\n' +
-					'daisydiff.jar,\\\n' +
 					'dd-plist-*.jar,\\\n' +
 					'dec-*.jar,\\\n' +
 					'directory-watcher-0.19.1.jar,\\\n' +
@@ -374,6 +373,7 @@ ext.commonConfUpdatePatterns = [
 					'HdrHistogram-*.jar,\\\n' +
 					'HikariCP-java7-*.jar,\\\n' +
 					'hppc-*.jar,\\\n' +
+					'html5diff-*.jar,\\\n' +
 					'httpasyncclient-*.jar,\\\n' +
 					'http-auth-*.jar,\\\n' +
 					'http-auth-aws-*.jar,\\\n' +

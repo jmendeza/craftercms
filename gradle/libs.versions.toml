@@ -136,6 +136,7 @@ rome-utils = "2.1.0"
 embed-mongo = "4.33.0"
 netty = "4.2.14.Final"
 okio = "3.17.0"
+html5diff = "1.4.5"
 
 [libraries]
 commons-lang = { module = "commons-lang:commons-lang", version.ref = "commons-lang" }
@@ -306,6 +307,8 @@ aws-cloudformation = { module = "software.amazon.awssdk:cloudformation", version
 aws-elastictranscoder = { module = "software.amazon.awssdk:elastictranscoder", version.ref = "aws-sdk-elastictranscoder" }
 aws-mediaconvert = { module = "software.amazon.awssdk:mediaconvert", version.ref = "aws-sdk" }
 rome-utils = { module = "com.rometools:rome-utils", version.ref = "rome-utils" }
+# Maintained DaisyDiff fork; still publishes the org.outerj.daisy.diff packages
+html5diff = { module = "ch.sbb.html5diff:html5diff", version.ref = "html5diff" }
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }

@@ -139,6 +139,10 @@ dependencies {
 	implementation libs.jakarta.mail.api
 	implementation libs.tika.core
 	implementation libs.rome.utils
+	// Only the SAX-based diffHTML API is used, so neko-htmlunit is left at the version AntiSamy resolves
+	implementation(libs.html5diff) {
+		exclude group: 'org.htmlunit', module: 'neko-htmlunit'
+	}
 	implementation platform("org.apache.groovy:groovy-bom:${libs.versions.groovy.get()}")
 	implementation 'org.apache.groovy:groovy-jsr223'
 	implementation 'org.apache.groovy:groovy-json'
