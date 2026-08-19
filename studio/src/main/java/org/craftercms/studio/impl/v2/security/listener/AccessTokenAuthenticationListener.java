@@ -21,8 +21,7 @@ import org.craftercms.commons.http.RequestContext;
 import org.craftercms.studio.api.v1.exception.ServiceLayerException;
 import org.craftercms.studio.api.v2.dal.User;
 import org.craftercms.studio.api.v2.event.user.DisabledUserEvent;
-import org.craftercms.studio.api.v2.event.user.UserUpdatedEvent;
-import org.craftercms.studio.api.v2.service.security.AccessTokenService;
+import org.craftercms.studio.api.v2.event.user.UserUpdatedEvent;import org.craftercms.studio.api.v2.service.security.AccessTokenService;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.authentication.event.LogoutSuccessEvent;
@@ -69,11 +68,6 @@ public class AccessTokenAuthenticationListener {
 		long userId = ((User) event.getAuthentication().getPrincipal()).getId();
 		accessTokenService.deleteRefreshToken(userId);
 		accessTokenService.deletePreviewCookie(RequestContext.getCurrent().getResponse());
-	}
-
-	@EventListener
-	public void onUserUpdated(UserUpdatedEvent event) {
-		accessTokenService.deleteRefreshToken(event.getUserId());
 	}
 
 	@EventListener
