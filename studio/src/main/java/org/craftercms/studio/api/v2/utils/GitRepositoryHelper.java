@@ -1569,12 +1569,12 @@ public class GitRepositoryHelper implements DisposableBean {
 	 */
 	public void setBareRepository(String siteId) throws IOException {
 		Path repositoryPath = buildRepoPath(PUBLISHED, siteId);
-		gitCli.setBareRepository(repositoryPath.toFile());
 		String publishedCacheKey = getRepoCacheKey(siteId, PUBLISHED);
 		Repository repository = repositoryCache.getIfPresent(publishedCacheKey);
 		if (repository != null) {
 			repository.close();
 		}
 		repositoryCache.invalidate(publishedCacheKey);
+		gitCli.setBareRepository(repositoryPath.toFile());
 	}
 }
