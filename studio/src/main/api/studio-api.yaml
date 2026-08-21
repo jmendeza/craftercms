@@ -849,7 +849,7 @@ paths:
                 '500':
                     $ref: '#/components/responses/InternalServerError'
 
-    /api/2/users/{id}/sites/{site}/roles:
+    /api/2/users/{id}/sites/{siteId}/roles:
         get:
             tags:
                 - users
@@ -865,7 +865,7 @@ paths:
                     required: true
                     schema:
                         type: string
-                -   name: site
+                -   name: siteId
                     in: path
                     description: The site ID
                     required: true
@@ -1076,7 +1076,7 @@ paths:
                 '500':
                     $ref: '#/components/responses/InternalServerError'
 
-    /api/2/users/me/sites/{site}/roles:
+    /api/2/users/me/sites/{siteId}/roles:
         get:
             tags:
                 - users
@@ -1086,7 +1086,7 @@ paths:
                     Required Permission: "LOGGED_IN"
             operationId: getCurrentUserSiteRoles
             parameters:
-                -   name: site
+                -   name: siteId
                     in: path
                     description: The site ID
                     required: true
@@ -1111,7 +1111,7 @@ paths:
                 '500':
                     $ref: '#/components/responses/InternalServerError'
 
-    /api/2/users/me/sites/{site}/permissions:
+    /api/2/users/me/sites/{siteId}/permissions:
         get:
             tags:
                 - users
@@ -1121,7 +1121,7 @@ paths:
                     Required Permission: "LOGGED_IN"
             operationId: getCurrentUserSitePermissions
             parameters:
-                -   name: site
+                -   name: siteId
                     in: path
                     description: The site ID
                     required: true
@@ -1148,7 +1148,7 @@ paths:
                 '500':
                     $ref: '#/components/responses/InternalServerError'
 
-    /api/2/users/me/sites/{site}/has_permissions:
+    /api/2/users/me/sites/{siteId}/has_permissions:
         post:
             tags:
                 - users
@@ -1158,7 +1158,7 @@ paths:
                     Required Permission: "LOGGED_IN"
             operationId: hasCurrentUserSitePermissions
             parameters:
-                -   name: site
+                -   name: siteId
                     in: path
                     description: The site ID
                     required: true
@@ -7983,7 +7983,7 @@ paths:
                 '500':
                     $ref: '#/components/responses/InternalServerError'
 
-    /api/2/workflow/{site}/affected_packages:
+    /api/2/workflow/{siteId}/affected_packages:
         get:
             tags:
                 - workflow
@@ -7993,7 +7993,7 @@ paths:
                     Required permission "publish_get_queue"
             operationId: getWorkflowAffectedPackages
             parameters:
-                -   name: site
+                -   name: siteId
                     in: path
                     description: site ID
                     required: true
@@ -8037,7 +8037,7 @@ paths:
                 '500':
                     $ref: '#/components/responses/InternalServerError'
 
-    /api/2/workflow/{site}/approve:
+    /api/2/workflow/{siteId}/approve:
         post:
             tags:
                 - workflow
@@ -8047,7 +8047,7 @@ paths:
                     Required permission "publish_review"
             operationId: workflowApprove
             parameters:
-                -   name: site
+                -   name: siteId
                     in: path
                     description: site ID
                     required: true
@@ -8101,7 +8101,7 @@ paths:
                 '500':
                     $ref: '#/components/responses/InternalServerError'
 
-    /api/2/workflow/{site}/reject:
+    /api/2/workflow/{siteId}/reject:
         post:
             tags:
                 - workflow
@@ -8111,7 +8111,7 @@ paths:
                     Required permission "publish_review"
             operationId: workflowReject
             parameters:
-                -   name: site
+                -   name: siteId
                     in: path
                     description: site ID
                     required: true
@@ -8158,7 +8158,7 @@ paths:
                 '500':
                     $ref: '#/components/responses/InternalServerError'
 
-    /api/2/workflow/{site}/cancel:
+    /api/2/workflow/{siteId}/cancel:
         post:
             tags:
                 - workflow
@@ -8168,7 +8168,7 @@ paths:
                     Required permission "publish_cancel"
             operationId: cancelPublishPackages
             parameters:
-                -   name: site
+                -   name: siteId
                     in: path
                     description: site ID
                     required: true
