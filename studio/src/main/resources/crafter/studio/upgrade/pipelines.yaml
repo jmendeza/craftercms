@@ -490,6 +490,10 @@ pipelines:
                     -   type: dbScriptUpgrader
                         filename: upgrade/5.0.x/4.x-to-5.x/5.0-t3-to-5.0-t4.cleanup.sql
             -   currentVersion: 5.0-t5
+                nextVersion: 5.0-t6
+                operations:
+                    -   type: publishedRepositoryBareUpgrader
+            -   currentVersion: 5.0-t6
                 nextVersion: 5.0.0.0
                 operations:
                     -   type: xsltFileUpgrader
@@ -811,6 +815,8 @@ pipelines:
                         template: crafter/studio/upgrade/4.1.x/site-policy-config/site-policy-config-v4.1.2.xslt
                         commitDetails: Sync Studio version to 4.1.2
             -   currentVersion: 4.1.2
+                nextVersion: 5.0-t
+            -   currentVersion: 4.5.0.0
                 nextVersion: 5.0-t
             # Entry point for 5.0 upgrade
             -   currentVersion: 5.0-t
