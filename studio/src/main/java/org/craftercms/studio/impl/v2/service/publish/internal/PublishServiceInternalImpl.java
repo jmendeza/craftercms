@@ -638,13 +638,14 @@ public class PublishServiceInternalImpl implements PublishService, ApplicationCo
 			if (updateSchedule) {
 				publishPackage.setSchedule(schedule);
 			}
-			retryingDatabaseOperationFacade.retry(() -> publishDao.updatePackage(publishPackage));
+
 			if (resubmit) {
-				retryingDatabaseOperationFacade.retry(() ->
-								publishDao.updateItemStateBits(publishPackage.getId(), IN_WORKFLOW.value, 0L));
+				retryingDatabaseOperationFacade
+						.retry(() -> publishDao.resubmitPackage(publishPackage));
 				auditPublishSubmission(publishPackage, OPERATION_REQUEST_PUBLISH);
 				applicationContext.publishEvent(new WorkflowEvent(getAuthentication(), siteId, packageId, SUBMIT));
 			} else {
+				retryingDatabaseOperationFacade.retry(() -> publishDao.updatePackage(publishPackage));
 				auditPublishSubmission(publishPackage, OPERATION_UPDATE_PUBLISH_PACKAGE);
 			}
 		} finally {
