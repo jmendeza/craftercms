@@ -34,7 +34,7 @@ public class PackageSubmitterAnnotationHandler {
 		this.publishDao = publishDao;
 	}
 
-	@Around("@annotation(PackageSubmitter) || within(PackageSubmitter)")
+	@Around("@annotation(PackageSubmitter) || @within(PackageSubmitter)")
 	public Object checkPublishPackageSubmitter(ProceedingJoinPoint pjp) throws Throwable {
 		Method method = AopUtils.getActualMethod(pjp);
 		String siteId = StudioAnnotationUtils.getAnnotationValue(pjp, method, SiteId.class, String.class);
