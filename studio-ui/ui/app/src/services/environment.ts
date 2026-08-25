@@ -17,7 +17,23 @@
 import { get } from '../utils/ajax';
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
+import { Api2ResponseFormat } from '../models/ApiResponse';
+import { UiBootstrap } from '../models/UiBootstrap';
+import { setRequestForgeryToken } from '../utils/auth';
 
 export function fetchActiveEnvironment(): Observable<string> {
 	return get('/studio/api/2/ui/system/active_environment').pipe(map((response) => response?.response?.environment));
+}
+
+export function fetchUiBootstrap(): Observable<UiBootstrap> {
+	return get<Api2ResponseFormat<{ bootstrap: UiBootstrap }>>('/studio/api/2/ui/bootstrap').pipe(
+		map(({ response }) => response.bootstrap)
+	);
+}
+
+export function applyUiBootstrapSideEffects(bootstrap: UiBootstrap): void {
+	if (bootstrap.cookieDomain) {
+		document.domain = bootstrap.cookieDomain;
+	}
+	setRequestForgeryToken(bootstrap.xsrfHeader);
 }
