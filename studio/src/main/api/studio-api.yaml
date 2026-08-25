@@ -6059,12 +6059,6 @@ paths:
                     required: true
                     schema:
                         type: string
-                -   name: siteId
-                    description: The id of the site
-                    schema:
-                        type: string
-                    required: true
-                    in: query
                 -   name: pluginId
                     description: The id of the plugin
                     schema:
