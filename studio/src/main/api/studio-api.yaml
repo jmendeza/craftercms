@@ -9771,9 +9771,6 @@ components:
         RemoteRepository:
             type: object
             properties:
-                siteId:
-                    type: string
-                    description: site identifier
                 remoteName:
                     type: string
                     description: remote repository name
@@ -9808,7 +9805,6 @@ components:
                     type: string
                     description: private key to access
             required:
-                - siteId
                 - remoteName
                 - remoteUrl
                 - authenticationType
