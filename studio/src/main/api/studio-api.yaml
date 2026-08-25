@@ -6798,7 +6798,7 @@ paths:
                                     type: boolean
                                     description: true to enable, false to disable
                             required:
-                                - enabled
+                                - enable
             responses:
                 '200':
                     description: OK
