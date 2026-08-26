@@ -19,11 +19,11 @@ import { HashRouter } from 'react-router';
 import { GlobalAppContextProvider } from '../components/GlobalApp';
 import UrlDrivenSiteTools from '../components/SiteTools/UrlDrivenSiteTools/UrlDrivenSiteTools';
 
-export default function SiteTools() {
+export default function SiteTools(topProps: any) {
 	return (
 		<GlobalAppContextProvider>
 			<HashRouter>
-				<UrlDrivenSiteTools />
+				<UrlDrivenSiteTools {...topProps} />
 			</HashRouter>
 		</GlobalAppContextProvider>
 	);
