@@ -23,12 +23,24 @@ import { UiBootstrap } from '../../models/UiBootstrap';
 
 export function mapUiBootstrapToEnv(
 	bootstrap: UiBootstrap
-): Pick<GlobalState['env'], 'xsrfHeader' | 'xsrfArgument' | 'useBaseDomain' | 'activeEnvironment'> {
+): Pick<
+	GlobalState['env'],
+	| 'xsrfHeader'
+	| 'xsrfArgument'
+	| 'useBaseDomain'
+	| 'activeEnvironment'
+	| 'passwordRequirementsMinComplexity'
+	| 'footerHtml'
+	| 'guestBase'
+> {
 	return {
 		xsrfHeader: bootstrap.xsrfHeader,
 		xsrfArgument: bootstrap.xsrfArgument,
 		useBaseDomain: bootstrap.useBaseDomain,
-		activeEnvironment: bootstrap.environment
+		activeEnvironment: bootstrap.environment,
+		passwordRequirementsMinComplexity: bootstrap.passwordRequirementsMinComplexity,
+		footerHtml: bootstrap.footerHtml ?? '',
+		guestBase: bootstrap.previewAppBaseUri || window.location.origin
 	};
 }
 
@@ -48,6 +60,8 @@ export const envInitialState: GlobalState['env'] = ((origin: string) => ({
 	packageVersion: null,
 	packageBuildDate: null,
 	activeEnvironment: null,
+	passwordRequirementsMinComplexity: 4,
+	footerHtml: '',
 	socketConnected: false
 }))(window.location.origin);
 
