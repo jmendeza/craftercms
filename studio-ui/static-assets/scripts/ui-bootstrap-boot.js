@@ -30,8 +30,10 @@
 					document.domain = bootstrap.cookieDomain;
 				}
 			}
+		} else {
+			document.domain = location.hostname;
 		}
 	} catch (e) {
-		// Legacy pages may still load without a relaxed document.domain.
+		document.domain = location.hostname;
 	}
 })();
