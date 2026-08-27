@@ -17,6 +17,7 @@ package org.craftercms.studio.impl.v2.utils.spring.context;
 
 import org.craftercms.studio.api.v2.dal.Site;
 import org.craftercms.studio.api.v2.dal.SiteDAO;
+import org.craftercms.studio.api.v2.event.site.SiteBootstrapReadyEvent;
 import org.craftercms.studio.api.v2.event.site.SiteReadyEvent;
 import org.craftercms.studio.api.v2.utils.spring.context.SiteBootstrapStateProvider;
 import org.jspecify.annotations.NonNull;
@@ -51,7 +52,7 @@ public class SiteBootstrapStateProviderImpl implements SiteBootstrapStateProvide
 	public void markSiteAsReady(String siteId) {
 		getReadySites().add(siteId);
 		Site site = siteDAO.getSite(siteId);
-		applicationEventPublisher.publishEvent(new SiteReadyEvent(siteId, site.getSiteUuid()));
+		applicationEventPublisher.publishEvent(new SiteBootstrapReadyEvent(siteId, site.getSiteUuid()));
 	}
 
 	@Override
