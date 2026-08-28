@@ -117,7 +117,8 @@ ext.runReleaseBundleMatrix = { String s3Path ->
 
 /** True if the named executable is on PATH. */
 ext.commandLineToolAvailable = { String tool ->
-	def proc = "command -v ${tool}".execute()
+	logger.debug "Checking '${tool}' is available on PATH"
+	def proc = ['sh', '-c', "command -v ${tool}"].execute()
 	proc.waitFor()
 	return proc.exitValue() == 0
 }
