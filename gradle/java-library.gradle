@@ -38,6 +38,9 @@ plugins.withType(JavaPlugin).configureEach {
 		options.bottom = "Copyright &copy; ${year} <a href='${craftercmsUrl}'>${craftercmsName}</a>. All rights reserved."
 		options.author = true
 		options.version = true
+		title = "${project.crafterManifestTitle} ${craftercmsVersion} API"
+		options.windowTitle = title
+		options.docTitle = title
 	}
 
 	tasks.withType(Test).configureEach {
