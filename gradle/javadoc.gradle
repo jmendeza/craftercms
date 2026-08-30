@@ -30,7 +30,8 @@ tasks.register('aggregateJavadoc', Javadoc) {
 
 	destinationDir = layout.buildDirectory.dir(aggregateJavadocDirName).get().asFile
 
-	def docTitle = "${craftercmsName} ${craftercmsVersion} API"
+	def javadocVersion = findProperty('javadoc.version') ?: craftercmsVersion
+	def docTitle = "${craftercmsName} ${javadocVersion} API"
 	title = docTitle
 	options.docTitle = docTitle
 	options.windowTitle = docTitle
