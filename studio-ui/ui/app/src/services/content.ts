@@ -1424,7 +1424,9 @@ export function renameContent(siteId: string, path: string, name: string) {
 }
 
 export function checkPathExistence(siteId: string, path: string): Observable<boolean> {
-	return get(`/studio/api/2/content/${siteId}/exists?path=${path}`).pipe(map(({ response }) => response.exists));
+	return get(`/studio/api/2/content/${siteId}/exists${toQueryString({ path })}`).pipe(
+		map(({ response }) => response.exists)
+	);
 }
 
 export function fetchContentByCommitId(site: string, path: string, commitId: string): Observable<string | Blob> {
