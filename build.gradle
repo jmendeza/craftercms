@@ -193,7 +193,7 @@ task bundle() {
 }
 
 gradle.buildFinished {
-	// The root build dir only holds throwaway output, except for the aggregated javadoc site
+	// The root build dir only holds throwaway output, except for the aggregated javadoc sites
 	def rootBuildDir = project.layout.buildDirectory.get().asFile
 	def keep = aggregateJavadocDirName.tokenize('/').first()
 	rootBuildDir.listFiles()?.each { file ->
