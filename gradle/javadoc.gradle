@@ -15,44 +15,71 @@
  */
 
 /*
- * Aggregated Javadoc for every Java module, generated as a single site at build/docs/javadoc.
+ * Aggregated Javadoc sites per module family, written to build/docs/javadoc/<set>.
  *
  *   ./gradlew aggregateJavadoc
+ *   ./gradlew aggregateStudioJavadoc
  *
  * Per-module javadoc tasks and javadoc jars (see gradle/java-library.gradle) are unaffected.
  */
 
 ext.aggregateJavadocDirName = 'docs/javadoc'
+ext.aggregateJavadocSets = [
+	'commons',
+	'core',
+	'deployer',
+	'engine',
+	'profile',
+	'search',
+	'social',
+	'studio'
+] as Set
 
-tasks.register('aggregateJavadoc', Javadoc) {
+def javadocSetOf = { Project p ->
+	def path = p.path.substring(1)
+	def sep = path.indexOf(':')
+	sep < 0 ? path : path.substring(0, sep)
+}
+
+tasks.register('aggregateJavadoc') {
 	group = 'documentation'
-	description = 'Generates a single Javadoc site for all Java modules'
-
-	destinationDir = layout.buildDirectory.dir(aggregateJavadocDirName).get().asFile
-
-	def javadocVersion = findProperty('javadoc.version') ?: craftercmsVersion
-	def docTitle = "${craftercmsName} ${javadocVersion} API"
-	title = docTitle
-	options.docTitle = docTitle
-	options.windowTitle = docTitle
-	options.author = true
-	options.version = true
-	options.encoding = 'UTF-8'
-	options.charSet = 'UTF-8'
-	options.docEncoding = 'UTF-8'
-	options.addStringOption('Xdoclint:syntax', '-quiet')
-	def year = java.time.Year.now().value
-	options.bottom = "Copyright &copy; ${year} <a href='${craftercmsUrl}'>${craftercmsName}</a>. All rights reserved."
-	// Modules such as studio do not produce error-free javadoc yet, so a single bad comment
-	// must not fail the whole aggregated site
-	failOnError = false
+	description = 'Generates Javadoc sites for commons, core, deployer, engine, profile, search, social, and studio'
 }
 
 gradle.projectsEvaluated {
 	def javaProjects = subprojects.findAll { it.plugins.hasPlugin(JavaPlugin) }
+	def bySet = javaProjects.groupBy { javadocSetOf(it) }
+		.findAll { setName, _ -> setName in aggregateJavadocSets }
 
-	tasks.named('aggregateJavadoc', Javadoc) {
-		source javaProjects.collect { it.sourceSets.main.allJava }
-		classpath = files(javaProjects.collect { it.sourceSets.main.compileClasspath })
+	def year = java.time.Year.now().value
+	def setTasks = bySet.collect { setName, projects ->
+		def taskName = "aggregate${setName.capitalize()}Javadoc"
+		tasks.register(taskName, Javadoc) {
+			group = 'documentation'
+			description = "Generates Javadoc for ${setName}"
+			destinationDir = layout.buildDirectory.dir("${aggregateJavadocDirName}/${setName}").get().asFile
+			def javadocVersion = findProperty('javadoc.version') ?: project.version
+			def docTitle = "${crafterName} ${setName.capitalize()} ${javadocVersion} API"
+			title = docTitle
+			options.docTitle = docTitle
+			options.windowTitle = docTitle
+			options.author = true
+			options.version = true
+			options.encoding = 'UTF-8'
+			options.charSet = 'UTF-8'
+			options.docEncoding = 'UTF-8'
+			options.addStringOption('Xdoclint:syntax', '-quiet')
+			options.bottom = "Copyright &copy; ${year} <a href='${craftercmsUrl}'>${craftercmsDocsCopyrightName}</a>. All rights reserved."
+			// Modules such as studio do not produce error-free javadoc yet, so a single bad comment
+			// must not fail the whole aggregated site
+			failOnError = false
+
+			source projects.collect { it.sourceSets.main.allJava }
+			classpath = files(projects.collect { it.sourceSets.main.compileClasspath })
+		}
+	}
+
+	tasks.named('aggregateJavadoc') {
+		dependsOn setTasks
 	}
 }
