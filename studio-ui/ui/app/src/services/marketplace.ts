@@ -101,7 +101,7 @@ export function setPluginConfiguration(siteId: string, pluginId: string, content
 }
 
 export function fetchMarketplacePluginUsage(siteId: string, pluginId: string): Observable<ContentItem[]> {
-	const qs = toQueryString({ siteId, pluginId });
+	const qs = toQueryString({ pluginId });
 	return get(`/studio/api/2/marketplace/${siteId}/usage${qs}`).pipe(
 		map((response) => response?.response?.items),
 		switchMap((items) => (items.length === 0 ? of(items) : fetchContentItems(siteId, items)))
