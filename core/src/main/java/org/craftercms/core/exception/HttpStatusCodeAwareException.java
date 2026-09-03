@@ -13,19 +13,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.craftercms.engine.exception;
+package org.craftercms.core.exception;
 
 /**
- * Interface to be implemented by exceptions that want to expose an HTTP status
- * code to the response.
- * This is kept even if now exists in core to avoid breaking changes.
+ * Interface to be implemented by exceptions that want to expose an HTTP status code to the response.
  *
  * @author Alfonso Vásquez
- * @deprecated since 4.2.3. Use org.craftercms.core.exception.HttpStatusCodeAwareException instead.
  */
-@Deprecated
-public interface HttpStatusCodeAwareException extends org.craftercms.core.exception.HttpStatusCodeAwareException {
+public interface HttpStatusCodeAwareException {
 
-	int getStatusCode();
+    int getStatusCode();
 
 }
