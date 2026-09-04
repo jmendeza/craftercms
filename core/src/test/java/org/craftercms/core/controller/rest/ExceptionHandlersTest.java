@@ -74,7 +74,7 @@ public class ExceptionHandlersTest {
     public void testHandleAuthenticationException() {
         AuthenticationException ex = new AuthenticationException("This is a test");
 
-        Map<String, Object> model = exceptionHandler.handleAuthenticationException(request, ex);
+        Map<String, Object> model = exceptionHandler.handleAuthenticationException(request, response, ex);
         assertEquals(ex.getMessage(), model.get(MESSAGE_MODEL_ATTRIBUTE_NAME));
     }
 
@@ -82,7 +82,7 @@ public class ExceptionHandlersTest {
     public void testHandlePathNotFoundException()  {
         PathNotFoundException ex = new PathNotFoundException("This is a test");
 
-        Map<String, Object> model = exceptionHandler.handlePathNotFoundException(request, ex);
+        Map<String, Object> model = exceptionHandler.handlePathNotFoundException(request, response, ex);
         assertEquals(ex.getMessage(), model.get(MESSAGE_MODEL_ATTRIBUTE_NAME));
     }
 
@@ -90,7 +90,7 @@ public class ExceptionHandlersTest {
     public void testHandleException() {
         Exception ex = new Exception("This is a test");
 
-        Map<String, Object> model = exceptionHandler.handleException(request, ex);
+        Map<String, Object> model = exceptionHandler.handleException(request, response, ex);
         assertEquals(ex.getMessage(), model.get(MESSAGE_MODEL_ATTRIBUTE_NAME));
     }
 

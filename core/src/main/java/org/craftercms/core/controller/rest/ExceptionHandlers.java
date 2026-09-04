@@ -22,6 +22,7 @@ import org.craftercms.commons.validation.ValidationResult;
 import org.craftercms.commons.validation.ValidationRuntimeException;
 import org.craftercms.core.exception.AuthenticationException;
 import org.craftercms.core.exception.ForbiddenPathException;
+import org.craftercms.core.exception.HttpStatusCodeAwareException;
 import org.craftercms.core.exception.InvalidContextException;
 import org.craftercms.core.exception.PathNotFoundException;
 import org.slf4j.Logger;
@@ -30,9 +31,11 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolationException;
 import java.util.List;
 import java.util.Map;
@@ -56,50 +59,62 @@ public class ExceptionHandlers {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public Map<String, Object> handleInvalidContextException(HttpServletRequest request,
-                                                             MissingServletRequestParameterException e) {
-        return handleException(request, e);
+            HttpServletResponse response,
+            MissingServletRequestParameterException e) {
+        return handleException(request, response, e);
     }
 
     @ExceptionHandler(InvalidManagementTokenException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ResponseBody
     public Map<String, Object> handleInvalidContextException(HttpServletRequest request,
-                                                             InvalidManagementTokenException e) {
-        return handleException(request, e);
+            HttpServletResponse response,
+            InvalidManagementTokenException e) {
+        return handleException(request, response, e);
     }
 
     @ExceptionHandler(InvalidContextException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
-    public Map<String, Object> handleInvalidContextException(HttpServletRequest request, InvalidContextException e) {
-        return handleException(request, e);
+    public Map<String, Object> handleInvalidContextException(HttpServletRequest request,
+            HttpServletResponse response,
+            InvalidContextException e) {
+        return handleException(request, response, e);
     }
 
     @ExceptionHandler(AuthenticationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ResponseBody
-    public Map<String, Object> handleAuthenticationException(HttpServletRequest request, AuthenticationException e) {
-        return handleException(request, e);
+    public Map<String, Object> handleAuthenticationException(HttpServletRequest request,
+            HttpServletResponse response,
+            AuthenticationException e) {
+        return handleException(request, response, e);
     }
 
     @ExceptionHandler(PathNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ResponseBody
-    public Map<String, Object> handlePathNotFoundException(HttpServletRequest request, PathNotFoundException e) {
-        return handleException(request, e);
+    public Map<String, Object> handlePathNotFoundException(HttpServletRequest request,
+            HttpServletResponse response,
+            PathNotFoundException e) {
+        return handleException(request, response, e);
     }
 
     @ExceptionHandler(ForbiddenPathException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @ResponseBody
-    public Map<String, Object> handleForbiddenPathException(HttpServletRequest request, ForbiddenPathException e) {
-        return handleException(request, e);
+    public Map<String, Object> handleForbiddenPathException(HttpServletRequest request,
+            HttpServletResponse response,
+            ForbiddenPathException e) {
+        return handleException(request, response, e);
     }
 
     @ExceptionHandler(ValidationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
-    public ValidationResult handleValidationException(HttpServletRequest request, ValidationException e) {
+    public ValidationResult handleValidationException(HttpServletRequest request,
+            HttpServletResponse response,
+            ValidationException e) {
         logger.error("Request for " + request.getRequestURI() + " failed", e);
 
         return e.getResult();
@@ -108,7 +123,9 @@ public class ExceptionHandlers {
     @ExceptionHandler(ValidationRuntimeException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
-    public ValidationResult handleValidationRuntimeException(HttpServletRequest request, ValidationRuntimeException e) {
+    public ValidationResult handleValidationRuntimeException(HttpServletRequest request,
+            HttpServletResponse response,
+            ValidationRuntimeException e) {
         logger.error("Request for " + request.getRequestURI() + " failed", e);
 
         return e.getResult();
@@ -117,7 +134,9 @@ public class ExceptionHandlers {
     @ResponseBody
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(ConstraintViolationException.class)
-    public Map<String, Object> handleConstraintValidationException(ConstraintViolationException e) {
+    public Map<String, Object> handleConstraintValidationException(HttpServletRequest request,
+            HttpServletResponse response,
+            ConstraintViolationException e) {
         List<ValidationFieldError> validationErrors = e.getConstraintViolations().stream()
                 .map(c -> new ValidationFieldError(c.getPropertyPath().toString(), c.getMessage()))
                 .collect(toList());
@@ -127,17 +146,24 @@ public class ExceptionHandlers {
     @ResponseBody
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public Map<String, Object> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e) {
+    public Map<String, Object> handleMethodArgumentTypeMismatchException(HttpServletRequest request,
+            HttpServletResponse response,
+            MethodArgumentTypeMismatchException e) {
         List<ValidationFieldError> validationErrors = List.of(new ValidationFieldError(e.getName(), e.getMessage()));
         return Map.of(RESULT_KEY_VALIDATION_ERRORS, validationErrors);
     }
 
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    // @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
-    public Map<String, Object> handleException(HttpServletRequest request, Exception e) {
+    public Map<String, Object> handleException(HttpServletRequest request, HttpServletResponse response, Exception e) {
         logger.error("Request for " + request.getRequestURI() + " failed", e);
+        if (e instanceof HttpStatusCodeAwareException ex) {
+            response.setStatus(ex.getStatusCode());
+            return createResponseMessage(e.getMessage());
+        }
 
+		response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
         return createResponseMessage(e.getMessage());
     }
 
