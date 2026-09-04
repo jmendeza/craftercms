@@ -71,10 +71,15 @@ ext.applyReleaseVersions = { String releaseVersion, String gitBranchName ->
 	def composeFiles = fileTree(dir: "${projectDir}/docker-compose", include: '**/docker-compose*.yml')
 	composeFiles.each { composeFile ->
 		updateFileIfChanged(composeFile) { text ->
-			text.replaceAll(
+			def result = text.replaceAll(
 				/image: ([^:\s]+):([^:\s]+) # craftercms version flag/,
 				"image: \$1:${releaseVersion} # craftercms version flag"
 			)
+			result = result.replaceAll(
+				/image: ([^:\s]+):([^:\s]+) # craftercms enterprise version flag/,
+				"image: \$1:${releaseVersion}E # craftercms enterprise version flag"
+			)
+			result
 		}
 	}
 }
