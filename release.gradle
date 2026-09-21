@@ -68,8 +68,8 @@ ext.applyReleaseVersions = { String releaseVersion, String gitBranchName ->
 		}
 	}
 
-	// The enterprise marker goes after the numeric part, so 4.7.0-SNAPSHOT becomes 4.7.0E-SNAPSHOT
-	def enterpriseVersion = releaseVersion.replaceFirst(/^(\d+(?:\.\d+)*)/, '$1E')
+	// Insert E after the numeric part without doubling it (4.7.0-SNAPSHOT or 4.7.0E-SNAPSHOT -> 4.7.0E-SNAPSHOT)
+	def enterpriseVersion = releaseVersion.replaceFirst(/^(\d+(?:\.\d+)*)E?/, '$1E')
 
 	def composeFiles = fileTree(dir: "${projectDir}/docker-compose", include: '**/docker-compose*.yml')
 	composeFiles.each { composeFile ->
