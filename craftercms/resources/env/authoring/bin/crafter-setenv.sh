@@ -41,8 +41,6 @@ export SEARCH_HOST=${SEARCH_HOST:="localhost"}
 export SEARCH_PORT=${SEARCH_PORT:="@SEARCH_PORT@"}
 export DEPLOYER_HOST=${DEPLOYER_HOST:="localhost"}
 export DEPLOYER_PORT=${DEPLOYER_PORT:="@DEPLOYER_PORT@"}
-export MONGODB_HOST=${MONGODB_HOST:="localhost"}
-export MONGODB_PORT=${MONGODB_PORT:="@MONGODB_PORT@"}
 export MARIADB_HOST=${MARIADB_HOST:="127.0.0.1"}
 export MARIADB_PORT=${MARIADB_PORT:="@MARIADB_PORT@"}
 export TOMCAT_HOST=${TOMCAT_HOST:="localhost"}
@@ -80,12 +78,6 @@ export DEPLOYER_LOGS_DIR=${DEPLOYER_LOGS_DIR:="$CRAFTER_LOGS_DIR/deployer"}
 export DEPLOYER_DEPLOYMENTS_DIR=${DEPLOYER_DEPLOYMENTS_DIR:="$CRAFTER_DATA_DIR/repos/sites"}
 export DEPLOYER_SDOUT=${DEPLOYER_SDOUT:="$DEPLOYER_LOGS_DIR/crafter-deployer.out"}
 export DEPLOYER_PID=${DEPLOYER_PID:="$DEPLOYER_HOME/crafter-deployer.pid"}
-
-# -------------------- MongoDB variables --------------------
-export MONGODB_HOME=${MONGODB_HOME:="$CRAFTER_BIN_DIR/mongodb"}
-export MONGODB_DATA_DIR=${MONGODB_DATA_DIR:="$CRAFTER_DATA_DIR/mongodb"}
-export MONGODB_LOGS_DIR=${MONGODB_LOGS_DIR:="$CRAFTER_LOGS_DIR/mongodb"}
-export MONGODB_PID=${MONGODB_PID:="$MONGODB_HOME/mongod.lock"}
 
 # -------------------- MariaDB variables --------------------
 export MARIADB_SCHEMA=${MARIADB_SCHEMA:="crafter"}
