@@ -132,7 +132,6 @@ aws-sdk-elastictranscoder = "2.40.14"
 node = "22.18.0"
 yarn = "1.22.22"
 rome-utils = "2.1.0"
-embed-mongo = "4.33.0"
 netty = "4.2.17.Final"
 okio = "3.17.0"
 html5diff = "1.4.5"
@@ -206,8 +205,6 @@ bcpkix-jdk18on = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "bo
 bcprov-jdk18on = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
 bcmail-jdk18on = { module = "org.bouncycastle:bcmail-jdk18on", version.ref = "bouncycastle" }
 eddsa = { module = "net.i2p.crypto:eddsa", version.ref = "eddsa" }
-mongo-driver-sync = { module = "org.mongodb:mongodb-driver-sync", version.ref = "mongo" }
-mongo-driver-legacy = { module = "org.mongodb:mongodb-driver-legacy", version.ref = "mongo" }
 jongo = { module = "org.jongo:jongo", version.ref = "jongo" }
 semver4j = { module = "com.vdurmont:semver4j", version.ref = "semver4j" }
 joda-time = { module = "joda-time:joda-time", version.ref = "joda-time" }
