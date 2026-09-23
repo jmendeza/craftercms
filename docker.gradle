@@ -99,7 +99,6 @@ ext {
 		"opensearch",
 		"dbms",
 		"cli",
-		"mongodb",
 		"crafter-cli",
 		"apache-tomcat/work/**",
 		"apache-tomcat/temp/**",
@@ -112,7 +111,6 @@ ext {
 	defaultTomcatLocalBinExcludes = [
 		"migration",
 		"upgrade",
-		"mongodb",
 		"apache-tomcat/work/**",
 		"apache-tomcat/temp/**",
 		"apache-tomcat/webapps/crafter-search*",
@@ -388,7 +386,6 @@ tasks.register('buildDeployer') {
             exclude "migration"
             exclude "upgrade"
             exclude "cli"
-            exclude "mongodb"
             exclude "crafter-cli"
             exclude "apache-tomcat"
             exclude "opensearch"

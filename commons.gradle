@@ -116,7 +116,6 @@ ext.gradleModules = [
 	'commons': [
 		':commons:utilities',
 		':commons:security',
-		':commons:mongo',
 		':commons:audit',
 		':commons:git',
 		':commons:entitlements',
