@@ -522,7 +522,6 @@ ext.commonConfUpdatePatterns = [
 					'spring-security-ldap-*.jar,\\\n' +
 					'spring-security-messaging-*.jar,\\\n' +
 					'spring-security-web-*.jar,\\\n' +
-					'spring-social-*.jar,\\\n' +
 					'spring-tx-*.jar,\\\n' +
 					'spring-web-*.jar,\\\n' +
 					'spring-webmvc-*.jar,\\\n' +

@@ -789,15 +789,14 @@ function help() {
   cecho "    start [withMongoDB] [skipSearch] [skipMongoDB] [tailTomcat], Starts Tomcat, Deployer and OpenSearch.
              If withMongoDB is specified MongoDB will be started,
              if skipSearch is specified OpenSearch will not be started,
-             if skipMongoDB is specified MongoDB will not be started even if
-             the Crafter Profile WAR file is present,
+             if skipMongoDB is specified MongoDB will not be started,
              if tailTomcat is specified, Tomcat will be tailed and Crafter will shutdown when
              this script terminates.\n" "info"
   cecho "    stop, Stops Tomcat, Deployer, OpenSearch (if started), MongoDB (if started)\n" "info"
   cecho "    debug [withMongoDB] [skipSearch] [skipMongoDB], Starts Tomcat, Deployer and
              OpenSearch in debug mode. If withMongoDB is specified MongoDB will be started,
              if skipSearch is specified OpenSearch will not be started, if skipMongoDB is specified MongoDB
-             will not be started even if the Crafter Profile war is present\n" "info"
+             will not be started\n" "info"
   cecho "    restart, Restarts Tomcat, Deployer, OpenSearch (if started), MongoDB (if started)\n" "info"
   cecho "    start_deployer, Starts Deployer\n" "info"
   cecho "    stop_deployer, Stops Deployer\n" "info"
@@ -818,8 +817,6 @@ function help() {
   cecho "    status, Status of all CrafterCms subsystems\n" "info"
   cecho "    status_engine, Status of Crafter Engine\n" "info"
   cecho "    status_studio, Status of Crafter Studio\n" "info"
-  cecho "    status_profile, Status of Crafter Profile\n" "info"
-  cecho "    status_social, Status of Crafter Social\n" "info"
   cecho "    status_deployer, Status of Deployer\n" "info"
   cecho "    status_search, Status of OpenSearch\n" "info"
   cecho "    status_mariadb, Status of MariaDB\n" "info"
@@ -1048,7 +1045,7 @@ function isMongoNeeded() {
       return 0
     fi
   done
-  test -s "$CATALINA_HOME/webapps/crafter-profile.war" || test -d "$CATALINA_HOME/webapps/crafter-profile"
+  return 1
 }
 
 function stopMongoDB() {
@@ -1093,14 +1090,6 @@ function engineStatus(){
 
 function studioStatus(){
   getStatus "Crafter Studio" "$TOMCAT_HTTP_PORT" "$CATALINA_PID"
-}
-
-function profileStatus(){
-  getStatus "Crafter Profile" "$TOMCAT_HTTP_PORT" "$CATALINA_PID"
-}
-
-function socialStatus(){
-  getStatus "Crafter Social" "$TOMCAT_HTTP_PORT" "$CATALINA_PID"
 }
 
 function mariadbStatus() {
@@ -1206,14 +1195,8 @@ function status() {
     studioStatus
     mariadbStatus
   fi
-  if [ -f "$CRAFTER_BIN_DIR/apache-tomcat/webapps/crafter-profile.war" ]; then
-    if isMongoNeeded "$@"; then
-      mongoDbStatus
-    fi
-    profileStatus
-    if [ -f "$CRAFTER_BIN_DIR/apache-tomcat/webapps/crafter-social.war" ]; then
-      socialStatus
-    fi
+  if isMongoNeeded "$@"; then
+    mongoDbStatus
   fi
 }
 
@@ -1329,12 +1312,6 @@ function executeAction() {
     ;;
     status_studio)
       studioStatus
-    ;;
-    status_profile)
-      profileStatus
-    ;;
-    status_social)
-      socialStatus
     ;;
     status_deployer)
       deployerStatus
