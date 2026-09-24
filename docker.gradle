@@ -104,8 +104,6 @@ ext {
 		"apache-tomcat/work/**",
 		"apache-tomcat/temp/**",
 		"apache-tomcat/webapps/crafter-search*",
-		"apache-tomcat/webapps/crafter-social*",
-		"apache-tomcat/webapps/crafter-profile*",
 		"apache-tomcat/webapps/ROOT",
 		"apache-tomcat/webapps/studio",
 		"**/*.pid"
@@ -118,8 +116,6 @@ ext {
 		"apache-tomcat/work/**",
 		"apache-tomcat/temp/**",
 		"apache-tomcat/webapps/crafter-search*",
-		"apache-tomcat/webapps/crafter-social*",
-		"apache-tomcat/webapps/crafter-profile*",
 		"apache-tomcat/webapps/ROOT",
 		"apache-tomcat/webapps/studio",
 		"**/*.pid"
@@ -416,41 +412,6 @@ tasks.register('buildDeployer') {
     }
 }
 
-tasks.register('buildProfile') {
-    group = "Build"
-    description = "Builds the Profile Docker image"
-    dependsOn buildDeliveryTomcat
-	def injected = project.objects.newInstance(InjectedExecOps)
-    def imageBuildDir = "${imagesBuildDir}/profile"
-
-    doFirst {
-        delete imageBuildDir
-    }
-    doLast {
-        copy {
-            duplicatesStrategy = 'include'
-
-            from "${imagesBuildDir}/delivery/tomcat/"
-            from "${imagesDir}/profile/"
-            into imageBuildDir
-        }
-
-        updateDockerfileUser("${imageBuildDir}/Dockerfile")
-
-        copy {
-            from "${deliveryBundleRoot}/bin/apache-tomcat/webapps/crafter-profile.war"
-            from "${deliveryBundleRoot}/bin/apache-tomcat/webapps/crafter-profile-admin.war"
-            into "${imageBuildDir}/bin/apache-tomcat/webapps"
-        }
-
-		injected.execOps.exec {
-            commandLine 'docker', 'buildx', 'build', '--sbom=true', '--provenance=true', '-t', "${project.profileImageName}:${project.version}", imageBuildDir
-        }
-
-        pushTagDockerImage(project.profileImageName)
-    }
-}
-
 tasks.register('buildGitSshServer') {
     group = "Build"
     description = "Builds the Git SSH Server Docker image"
@@ -541,7 +502,6 @@ tasks.register('buildAllImages') {
     group = 'Build'
     description = 'Builds all Docker images'
     dependsOn buildMainImages
-    dependsOn buildProfile
 }
 
 tasks.register('deleteDockerArtifacts') {
