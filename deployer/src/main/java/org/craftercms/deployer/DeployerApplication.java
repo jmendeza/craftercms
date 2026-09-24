@@ -205,6 +205,7 @@ public class DeployerApplication implements WebMvcConfigurer {
 			}
 			DumperOptions options = new DumperOptions();
 			options.setDefaultFlowStyle(DumperOptions.FlowStyle.FLOW);
+			options.setDefaultScalarStyle(DumperOptions.ScalarStyle.DOUBLE_QUOTED);
 			options.setSplitLines(false);
 			String dumped = new Yaml(options).dump(value.toString());
 			return Strings.CI.removeEnd(dumped, "\n");
