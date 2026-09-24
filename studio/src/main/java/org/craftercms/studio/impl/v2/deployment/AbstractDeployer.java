@@ -55,6 +55,8 @@ public abstract class AbstractDeployer implements Deployer {
 	protected static final String SOURCE_TEMPLATE_PARAM = "source";
 	protected static final String REPO_URL_TEMPLATE_PARAM = "repo_url";
 	protected static final String LOCAL_REPO_PATH_TEMPLATE_PARAM = "local_repo_path";
+	protected static final String DEPLOYER_AUTHORIZATION_TOKEN_TEMPLATE_PARAM = "token";
+
 
 	private final static Logger logger = LoggerFactory.getLogger(AbstractDeployer.class);
 
@@ -67,8 +69,8 @@ public abstract class AbstractDeployer implements Deployer {
 	}
 
 	protected void doCreateTarget(String site, String environment, String template,
-				      boolean replace, boolean disableDeployCron, String localRepoPath,
-				      String repoUrl, HierarchicalConfiguration<ImmutableNode> additionalParams)
+					  boolean replace, boolean disableDeployCron, String localRepoPath,
+					  String repoUrl, HierarchicalConfiguration<ImmutableNode> additionalParams)
 		throws IllegalStateException, RestClientException {
 		String requestUrl = getCreateTargetUrl();
 		Map<String, Object> requestBody = getCreateTargetRequestBody(site, environment, template,
@@ -149,9 +151,9 @@ public abstract class AbstractDeployer implements Deployer {
 	 * @return a {@link Map} containing the parameters, preserving the hierarchical structure of the configuration parameters
 	 */
 	protected Map<String, Object> getDuplicateTargetRequestBody(String sourceSite, String site, String environment,
-								    String template, boolean replace, boolean disableDeployCron,
-								    String localRepoPath, String repoUrl,
-								    HierarchicalConfiguration<ImmutableNode> additionalParams) {
+									String template, boolean replace, boolean disableDeployCron,
+									String localRepoPath, String repoUrl,
+									HierarchicalConfiguration<ImmutableNode> additionalParams) {
 		Map<String, Object> createTargetRequestBody = getCreateTargetRequestBody(site, environment, template, replace, disableDeployCron,
 			localRepoPath, repoUrl, additionalParams);
 		MapUtils.add(createTargetRequestBody, SOURCE_TEMPLATE_PARAM, getSourceTemplateParams(sourceSite));
@@ -176,7 +178,7 @@ public abstract class AbstractDeployer implements Deployer {
 	}
 
 	protected void addChildParams(Map<String, Object> childParams, ImmutableNode parentNode,
-				      ConfigurationInterpolator interpolator) {
+					  ConfigurationInterpolator interpolator) {
 		for (ImmutableNode childParamNode : parentNode.getChildren()) {
 			if (childParamNode.getChildren().isEmpty()) {
 				Object value = interpolator.interpolate(childParamNode.getValue());
