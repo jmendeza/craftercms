@@ -37,7 +37,7 @@ import org.springframework.web.bind.annotation.*;
  *
  */
 @Controller
-@RequestMapping("/api/3/system/context")
+@RequestMapping({"/api/3/system/context", "/api/3/system/context/"})
 public class SocialContextController {
 
     @Autowired
@@ -45,19 +45,19 @@ public class SocialContextController {
     @Autowired
     private ContextPreferencesService contextPreferencesService;
 
-    @RequestMapping(value = "/all", method = RequestMethod.GET)
+    @RequestMapping(value = {"/all", "/all/"}, method = RequestMethod.GET)
     @ResponseBody
     public Iterable<SocialContext> getAllContexts() throws SocialException {
         return socialContextService.getAllContexts();
     }
 
-    @RequestMapping(method = RequestMethod.POST)
+    @RequestMapping(value = {"", "/"}, method = RequestMethod.POST)
     @ResponseBody
     public SocialContext create(@RequestParam final String contextName) throws SocialException {
         return socialContextService.createNewContext(contextName);
     }
 
-    @RequestMapping(value = "/{id}/{profileId}", method = RequestMethod.POST)
+    @RequestMapping(value = {"/{id}/{profileId}", "/{id}/{profileId}/"}, method = RequestMethod.POST)
     @ResponseBody
     public Profile addProfileToContext(@PathVariable("id") final String contextId, @PathVariable("profileId") final
     String profileId, @RequestParam final String roles) throws SocialException {
@@ -68,14 +68,16 @@ public class SocialContextController {
         return socialContextService.addProfileToContext(profileId, contextId, StringUtils.split(roles, ','));
     }
 
-    @RequestMapping(value = "/{id}/{profileId}/delete", method = {RequestMethod.DELETE,RequestMethod.POST})
+    @RequestMapping(value = {"/{id}/{profileId}/delete", "/{id}/{profileId}/delete/"},
+        method = {RequestMethod.DELETE,RequestMethod.POST})
     @ResponseBody
     public Profile removeProfileFromContext(@PathVariable("id") final String contextId, @PathVariable("profileId")
     final String profileId) throws SocialException {
         return socialContextService.removeProfileFromContext(contextId, profileId);
     }
 
-    @RequestMapping(value = "/preferences/email", method = {RequestMethod.PUT, RequestMethod.POST})
+    @RequestMapping(value = {"/preferences/email", "/preferences/email/"},
+        method = {RequestMethod.PUT, RequestMethod.POST})
     @ResponseBody
     public boolean saveEmailTemplate(@RequestParam(required = true) final String template, @RequestParam(required =
         true) final String type) throws SocialException {
@@ -97,7 +99,7 @@ public class SocialContextController {
     }
 
 
-    @RequestMapping(value = "/preferences/email", method = RequestMethod.GET)
+    @RequestMapping(value = {"/preferences/email", "/preferences/email/"}, method = RequestMethod.GET)
     @ResponseBody
     public Map<String, String> getSaveEmailTemplate(@RequestParam(required = true) final String type) throws
         SocialException {
@@ -117,7 +119,7 @@ public class SocialContextController {
     }
 
 
-    @RequestMapping(value = "/preferences/email/config", method = RequestMethod.GET)
+    @RequestMapping(value = {"/preferences/email/config", "/preferences/email/config/"}, method = RequestMethod.GET)
     @ResponseBody
     public Map<String, Object> getEmailConfiguration() throws SocialException {
         if (!checkIfUserIsAdmin()) {
@@ -128,7 +130,8 @@ public class SocialContextController {
     }
 
 
-    @RequestMapping(value = "/preferences/email/config", method = {RequestMethod.POST, RequestMethod.PUT})
+    @RequestMapping(value = {"/preferences/email/config", "/preferences/email/config/"},
+        method = {RequestMethod.POST, RequestMethod.PUT})
     @ResponseBody
     public Map<String, Object> setEmailConfiguration(@RequestParam(required = true) final String host, @RequestParam
         (required = true) final String encoding, @RequestParam(required = true) final int port, @RequestParam
@@ -157,7 +160,7 @@ public class SocialContextController {
     }
 
 
-    @RequestMapping(value = "/preferences", method = RequestMethod.GET)
+    @RequestMapping(value = {"/preferences", "/preferences/"}, method = RequestMethod.GET)
     @ResponseBody
     public Map<String, Object> getContextPreference() {
         if (!SocialSecurityUtils.getCurrentProfile().getUsername().equalsIgnoreCase(SocialSecurityUtils.ANONYMOUS)) {
@@ -166,7 +169,8 @@ public class SocialContextController {
         throw new AuthenticationRequiredException("User must be logged in");
     }
 
-    @RequestMapping(value = "/updatePreference", method = {RequestMethod.POST, RequestMethod.PUT})
+    @RequestMapping(value = {"/updatePreference", "/updatePreference/"},
+        method = {RequestMethod.POST, RequestMethod.PUT})
     @ResponseBody
     public boolean savePreferences(@RequestParam final Map<String, Object> preferences) {
         if (!SocialSecurityUtils.getCurrentProfile().getUsername().equalsIgnoreCase(SocialSecurityUtils.ANONYMOUS)) {
@@ -178,7 +182,8 @@ public class SocialContextController {
         throw new AuthenticationRequiredException("User must be logged in and must be social admin or context admin");
     }
 
-    @RequestMapping(value = "/deletePreferences", method = {RequestMethod.POST, RequestMethod.DELETE})
+    @RequestMapping(value = {"/deletePreferences", "/deletePreferences/"},
+        method = {RequestMethod.POST, RequestMethod.DELETE})
     @ResponseBody
     public boolean deletePreferences(@RequestParam final String preferences) {
         if (!SocialSecurityUtils.getCurrentProfile().getUsername().equalsIgnoreCase(SocialSecurityUtils.ANONYMOUS)) {
