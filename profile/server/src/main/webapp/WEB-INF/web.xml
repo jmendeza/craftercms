@@ -58,7 +58,7 @@
 
     <servlet-mapping>
         <servlet-name>appServlet</servlet-name>
-        <url-pattern>/</url-pattern>
+        <url-pattern>/*</url-pattern>
     </servlet-mapping>
 
     <filter>
@@ -79,6 +79,11 @@
         </init-param>
     </filter>
 
+	<filter>
+		<filter-name>crafter.suffixStrippingFilter</filter-name>
+		<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+	</filter>
+
     <filter-mapping>
         <filter-name>requestContextBindingFilter</filter-name>
         <url-pattern>/*</url-pattern>
@@ -89,4 +94,9 @@
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 
+	<filter-mapping>
+		<filter-name>crafter.suffixStrippingFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+		<dispatcher>REQUEST</dispatcher>
+	</filter-mapping>
 </web-app>

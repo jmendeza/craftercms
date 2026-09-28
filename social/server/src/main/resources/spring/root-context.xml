@@ -198,6 +198,12 @@
         <constructor-arg name="ugcRepository" ref="social.repository.ugcRepository"/>
     </bean>
 
+
+	<bean id="crafter.suffixStrippingFilter" class="org.craftercms.commons.http.SuffixStrippingFilter">
+		<constructor-arg name="suffixes" value="${crafter.social.api.stripSuffixes.suffixes}"/>
+		<constructor-arg name="includedUrls" value="${crafter.social.api.stripSuffixes.includedUrls}"/>
+	</bean>
+
     <import resource="scheduler-context.xml"/>
     <import resource="extensions-context.xml"/>
     <import resource="classpath*:crafter/social/extension/services-context.xml"/>
