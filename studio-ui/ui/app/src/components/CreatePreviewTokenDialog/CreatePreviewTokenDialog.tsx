@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2022 Crafter Software Corporation. All Rights Reserved.
+ * Copyright (C) 2007-2026 Crafter Software Corporation. All Rights Reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as published by
@@ -41,7 +41,7 @@ import { FormHelperText } from '@mui/material';
 import FormLabel from '@mui/material/FormLabel';
 import Alert from '@mui/material/Alert';
 import Divider from '@mui/material/Divider';
-import { encrypt } from '../../services/security';
+import { generatePreviewToken } from '../../services/security';
 import { showErrorDialog } from '../../state/reducers/dialogs/error';
 import { copyToClipboard } from '../../utils/system';
 import { showSystemNotification } from '../../state/actions/system';
@@ -184,7 +184,7 @@ function Body(props: BodyProps) {
     e.stopPropagation();
     if (!valid) return;
     functionRefs.current.onSubmittingAndOrPendingChange({ isSubmitting: true });
-    encrypt(`${projects.join(',')}|${expiresAt.getTime()}`).subscribe({
+    generatePreviewToken(projects, expiresAt.toISOString()).subscribe({
       next(token) {
         functionRefs.current.onSubmittingAndOrPendingChange({ isSubmitting: false, hasPendingChanges: false });
         onTokenGenerated?.(token);
