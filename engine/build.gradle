@@ -67,6 +67,7 @@ dependencies {
 	implementation libs.mongo.bson
 	implementation platform("org.apache.groovy:groovy-bom:${libs.versions.groovy.get()}")
 	implementation libs.groovy
+	implementation libs.groovy.grapeivy
 	implementation libs.spring.social.web
 	implementation libs.spring.social.facebook
 
