@@ -182,6 +182,8 @@ spring-aop = { module = "org.springframework:spring-aop", version.ref = "spring"
 spring-test = { module = "org.springframework:spring-test", version.ref = "spring" }
 groovy = { module = "org.apache.groovy:groovy", version.ref = "groovy" }
 groovy-sql = { module = "org.apache.groovy:groovy-sql", version.ref = "groovy" }
+groovy-callsite = { module = "org.apache.groovy:groovy-callsite", version.ref = "groovy" }
+groovy-grapeivy = { module = "org.apache.groovy:groovy-grape-ivy", version.ref = "groovy" }
 findbugs = { module = "com.google.code.findbugs:findbugs", version.ref = "findbugs" }
 bcel = { module = "org.apache.bcel:bcel", version.ref = "bcel" }
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
