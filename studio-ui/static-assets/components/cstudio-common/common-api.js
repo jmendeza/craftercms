@@ -6445,7 +6445,7 @@ var nodeOpen = false,
             path = CStudioAuthoring.Service.getPluginURL.replace('{siteId}', CStudioAuthoringContext.site);
             prefix = name;
             if (item.plugin.type) {
-              path += '&type=' + item.plugin.type;
+              path += '?type=' + item.plugin.type;
             } else {
               missingProp.push('Type');
             }

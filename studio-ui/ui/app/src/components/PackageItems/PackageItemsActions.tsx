@@ -38,6 +38,8 @@ export interface PackageItemsActionsProps {
 	maxTreeItems: number;
 	includeChildren?: boolean;
 	setIncludeChildren?(value: boolean): void;
+	selectAllDependenciesChecked?: boolean;
+	onSelectAllDependencies?(checked: boolean): void;
 }
 
 export function PackageItemsActions(props: PackageItemsActionsProps) {
@@ -48,12 +50,28 @@ export function PackageItemsActions(props: PackageItemsActionsProps) {
 		maxTreeItems,
 		setExpandedPaths,
 		includeChildren,
-		setIncludeChildren
+		setIncludeChildren,
+		selectAllDependenciesChecked,
+		onSelectAllDependencies
 	} = props;
 	const { formatMessage } = useIntl();
+	const showSelectAll = Boolean(onSelectAllDependencies);
 	return (
-		<Box display="flex" justifyContent="space-between" alignItems="center" mr={1} ml={1}>
-			<Box display="flex" py={0.5}>
+		<Box
+			sx={{
+				display: 'flex',
+				justifyContent: 'space-between',
+				alignItems: 'center',
+				mr: 1,
+				ml: 1
+			}}
+		>
+			<Box
+				sx={{
+					display: 'flex',
+					py: 0.5
+				}}
+			>
 				<Tooltip
 					title={
 						disableTreeView ? (
@@ -106,16 +124,32 @@ export function PackageItemsActions(props: PackageItemsActionsProps) {
 					</>
 				)}
 			</Box>
-			{nnou(includeChildren) && (
-				<Box>
-					<Button
-						size="small"
-						startIcon={includeChildren ? <CheckBoxRoundedIcon /> : <CheckBoxOutlineBlankRoundedIcon />}
-						sx={{ [`.${buttonClasses.startIcon}`]: { mr: 0.5 } }}
-						onClick={() => setIncludeChildren(!includeChildren)}
-					>
-						<FormattedMessage defaultMessage="Include children" />
-					</Button>
+			{(nnou(includeChildren) || showSelectAll) && (
+				<Box sx={{ display: 'flex', gap: 0.5 }}>
+					{showSelectAll && (
+						<Button
+							size="small"
+							startIcon={selectAllDependenciesChecked ? <CheckBoxRoundedIcon /> : <CheckBoxOutlineBlankRoundedIcon />}
+							sx={{ [`.${buttonClasses.startIcon}`]: { mr: 0.5 } }}
+							onClick={() => onSelectAllDependencies(!selectAllDependenciesChecked)}
+						>
+							{selectAllDependenciesChecked ? (
+								<FormattedMessage defaultMessage="Deselect all" />
+							) : (
+								<FormattedMessage defaultMessage="Select all" />
+							)}
+						</Button>
+					)}
+					{nnou(includeChildren) && (
+						<Button
+							size="small"
+							startIcon={includeChildren ? <CheckBoxRoundedIcon /> : <CheckBoxOutlineBlankRoundedIcon />}
+							sx={{ [`.${buttonClasses.startIcon}`]: { mr: 0.5 } }}
+							onClick={() => setIncludeChildren(!includeChildren)}
+						>
+							<FormattedMessage defaultMessage="Include children" />
+						</Button>
+					)}
 				</Box>
 			)}
 		</Box>

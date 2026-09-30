@@ -16,7 +16,7 @@
 
 import Box from '@mui/material/Box';
 import { listItemSecondaryActionClasses } from '@mui/material';
-import { useIntl } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
@@ -26,7 +26,7 @@ import MoreVertRounded from '@mui/icons-material/MoreVertRounded';
 import Checkbox from '@mui/material/Checkbox';
 import ListItemText from '@mui/material/ListItemText';
 import ItemDisplay from '../ItemDisplay';
-import React, { type DetailedHTMLProps, type HTMLAttributes, useCallback, useState } from 'react';
+import React, { type DetailedHTMLProps, type HTMLAttributes, useCallback, useMemo, useState } from 'react';
 import { DependencyChip, DependencyDataState } from './PublishDialogContainer';
 import { AllItemActions, ContentItem, LightItem } from '../../models';
 import { PathTreeNode } from './buildPathTrees';
@@ -45,6 +45,7 @@ import useItemsByPath from '../../hooks/useItemsByPath';
 import { fetchContentItem } from '../../services/content';
 import { List, type RowComponentProps } from 'react-window';
 import DraftChip from '../DraftChip';
+import Tooltip from '@mui/material/Tooltip';
 
 export interface PublishItemsProps {
 	itemMap: Record<string, LightItem>;
@@ -55,6 +56,7 @@ export interface PublishItemsProps {
 	selectedDependenciesMap?: Record<string, boolean>;
 	trees: PathTreeNode[];
 	onCheckboxChange?: (event: React.ChangeEvent<HTMLInputElement>, checked: boolean, path: string) => void;
+	onSelectAllDependencies?: (checked: boolean) => void;
 	includeChildren?: boolean;
 	setIncludeChildren?: (value: boolean) => void;
 }
@@ -71,6 +73,7 @@ export function PublishPackageItemsView(props: PublishItemsProps) {
 		selectedDependenciesMap = {},
 		trees,
 		onCheckboxChange,
+		onSelectAllDependencies,
 		includeChildren,
 		setIncludeChildren
 	} = props;
@@ -90,6 +93,16 @@ export function PublishPackageItemsView(props: PublishItemsProps) {
 	const totalItems = itemsAndDependenciesPaths.length;
 	const disableTreeView = totalItems > maxTreeItems;
 	const itemsByPath = useItemsByPath();
+	const selectableSoftDependencyPaths = useMemo(
+		() =>
+			Object.keys(dependencyTypeMap).filter(
+				(path) => dependencyTypeMap[path] === 'soft' && itemMap[path]?.canRequestPublish
+			),
+		[dependencyTypeMap, itemMap]
+	);
+	const selectAllDependenciesChecked =
+		selectableSoftDependencyPaths.length > 0 &&
+		selectableSoftDependencyPaths.every((path) => selectedDependenciesMap[path]);
 
 	const onContextMenuClose = () => {
 		setContextMenu({
@@ -150,6 +163,8 @@ export function PublishPackageItemsView(props: PublishItemsProps) {
 				maxTreeItems={maxTreeItems}
 				includeChildren={includeChildren}
 				setIncludeChildren={setIncludeChildren}
+				selectAllDependenciesChecked={selectAllDependenciesChecked}
+				onSelectAllDependencies={selectableSoftDependencyPaths.length > 0 ? onSelectAllDependencies : undefined}
 			/>
 			<Divider />
 			<Box sx={{ p: 1, flexGrow: 1, overflowY: 'auto', maxHeight: '70vh' }}>
@@ -201,7 +216,12 @@ export function PublishPackageItemsView(props: PublishItemsProps) {
 									<ListItem
 										key={path}
 										secondaryAction={
-											<Box display="flex" alignItems="center">
+											<Box
+												sx={{
+													display: 'flex',
+													alignItems: 'center'
+												}}
+											>
 												<IconButton
 													className="item-menu-button"
 													size="small"
@@ -214,18 +234,36 @@ export function PublishPackageItemsView(props: PublishItemsProps) {
 													<MoreVertRounded />
 												</IconButton>
 												{dependencyTypeMap?.[path] === 'soft' && (
-													<Checkbox
-														size="small"
-														checked={selectedDependenciesMap[path]}
-														onChange={(e, checked) => onCheckboxChange?.(e, checked, path)}
-													/>
+													<Tooltip
+														title={
+															!itemMap[path].canRequestPublish ? (
+																<FormattedMessage defaultMessage="This reference can't be selected because you don't have permission to publish it." />
+															) : (
+																''
+															)
+														}
+													>
+														<span>
+															<Checkbox
+																size="small"
+																disabled={!itemMap[path].canRequestPublish}
+																checked={selectedDependenciesMap[path]}
+																onChange={(e, checked) => onCheckboxChange?.(e, checked, path)}
+															/>
+														</span>
+													</Tooltip>
 												)}
 											</Box>
 										}
 									>
 										<ListItemText
 											primary={
-												<Box display="flex" gap={1}>
+												<Box
+													sx={{
+														display: 'flex',
+														gap: 1
+													}}
+												>
 													<ItemDisplay
 														item={itemMap[path]}
 														showNavigableAsLinks={false}
