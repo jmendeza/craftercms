@@ -32,7 +32,7 @@
 	<context:annotation-config/>
 
 	<mvc:annotation-driven content-negotiation-manager="crafter.contentNegotiationManager">
-		<mvc:path-matching suffix-pattern="true"/>
+		<mvc:path-matching/>
 		<mvc:message-converters>
 			<bean class="org.craftercms.commons.jackson.mvc.CrafterJackson2MessageConverter">
 				<constructor-arg name="filter" ref="crafter.jacksonFilterProvider"/>
@@ -51,17 +51,16 @@
 		</property>
 	</bean>
 
-	<bean id="crafter.contentNegotiationManager"
-	      class="org.springframework.web.accept.ContentNegotiationManagerFactoryBean">
-		<property name="favorPathExtension" value="true"/>
-		<property name="defaultContentType" value="application/json"/>
-		<property name="mediaTypes">
-			<map>
-				<entry key="xml" value="application/xml"/>
-				<entry key="json" value="application/json"/>
-			</map>
-		</property>
-	</bean>
+    <bean id="crafter.contentNegotiationManager"
+          class="org.springframework.web.accept.ContentNegotiationManagerFactoryBean">
+        <property name="defaultContentType" value="application/json"/>
+        <property name="mediaTypes">
+            <map>
+                <entry key="xml" value="application/xml"/>
+                <entry key="json" value="application/json"/>
+            </map>
+        </property>
+    </bean>
 
 	<mvc:interceptors>
 		<ref bean="crafter.accessTokenCheckingInterceptor"/>

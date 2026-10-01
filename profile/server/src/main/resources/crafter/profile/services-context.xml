@@ -279,8 +279,13 @@
 		</property>
 	</bean>
 
-	<bean id="multipartResolver"
-	      class="org.springframework.web.multipart.support.StandardServletMultipartResolver">
+    <bean id="multipartResolver"
+          class="org.springframework.web.multipart.support.StandardServletMultipartResolver">
+    </bean>
+
+	<bean id="crafter.suffixStrippingFilter" class="org.craftercms.commons.http.SuffixStrippingFilter">
+		<constructor-arg name="suffixes" value="${crafter.profile.api.stripSuffixes.suffixes}"/>
+		<constructor-arg name="includedUrls" value="${crafter.profile.api.stripSuffixes.includedUrls}"/>
 	</bean>
 
 	<!-- Entitlements -->
