@@ -26,10 +26,11 @@ export function encrypt(text: string, site: string = ''): Observable<string> {
 	);
 }
 
-export function generatePreviewToken(siteIds: string[], expiresAt: string): Observable<string> {
-  return postJSON(`/studio/api/2/security/preview/generate_token.json`, { siteIds, expiresAt }).pipe(
-    map((response) => response?.response?.token)
-  );
+export function generatePreviewToken(siteIds: string[], expiresAt: string | Date): Observable<string> {
+  return postJSON(`/studio/api/2/security/preview/generate_token.json`, {
+    siteIds,
+    expiresAt: expiresAt instanceof Date ? expiresAt.toISOString() : expiresAt
+  }).pipe(map((response) => response?.response?.token));
 }
 
 export function previewSwitch(): Observable<true> {
