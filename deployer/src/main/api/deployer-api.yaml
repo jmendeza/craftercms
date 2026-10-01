@@ -31,8 +31,16 @@ paths:
             summary: Create a Crafter Deployer target
             description: |
                     Module: Deployer <br>
-                    "Target creation is based on templates. The deployer comes with two out of the box: remote and local. The remote template creates targets that pull changes from a remote Git repository, making it ideal to create targets for delivery environments. The local template instead generates targets that use a local Git repo and the last processed commit to infer the changes, without executing a pull, so it's used mostly to create targets for authoring environments. <br><br> If a target already exists and <b><i>replace</i></b> is true, then the new target will replace the existing one. If <b><i>replace</i></b> is false and the target exists, a 409 is returned."
+                    Target creation is based on templates. The deployer comes with two out of the box: remote and local. The remote template creates targets that pull changes from a remote Git repository, making it ideal to create targets for delivery environments. The local template instead generates targets that use a local Git repo and the last processed commit to infer the changes, without executing a pull, so it’s used mostly to create targets for authoring environments. <br><br> If a target already exists and <b><i>replace</i></b> is true, then the new target will replace the existing one. If <b><i>replace</i></b> is false and the target exists, a 409 is returned.
             operationId: createTarget
+            parameters:
+                - name: token
+                  in: query
+                  description: The authorization token
+                  required: true
+                  schema:
+                      type: string
+                  example: aValidTokenValue
             requestBody:
                 description: Create target request body
                 required: true
@@ -65,7 +73,7 @@ paths:
                                     repo_password: crafter
                                     repo_branch: live
                                     engine_url: http://localhost:8080
-                                    notification_addresses: admin1@my-editorial.com", "admin2@my-editorial.com
+                                    notification_addresses: "admin1@my-editorial.com, admin2@my-editorial.com"
                             withGitPullOptions:
                                 summary: Example of request body with git pull options
                                 description: "Module: Deployer"
@@ -88,6 +96,8 @@ paths:
                     $ref: '#/components/responses/Created'
                 '400':
                     $ref: '#/components/responses/BadRequest'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
                 '409':
                     $ref: '#/components/responses/Conflict'
                 '500':
@@ -104,7 +114,7 @@ paths:
             parameters:
                 - name: env
                   in: path
-                  description: The target's environment (e.g. dev).
+                  description: The target’s environment (e.g. dev).
                   required: true
                   schema:
                       type: string
@@ -112,12 +122,19 @@ paths:
                       env: dev
                 - name: site_name
                   in: path
-                  description: The target's project/site name (e.g. editorial).
+                  description: The target’s project/site name (e.g. editorial).
                   required: true
                   schema:
                       type: string
                   example:
                       site_name: editorial
+                - name: token
+                  in: query
+                  description: The authorization token
+                  required: true
+                  schema:
+                      type: string
+                  example: aValidTokenValue
             responses:
                 '200':
                     description: OK
@@ -129,8 +146,12 @@ paths:
                                 env: dev
                                 siteName: editorial
                                 id: editorial-dev
-                                load_date: 2023-01-26T10:00:1.234-05:00
+                                load_date: 2023-01-26T10:00:01.234-05:00
                                 status: INIT_COMPLETED
+                '400':
+                    $ref: '#/components/responses/BadRequest'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
                 '404':
                     $ref: '#/components/responses/NotFound'
                 '500':
@@ -144,6 +165,14 @@ paths:
             summary: Get all Crafter Deployer targets.
             description: "Module: Deployer"
             operationId: getAllTargets
+            parameters:
+                - name: token
+                  in: query
+                  description: The authorization token
+                  required: true
+                  schema:
+                      type: string
+                  example: aValidTokenValue
             responses:
                 '200':
                     description: OK
@@ -164,6 +193,10 @@ paths:
                                   siteName: third
                                   status: INIT_COMPLETED
                                   id: third-preview
+                '400':
+                    $ref: '#/components/responses/BadRequest'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
                 '500':
                     $ref: '#/components/responses/InternalServerError'
 
@@ -178,7 +211,7 @@ paths:
             parameters:
                 - name: env
                   in: path
-                  description: The target's environment (e.g. dev).
+                  description: The target’s environment (e.g. dev).
                   required: true
                   schema:
                       type: string
@@ -186,15 +219,26 @@ paths:
                       env: dev
                 - name: site_name
                   in: path
-                  description: The target's project/site name (e.g. editorial).
+                  description: The target’s project/site name (e.g. editorial).
                   required: true
                   schema:
                       type: string
                   example:
                       site_name: editorial
+                - name: token
+                  in: query
+                  description: The authorization token
+                  required: true
+                  schema:
+                      type: string
+                  example: aValidTokenValue
             responses:
                 '204':
                     description: NO CONTENT
+                '400':
+                    $ref: '#/components/responses/BadRequest'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
                 '404':
                     $ref: '#/components/responses/NotFound'
                 '500':
@@ -211,7 +255,7 @@ paths:
             parameters:
                 - name: env
                   in: path
-                  description: The target's environment (e.g. dev).
+                  description: The target’s environment (e.g. dev).
                   required: true
                   schema:
                       type: string
@@ -219,21 +263,30 @@ paths:
                       env: dev
                 - name: site_name
                   in: path
-                  description: The target's project/site name (e.g. editorial).
+                  description: The target’s project/site name (e.g. editorial).
                   required: true
                   schema:
                       type: string
                   example:
                       site_name: editorial
+                - name: token
+                  in: query
+                  description: The authorization token
+                  required: true
+                  schema:
+                      type: string
+                  example: aValidTokenValue
             responses:
                 '204':
                     description: NO CONTENT
+                '400':
+                    $ref: '#/components/responses/BadRequest'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
                 '404':
                     $ref: '#/components/responses/NotFound'
                 '500':
                     $ref: '#/components/responses/InternalServerError'
-                '503':
-                    $ref: '#/components/responses/ServiceUnavailable'
 
     /api/1/target/deploy/{env}/{site_name}:
         post:
@@ -246,7 +299,7 @@ paths:
             parameters:
                 - name: env
                   in: path
-                  description: The target's environment (e.g. dev).
+                  description: The target’s environment (e.g. dev).
                   required: true
                   schema:
                       type: string
@@ -254,12 +307,19 @@ paths:
                       env: dev
                 - name: site_name
                   in: path
-                  description: The target's project/site name (e.g. editorial).
+                  description: The target’s project/site name (e.g. editorial).
                   required: true
                   schema:
                       type: string
                   example:
                       site_name: editorial
+                - name: token
+                  in: query
+                  description: The authorization token
+                  required: true
+                  schema:
+                      type: string
+                  example: aValidTokenValue
             requestBody:
                 content:
                     application/json:
@@ -273,7 +333,7 @@ paths:
                                     description: The id of the commit to start processing changes<br><br> <i>Available since version 4.0.0</i>
                                     type: string
                                 deployment_mode:
-                                    description: "The deployment mode to execute. Possible values: <br> nbsp;&nbsp;&nbsp;<b>PUBLISH</b>: All processors will run<br> &nbsp;&nbsp;&nbsp;<b>SEARCH_INDEX</b>: Only the indexing processor will run <br><br> <i>Available since version 4.0.0</i>"
+                                    description: "The deployment mode to execute. Possible values: <br> &nbsp;&nbsp;&nbsp;<b>PUBLISH</b>: All processors will run<br> &nbsp;&nbsp;&nbsp;<b>SEARCH_INDEX</b>: Only the indexing processor will run <br><br> <i>Available since version 4.0.0</i>"
                                     type: string
             responses:
                 '202':
@@ -286,10 +346,16 @@ paths:
                                     message:
                                         type: string
                                         example: OK
+                '400':
+                    $ref: '#/components/responses/BadRequest'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
                 '404':
                     $ref: '#/components/responses/NotFound'
                 '500':
                     $ref: '#/components/responses/InternalServerError'
+                '503':
+                    $ref: '#/components/responses/ServiceUnavailable'
 
     /api/1/target/deploy-all:
         post:
@@ -299,6 +365,14 @@ paths:
             summary: Deploy all Crafter Deployer targets.
             description: "Module: Deployer"
             operationId: deployAllTargets
+            parameters:
+                - name: token
+                  in: query
+                  description: The authorization token
+                  required: true
+                  schema:
+                      type: string
+                  example: aValidTokenValue
             requestBody:
                 content:
                     application/json:
@@ -314,6 +388,10 @@ paths:
             responses:
                 '202':
                     $ref: '#/components/responses/Accepted'
+                '400':
+                    $ref: '#/components/responses/BadRequest'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
                 '404':
                     $ref: '#/components/responses/NotFound'
                 '500':
@@ -330,7 +408,7 @@ paths:
             parameters:
                 - name: env
                   in: path
-                  description: The target's environment (e.g. dev).
+                  description: The target’s environment (e.g. dev).
                   required: true
                   schema:
                       type: string
@@ -338,12 +416,19 @@ paths:
                       env: dev
                 - name: site_name
                   in: path
-                  description: The target's project/site name (e.g. editorial).
+                  description: The target’s project/site name (e.g. editorial).
                   required: true
                   schema:
                       type: string
                   example:
                       site_name: editorial
+                - name: token
+                  in: query
+                  description: The authorization token
+                  required: true
+                  schema:
+                      type: string
+                  example: aValidTokenValue
             responses:
                 '200':
                     description: OK
@@ -398,6 +483,10 @@ paths:
                                         "processorExecutions": []
                                     },
                                 ]
+                '400':
+                    $ref: '#/components/responses/BadRequest'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
                 '404':
                     $ref: '#/components/responses/NotFound'
                 '500':
@@ -414,7 +503,7 @@ paths:
             parameters:
                 - name: env
                   in: path
-                  description: The target's environment (e.g. dev).
+                  description: The target’s environment (e.g. dev).
                   required: true
                   schema:
                       type: string
@@ -422,12 +511,19 @@ paths:
                       env: dev
                 - name: site_name
                   in: path
-                  description: The target's project/site name (e.g. editorial).
+                  description: The target’s project/site name (e.g. editorial).
                   required: true
                   schema:
                       type: string
                   example:
                       site_name: editorial
+                - name: token
+                  in: query
+                  description: The authorization token
+                  required: true
+                  schema:
+                      type: string
+                  example: aValidTokenValue
             responses:
                 '200':
                     description: OK
@@ -501,6 +597,10 @@ paths:
                                         }
                                     ]
                                 }
+                '400':
+                    $ref: '#/components/responses/BadRequest'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
                 '404':
                     $ref: '#/components/responses/NotFound'
                 '500':
@@ -517,7 +617,7 @@ paths:
             parameters:
                 - name: env
                   in: path
-                  description: The target's environment (e.g. dev).
+                  description: The target’s environment (e.g. dev).
                   required: true
                   schema:
                       type: string
@@ -525,12 +625,19 @@ paths:
                       env: dev
                 - name: site_name
                   in: path
-                  description: The target's project/site name (e.g. editorial).
+                  description: The target’s project/site name (e.g. editorial).
                   required: true
                   schema:
                       type: string
                   example:
                       site_name: editorial
+                - name: token
+                  in: query
+                  description: The authorization token
+                  required: true
+                  schema:
+                      type: string
+                  example: aValidTokenValue
             responses:
                 '200':
                     description: OK
@@ -585,6 +692,10 @@ paths:
                                         "processorExecutions": []
                                     },
                                 ]
+                '400':
+                    $ref: '#/components/responses/BadRequest'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
                 '404':
                     $ref: '#/components/responses/NotFound'
                 '500':
@@ -601,7 +712,7 @@ paths:
             parameters:
                 - name: env
                   in: path
-                  description: The target's environment (e.g. dev).
+                  description: The target’s environment (e.g. dev).
                   required: true
                   schema:
                       type: string
@@ -609,7 +720,7 @@ paths:
                       env: dev
                 - name: site_name
                   in: path
-                  description: The target's project/site name (e.g. editorial).
+                  description: The target’s project/site name (e.g. editorial).
                   required: true
                   schema:
                       type: string
@@ -621,7 +732,7 @@ paths:
                   required: true
                   schema:
                       type: string
-                  example: defaultManagementToken
+                  example: aValidTokenValue
             responses:
                 '200':
                     description: OK
@@ -645,7 +756,7 @@ paths:
             parameters:
                 - name: env
                   in: path
-                  description: The target's environment (e.g. dev).
+                  description: The target’s environment (e.g. dev).
                   required: true
                   schema:
                       type: string
@@ -653,7 +764,7 @@ paths:
                       env: dev
                 - name: site_name
                   in: path
-                  description: The target's project/site name (e.g. editorial).
+                  description: The target’s project/site name (e.g. editorial).
                   required: true
                   schema:
                       type: string
@@ -665,7 +776,7 @@ paths:
                   required: true
                   schema:
                       type: string
-                  example: defaultManagementToken
+                  example: aValidTokenValue
             responses:
                 '202':
                     $ref: '#/components/responses/Accepted'
@@ -688,7 +799,7 @@ paths:
             parameters:
                 - name: env
                   in: path
-                  description: The target's environment (e.g. dev).
+                  description: The target’s environment (e.g. dev).
                   required: true
                   schema:
                       type: string
@@ -700,6 +811,13 @@ paths:
                   schema:
                       type: string
                   example: editorial
+                - name: token
+                  in: query
+                  description: The authorization token
+                  required: true
+                  schema:
+                      type: string
+                  example: aValidTokenValue
             requestBody:
                 description: Duplicate target's request body
                 required: true
@@ -726,7 +844,7 @@ paths:
             security: [ ]
             tags:
                 - monitoring
-            summary: Get a Crafter Deployer's version details.
+            summary: Get Crafter Deployer's version details.
             description: "Module: Deployer"
             operationId: version
             parameters:
@@ -736,7 +854,7 @@ paths:
                   required: true
                   schema:
                       type: string
-                  example: defaultManagementToken
+                  example: aValidTokenValue
             responses:
                 '200':
                     description: OK
@@ -770,7 +888,7 @@ paths:
             security: []
             tags:
                 - monitoring
-            summary: Get a Crafter Deployer's version details.
+            summary: Get Crafter Deployer's system information details.
             description: "Module: Deployer"
             operationId: sysinfo
             parameters:
@@ -780,7 +898,7 @@ paths:
                   required: true
                   schema:
                       type: string
-                  example: defaultManagementToken
+                  example: aValidTokenValue
             responses:
                 '200':
                     description: OK
@@ -820,13 +938,19 @@ paths:
                                     javaVersion: 17
                                     javaVendor: Oracle Corporation
                                     javaVm: OpenJDK 64-Bit Server VM
+                '400':
+                    $ref: '#/components/responses/BadRequest'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
 
     /api/1/monitoring/status:
         get:
             security: [ ]
             tags:
                 - monitoring
-            summary: Get a Crafter Deployer's status details.
+            summary: Get Crafter Deployer's status details.
             description: "Module: Deployer"
             operationId: status
             parameters:
@@ -836,7 +960,7 @@ paths:
                   required: true
                   schema:
                       type: string
-                  example: defaultManagementToken
+                  example: aValidTokenValue
             responses:
                 '200':
                     description: OK
@@ -867,7 +991,7 @@ paths:
             security: [ ]
             tags:
                 - monitoring
-            summary: Get a Crafter Deployer's memory details.
+            summary: Get Crafter Deployer's memory details.
             description: "Module: Deployer"
             operationId: memory
             parameters:
@@ -877,7 +1001,7 @@ paths:
                   required: true
                   schema:
                       type: string
-                  example: defaultManagementToken
+                  example: aValidTokenValue
             responses:
                 '200':
                     description: OK
