@@ -179,7 +179,7 @@ function Body(props: BodyProps) {
 		e.stopPropagation();
 		if (!valid) return;
 		functionRefs.current.onSubmittingAndOrPendingChange({ isSubmitting: true });
-		generatePreviewToken(projects, expiresAt.toISOString()).subscribe({
+		generatePreviewToken(projects, expiresAt).subscribe({
 			next(token) {
 				functionRefs.current.onSubmittingAndOrPendingChange({ isSubmitting: false, hasPendingChanges: false });
 				onTokenGenerated?.(token);
