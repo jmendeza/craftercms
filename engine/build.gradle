@@ -62,6 +62,7 @@ dependencies {
 	implementation libs.quartz
 	implementation platform("org.apache.groovy:groovy-bom:${libs.versions.groovy.get()}")
 	implementation libs.groovy
+	implementation libs.groovy.grapeivy
 
 	implementation libs.angus.mail
 	implementation libs.httpclient5
