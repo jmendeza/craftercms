@@ -21,6 +21,7 @@ import jakarta.servlet.http.HttpSession;
 import org.apache.commons.lang.StringUtils;
 import org.craftercms.engine.controller.rest.preview.ProfileRestController;
 import org.craftercms.engine.util.spring.security.ConfigAwarePreAuthenticationFilter;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.*;
@@ -87,6 +88,20 @@ public class TargetingPreAuthenticatedFilter extends ConfigAwarePreAuthenticatio
         }
         return null;
     }
+
+	@Override
+	protected boolean principalChanged(final HttpServletRequest request, final Authentication currentAuthentication) {
+		if (super.principalChanged(request, currentAuthentication)) {
+			return true;
+		}
+		// TargetingUser equality ignores authorities, so persona role changes must be detected explicitly
+		Object principal = getPreAuthenticatedPrincipal(request);
+		if (!(principal instanceof TargetingUser newUser)
+			|| !(currentAuthentication.getPrincipal() instanceof TargetingUser currentUser)) {
+			return false;
+		}
+		return !newUser.getAuthorities().equals(currentUser.getAuthorities());
+	}
 
 	@Override
 	protected Object getPreAuthenticatedCredentials(final HttpServletRequest request) {
