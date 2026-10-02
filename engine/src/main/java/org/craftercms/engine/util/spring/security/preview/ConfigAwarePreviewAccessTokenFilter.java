@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2025 Crafter Software Corporation. All Rights Reserved.
+ * Copyright (C) 2007-2026 Crafter Software Corporation. All Rights Reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as published by
@@ -36,6 +36,7 @@ import org.springframework.web.filter.GenericFilterBean;
 
 import java.beans.ConstructorProperties;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 
@@ -49,6 +50,11 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 public class ConfigAwarePreviewAccessTokenFilter extends GenericFilterBean {
     private final static String PREVIEW_SITE_TOKEN_NAME = "crafterPreview";
     private final static String PREVIEW_SITE_TOKEN_HEADER_NAME = "X-Crafter-Preview";
+    private final static int PREVIEW_TOKEN_FIELD_COUNT = 4;
+    private final static int USERNAME_INDEX = 0;
+    private final static int CREATED_INDEX = 1;
+    private final static int SITES_INDEX = 2;
+    private final static int EXPIRY_INDEX = 3;
 
     private final TextEncryptor textEncryptor;
 	private final SiteAwareCorsConfigurationSource corsConfigSource;
@@ -104,14 +110,38 @@ public class ConfigAwarePreviewAccessTokenFilter extends GenericFilterBean {
         }
 
         String[] tokens = decryptPreviewToken(previewToken);
-        if (tokens.length != 2) {
-            String message = format("Failed to validate preview site token. Found '%s' header or '%s' token elements but expecting 2",
+        if (tokens.length != PREVIEW_TOKEN_FIELD_COUNT || isEmpty(tokens[USERNAME_INDEX])) {
+            String message = format("Failed to validate preview site token. '%s' header or '%s' token format is invalid",
                     PREVIEW_SITE_TOKEN_HEADER_NAME, PREVIEW_SITE_TOKEN_NAME);
             logger.debug(message);
             throw new PreviewAccessException(HttpStatus.UNAUTHORIZED, message);
         }
 
-        long tokenExpiryTimestamp = Long.parseLong(tokens[1]);
+		long createdTimestamp;
+		try {
+			createdTimestamp = Long.parseLong(tokens[CREATED_INDEX]);
+		} catch (NumberFormatException e) {
+			String message = format("Failed to validate preview site token. '%s' header or '%s' token timestamps are invalid",
+					PREVIEW_SITE_TOKEN_HEADER_NAME, PREVIEW_SITE_TOKEN_NAME);
+			logger.debug(message);
+			throw new PreviewAccessException(HttpStatus.UNAUTHORIZED, message);
+		}
+		
+        if (logger.isTraceEnabled()) {
+            String username = tokens[USERNAME_INDEX];
+            logger.trace(format("Validating preview token for user '%s' created at %s", username, createdTimestamp));
+        }
+
+        long tokenExpiryTimestamp;
+        try {
+            tokenExpiryTimestamp = Long.parseLong(tokens[EXPIRY_INDEX]);
+        } catch (NumberFormatException e) {
+            String message = format("Failed to validate preview site token. '%s' header or '%s' token timestamps are invalid",
+                    PREVIEW_SITE_TOKEN_HEADER_NAME, PREVIEW_SITE_TOKEN_NAME);
+            logger.debug(message);
+            throw new PreviewAccessException(HttpStatus.UNAUTHORIZED, message);
+        }
+		
         boolean isExpired = tokenExpiryTimestamp < System.currentTimeMillis();
         if (isExpired) {
             String message = format("User is not authorized to preview site '%s', '%s' header or '%s' token has expired",
@@ -120,7 +150,7 @@ public class ConfigAwarePreviewAccessTokenFilter extends GenericFilterBean {
             throw new PreviewAccessException(HttpStatus.FORBIDDEN, message);
         }
 
-        String previewSitesFromToken = tokens[0];
+        String previewSitesFromToken = tokens[SITES_INDEX];
         List<String> allowedSites = Arrays.asList(previewSitesFromToken.split(","));
         if (!allowedSites.contains(site)) {
             String message = format("User is not authorized to preview site '%s', '%s' header or '%s' token does not match",
@@ -190,7 +220,7 @@ public class ConfigAwarePreviewAccessTokenFilter extends GenericFilterBean {
      * Decrypts the preview site token.
      *
      * @param encryptedToken the encrypted token
-     * @return the decrypted token as an array of tokens (siteNames, expirationTimestamp)
+     * @return the decrypted token fields (username, creationTimestamp, siteNames, expirationTimestamp)
      */
     private String[] decryptPreviewToken(final String encryptedToken) {
         try {
