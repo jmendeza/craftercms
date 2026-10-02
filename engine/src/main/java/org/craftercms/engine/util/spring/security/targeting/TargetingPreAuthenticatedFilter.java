@@ -69,6 +69,7 @@ public class TargetingPreAuthenticatedFilter extends ConfigAwarePreAuthenticatio
                 Collection<SimpleGrantedAuthority> authorities = roles == null
                     ? List.of()
                     : Arrays.stream(roles)
+                        .map(String::trim)
                         .filter(StringUtils::isNotBlank)
                         .map(SimpleGrantedAuthority::new)
                         .toList();
