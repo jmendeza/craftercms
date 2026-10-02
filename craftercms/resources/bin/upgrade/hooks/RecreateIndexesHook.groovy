@@ -57,9 +57,10 @@ class RecreateIndexesHook implements PostUpgradeHook {
     protected def getAllTargets() {
         OkHttpClient client = new OkHttpClient()
         Request request = new Request.Builder()
-                .url("${getDeployerUrl()}/api/1/target/get-all?token=${getDeployerManagementToken()}")
+                .url("${getDeployerUrl()}/api/1/target/get-all")
                 .get()
                 .addHeader('Content-Type', 'application/json')
+                .addHeader('X-Crafter-Management-Token', getDeployerManagementToken())
                 .build()
 
         try (Response response = client.newCall(request).execute()) {
@@ -76,15 +77,11 @@ class RecreateIndexesHook implements PostUpgradeHook {
     protected void recreateIndex(String siteName, String environment) {
         OkHttpClient client = new OkHttpClient()
 
-        HttpUrl.Builder urlBuilder = HttpUrl
-                .parse("${getDeployerUrl()}/api/1/target/recreate/${environment}/${siteName}")
-                .newBuilder()
-        urlBuilder.addQueryParameter('token', getDeployerManagementToken())
-
         Request request = new Request.Builder()
-                .url(urlBuilder.build())
+                .url("${getDeployerUrl()}/api/1/target/recreate/${environment}/${siteName}")
                 .post(RequestBody.create(null, new byte[0]))
                 .addHeader('Content-Type', 'application/json')
+                .addHeader('X-Crafter-Management-Token', getDeployerManagementToken())
                 .build()
         try {
             Response response = client.newCall(request).execute();

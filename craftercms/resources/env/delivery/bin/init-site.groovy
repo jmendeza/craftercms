@@ -139,9 +139,10 @@ def createDeployerTarget(siteName, repoPath, targetParams) {
     MediaType mediaType = MediaType.parse('application/json')
     RequestBody body = RequestBody.create(new JsonBuilder(targetParams).toString(), mediaType)
     Request request = new Request.Builder()
-            .url("${getDeployerUrl()}/api/1/target/create?token=${getDeployerManagementToken()}")
+            .url("${getDeployerUrl()}/api/1/target/create")
             .post(body)
             .addHeader('Content-Type', 'application/json')
+            .addHeader('X-Crafter-Management-Token', getDeployerManagementToken())
             .build()
     try {
         Response response = client.newCall(request).execute()
