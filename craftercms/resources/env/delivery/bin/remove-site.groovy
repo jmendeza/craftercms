@@ -86,9 +86,10 @@ def deleteDeployerTarget(siteName) {
     MediaType mediaType = MediaType.parse('application/json')
     RequestBody body = RequestBody.create('', mediaType)
     Request request = new Request.Builder()
-            .url("${getDeployerUrl()}/api/1/target/delete/default/${siteName}?token=${getDeployerManagementToken()}")
+            .url("${getDeployerUrl()}/api/1/target/delete/default/${siteName}")
             .post(body)
             .addHeader('Content-Type', 'application/json')
+            .addHeader('X-Crafter-Management-Token', getDeployerManagementToken())
             .build()
     try {
         Response response = client.newCall(request).execute()
