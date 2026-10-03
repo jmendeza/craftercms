@@ -33,9 +33,10 @@ class ReindexAllTargetsHook implements PostUpgradeHook {
 		OkHttpClient client = new OkHttpClient()
 
         Request request = new Request.Builder()
-                .url("${getDeployerUrl()}/api/1/target/get-all?token=${getDeployerManagementToken()}")
+                .url("${getDeployerUrl()}/api/1/target/get-all")
                 .get()
                 .addHeader('Content-Type', 'application/json')
+                .addHeader('X-Crafter-Management-Token', getDeployerManagementToken())
                 .build()
         try (Response response = client.newCall(request).execute()) {
             if (!response.successful) {
@@ -59,9 +60,10 @@ class ReindexAllTargetsHook implements PostUpgradeHook {
         MediaType mediaType = MediaType.parse('application/json')
         RequestBody body = RequestBody.create(new JsonBuilder(deployAllParams).toString(), mediaType)
         Request request = new Request.Builder()
-                .url("${getDeployerUrl()}/api/1/target/deploy-all?token=${getDeployerManagementToken()}")
+                .url("${getDeployerUrl()}/api/1/target/deploy-all")
                 .post(body)
                 .addHeader('Content-Type', 'application/json')
+                .addHeader('X-Crafter-Management-Token', getDeployerManagementToken())
                 .build()
         try {
             Response response = client.newCall(request).execute();

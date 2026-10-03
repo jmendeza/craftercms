@@ -20,6 +20,7 @@ import org.apache.commons.configuration2.interpol.ConfigurationInterpolator;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.lang3.StringUtils;
 import org.craftercms.commons.collections.MapUtils;
+import org.craftercms.commons.rest.ManagementToken;
 import org.craftercms.commons.rest.RestTemplate;
 import org.craftercms.studio.api.v2.deployment.Deployer;
 import org.craftercms.studio.api.v2.utils.StudioConfiguration;
@@ -38,6 +39,8 @@ import java.util.Map;
 
 import static org.craftercms.studio.api.v1.constant.StudioConstants.CONFIG_SITEENV_VARIABLE;
 import static org.craftercms.studio.api.v1.constant.StudioConstants.CONFIG_SITENAME_VARIABLE;
+import static org.craftercms.studio.api.v1.constant.StudioConstants.CONFIG_SITENAME_VARIABLE;
+import static org.craftercms.studio.api.v2.utils.StudioConfiguration.CONFIGURATION_MANAGEMENT_DEPLOYER_AUTHORIZATION_TOKEN;
 import static org.craftercms.studio.api.v2.utils.StudioConfiguration.PREVIEW_DUPLICATE_TARGET_URL;
 
 /**
@@ -68,21 +71,26 @@ public abstract class AbstractDeployer implements Deployer {
 		this.studioConfiguration = studioConfiguration;
 	}
 
+	protected String getAuthorizationToken() {
+		return studioConfiguration.getProperty(CONFIGURATION_MANAGEMENT_DEPLOYER_AUTHORIZATION_TOKEN);
+	}
+
 	protected void doCreateTarget(String site, String environment, String template,
-					  boolean replace, boolean disableDeployCron, String localRepoPath,
-					  String repoUrl, HierarchicalConfiguration<ImmutableNode> additionalParams)
-		throws IllegalStateException, RestClientException {
+								  boolean replace, boolean disableDeployCron, String localRepoPath,
+								  String repoUrl, HierarchicalConfiguration<ImmutableNode> additionalParams)
+			throws IllegalStateException, RestClientException {
 		String requestUrl = getCreateTargetUrl();
 		Map<String, Object> requestBody = getCreateTargetRequestBody(site, environment, template,
-			replace, disableDeployCron, localRepoPath,
-			repoUrl, additionalParams);
+				replace, disableDeployCron, localRepoPath,
+				repoUrl, additionalParams);
 		try {
 			RequestEntity<Map<String, Object>> requestEntity = RequestEntity.post(new URI(requestUrl))
-				.contentType(MediaType.APPLICATION_JSON)
-				.body(requestBody);
+					.contentType(MediaType.APPLICATION_JSON)
+					.header(ManagementToken.HEADER_NAME, getAuthorizationToken())
+					.body(requestBody);
 
 			logger.debug("Call create target API '{}' for site '{}' publishing target '{}'",
-				requestEntity, site, environment);
+					requestForLog(requestEntity), site, environment);
 
 			restTemplate.exchange(requestEntity, Map.class);
 		} catch (URISyntaxException e) {
@@ -97,11 +105,12 @@ public abstract class AbstractDeployer implements Deployer {
 
 		try {
 			RequestEntity<Void> requestEntity = RequestEntity.post(new URI(requestUrl))
-				.contentType(MediaType.APPLICATION_JSON)
-				.build();
+					.contentType(MediaType.APPLICATION_JSON)
+					.header(ManagementToken.HEADER_NAME, getAuthorizationToken())
+					.build();
 
 			logger.debug("Call delete target API '{}' for site '{}' publishing target '{}'",
-				requestEntity, site, environment);
+					requestForLog(requestEntity), site, environment);
 
 			restTemplate.exchange(requestEntity, Map.class);
 		} catch (URISyntaxException e) {
@@ -223,14 +232,15 @@ public abstract class AbstractDeployer implements Deployer {
 	 * @throws RestClientException if an error occurs while calling Deployer API
 	 */
 	protected void doDuplicateTarget(String sourceSiteId, String siteId, String env, String template,
-					 boolean replace, boolean disableDeployCron, String localRepoPath,
-					 String repoUrl, HierarchicalConfiguration<ImmutableNode> additionalParams) throws RestClientException {
+									 boolean replace, boolean disableDeployCron, String localRepoPath,
+									 String repoUrl, HierarchicalConfiguration<ImmutableNode> additionalParams) throws RestClientException {
 		String requestUrl = getDuplicateTargetUrl(sourceSiteId, env);
 		DuplicateTargetRequest requestBody = new DuplicateTargetRequest(siteId,
-			getDuplicateTargetRequestBody(sourceSiteId, siteId, env, template, replace, disableDeployCron, localRepoPath, repoUrl, additionalParams));
+				getDuplicateTargetRequestBody(sourceSiteId, siteId, env, template, replace, disableDeployCron, localRepoPath, repoUrl, additionalParams));
 		RequestEntity<DuplicateTargetRequest> requestEntity = RequestEntity.post(URI.create(requestUrl))
-			.contentType(MediaType.APPLICATION_JSON)
-			.body(requestBody);
+				.contentType(MediaType.APPLICATION_JSON)
+				.header(ManagementToken.HEADER_NAME, getAuthorizationToken())
+				.body(requestBody);
 
 		logger.debug("Call duplicate target API. From site '{}' to site '{}' publishing target '{}'",
 			sourceSiteId, siteId, env);
@@ -246,8 +256,15 @@ public abstract class AbstractDeployer implements Deployer {
 	 */
 	protected String getDuplicateTargetUrl(String sourceSiteId, String env) {
 		return studioConfiguration.getProperty(PREVIEW_DUPLICATE_TARGET_URL)
-			.replaceAll(CONFIG_SITENAME_VARIABLE, sourceSiteId)
-			.replaceAll(CONFIG_SITEENV_VARIABLE, env);
+				.replaceAll(CONFIG_SITENAME_VARIABLE, sourceSiteId)
+				.replaceAll(CONFIG_SITEENV_VARIABLE, env);
+	}
+
+	/**
+	 * URL and method only. The full request includes the management token header.
+	 */
+	protected String requestForLog(RequestEntity<?> requestEntity) {
+		return requestEntity.getMethod() + " " + requestEntity.getUrl().toString();
 	}
 
 	protected abstract String getCreateTargetUrl();
