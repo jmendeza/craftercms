@@ -38,17 +38,16 @@
 	<!--									-->
 	<!-- ////////////////////////////////// -->
 
-	<bean name="crafter.properties" class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
-		<property name="order" value="0"/>
-		<property name="locations">
-			<list>
-				<value>classpath:crafter/core/core.properties</value>
-				<value>classpath:crafter/security/security.properties</value>
-				<value>classpath:crafter/engine/server-config.properties</value>
-			</list>
-		</property>
-		<property name="ignoreUnresolvablePlaceholders" value="true"/>
-	</bean>
+    <bean name="crafter.properties" class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
+        <property name="order" value="0"/>
+        <property name="locations">
+            <list>
+                <value>classpath:crafter/core/core.properties</value>
+                <value>classpath:crafter/engine/server-config.properties</value>
+            </list>
+        </property>
+        <property name="ignoreUnresolvablePlaceholders" value="true"/>
+    </bean>
 
 	<!-- Runs after the mode post processors -->
 	<bean class="org.craftercms.commons.spring.ListMergingPostProcessor">
