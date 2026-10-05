@@ -41,8 +41,7 @@ import FormLabel from '@mui/material/FormLabel';
 import Alert from '@mui/material/Alert';
 import Divider from '@mui/material/Divider';
 import { generatePreviewToken } from '../../services/security';
-import { showErrorDialog } from '../../state/reducers/dialogs/error';
-import { copyToClipboard } from '../../utils/system';
+import { copyToClipboard, pushErrorDialog } from '../../utils/system';
 import { showSystemNotification } from '../../state/actions/system';
 import useSitesBranch from '../../hooks/useSitesBranch';
 import Tabs from '@mui/material/Tabs';
@@ -178,17 +177,17 @@ function Body(props: BodyProps) {
 		e.preventDefault();
 		e.stopPropagation();
 		if (!valid) return;
-		functionRefs.current.onSubmittingAndOrPendingChange({ isSubmitting: true });
+		functionRefs.current.updateSubmittingOrHasPendingChanges({ isSubmitting: true });
 		generatePreviewToken(projects, expiresAt).subscribe({
 			next(token) {
-				functionRefs.current.onSubmittingAndOrPendingChange({ isSubmitting: false, hasPendingChanges: false });
+				functionRefs.current.updateSubmittingOrHasPendingChanges({ isSubmitting: false, hasPendingChanges: false });
 				onTokenGenerated?.(token);
 				setToken(token);
 				copy(token, false);
 			},
 			error(response) {
-				functionRefs.current.onSubmittingAndOrPendingChange({ isSubmitting: false });
-				dispatch(showErrorDialog({ error: response }));
+				functionRefs.current.updateSubmittingOrHasPendingChanges({ isSubmitting: false });
+				dispatch(pushErrorDialog({ props: { error: response } }));
 			}
 		});
 	};
