@@ -267,6 +267,7 @@ spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-start
 spring-boot-starter-log4j2 = { module = "org.springframework.boot:spring-boot-starter-log4j2" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
 spring-boot-starter-restclient = { module = "org.springframework.boot:spring-boot-starter-restclient" }
+spring-boot-jackson2 = { module = "org.springframework.boot:spring-boot-jackson2" }
 spring-jdbc = { module = "org.springframework:spring-jdbc", version.ref = "spring" }
 spring-websocket = { module = "org.springframework:spring-websocket", version.ref = "spring" }
 spring-messaging = { module = "org.springframework:spring-messaging", version.ref = "spring" }
