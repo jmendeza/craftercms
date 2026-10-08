@@ -43,6 +43,7 @@ import {
 } from '../FormsEngine/lib/formUtils';
 import { RefObject } from 'react';
 import { Subject } from 'rxjs';
+import { atom } from 'jotai';
 import { createParsedValueForField } from '../FormsEngine/lib/valueRetrievers';
 import { toBooleanString, toColor } from '../../utils/string';
 import { getXmlBuilder, valueSerializersLookup } from '../FormsEngine/lib/valueSerializers';
@@ -71,7 +72,6 @@ export const NEW_FIELD_ID = '{NEW}';
 export const NEW_DATASOURCE_ID = '{NEW}';
 export const TYPE_TEMPLATE_BASE_PATH = '/templates/web';
 export const CONTENT_TYPES_BASE_PATH = '/config/studio/content-types';
-export const TYPE_GROOVY_CONTROLLER_BASE_PATH = '/config/studio/content-types';
 
 // Some properties in ContentTypeField differ from the name in the XML.
 // Descriptors for controls, sections, data sources, etc., declare their form fields with the XML name,
@@ -101,7 +101,7 @@ export type TypePropsToEdit = Pick<
 	| 'previewable'
 >;
 
-type ContentTypeValuesObject = TypePropsToEdit & { groovyController: string };
+type ContentTypeValuesObject = TypePropsToEdit;
 
 export const typePropsToEdit: Array<keyof TypePropsToEdit> = [
 	'id',
@@ -149,9 +149,7 @@ export const systemFieldsIdsMap: Partial<Record<BuiltInControlType, readOnlyFiel
 };
 
 export function createTypeFormValuesObject(type: ContentType): ContentTypeValuesObject {
-	const values: Partial<ContentTypeValuesObject> = pluckProps(type, false, ...typePropsToEdit);
-	values.groovyController = 'controller.groovy';
-	return values as ContentTypeValuesObject;
+	return pluckProps(type, false, ...typePropsToEdit) as ContentTypeValuesObject;
 }
 
 /**
@@ -563,7 +561,9 @@ export const createStableFormContextProps = (
 			isLargeContainer: undefined,
 			tableOfContentsDrawerOpen: undefined,
 			closeAfterSave: undefined,
-			minimizeAfterSave: undefined
+			minimizeAfterSave: undefined,
+			// Field validation atoms always read this, even where no form controller attaches.
+			relevanceVersion: atom(0)
 		},
 		changedFieldIds: null,
 		fieldUpdates$: null,
@@ -571,7 +571,8 @@ export const createStableFormContextProps = (
 		originalValues: null,
 		props: null,
 		state: null,
-		affectedPluginControlFields: []
+		affectedPluginControlFields: [],
+		formControllerState: null
 	};
 	if (createRootTypeSections) {
 		Object.assign(
@@ -843,17 +844,19 @@ export function editTypeController(
 	basePath: string,
 	contentTypeId: string,
 	dispatch: Dispatch,
-	type: 'groovy' | 'javascript'
+	type: 'groovy' | 'javascript',
+	onSaveSuccess?: () => void
 ) {
 	const fileName = type === 'groovy' ? 'controller.groovy' : 'form-controller.js';
-	// editController creates the config file if it doesn't exist.
+	// If the file is missing, CodeEditor opens empty and creates it on Save (unless createBeforeOpen is set).
 	dispatch(
 		editController({
 			path: `${basePath}${contentTypeId}/`,
 			fileName,
 			mode: type,
 			contentType: contentTypeId,
-			openOnSuccess: true
+			openOnSuccess: true,
+			onSaveSuccess
 		})
 	);
 }

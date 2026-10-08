@@ -40,7 +40,6 @@ import {
 	createVirtualTypeFormContext,
 	createVirtualTypeForSection,
 	DescriptorContentType,
-	editTypeController,
 	editTypeTemplate,
 	getFieldFromType,
 	getPropertiesAndValidationsFromDescriptor,
@@ -56,7 +55,6 @@ import {
 	reverseTypeFieldValuesObject,
 	systemFieldsIdsMap,
 	systemFieldsTypesMap,
-	TYPE_GROOVY_CONTROLLER_BASE_PATH,
 	TYPE_TEMPLATE_BASE_PATH,
 	TypePropsToEdit,
 	typePropsToEdit
@@ -73,7 +71,7 @@ import {
 	StableFormContextProps
 } from '../../FormsEngine/lib/formsEngineContext';
 import useContentTypes from '../../../hooks/useContentTypes';
-import { createStore as createJotai, Provider } from 'jotai';
+import { createStore as createJotai, PrimitiveAtom, Provider } from 'jotai';
 import { debounceTime, forkJoin, map, Observable, Subject, tap } from 'rxjs';
 import EditTypeViewLayout, { EditAppLayoutProps } from './EditTypeViewLayout';
 import useUpdateRefs from '../../../hooks/useUpdateRefs';
@@ -93,6 +91,7 @@ import { deserialize, fromString, serialize } from '../../../utils/xml';
 import useSpreadState from '../../../hooks/useSpreadState';
 import { asArray } from '../../../utils/array';
 import { fetchContentItem } from '../../../services/content';
+import { queueFormDefinitionWrite } from '../../../services/contentTypes';
 import { batchActions } from '../../../state/actions/misc';
 import { fetchItemVersions } from '../../../state/actions/versions';
 import { getRootPath } from '../../../utils/path';
@@ -103,6 +102,7 @@ import { XmlDiffDialog } from './XmlDiffDialog';
 import type { ReorderFieldsDialogProps } from './ReorderFieldsDialog';
 import PickControlDialog from './PickControlDialog';
 import PickDataSourceDialog from './PickDataSourceDialog';
+import { TypeControllerFlagContext, TypeControllerFlagContextProps } from '../typeControllerFlagContext';
 import { fetchContentTypes } from '../../../state/actions/preview';
 import { getXmlBuilder, valueSerializersLookup } from '../../FormsEngine/lib/valueSerializers';
 import { pushErrorDialog } from '../../../utils/system';
@@ -184,6 +184,34 @@ export const EditTypeView = forwardRef<HTMLDivElement, EditTypeAppProps>((props,
 	const [type, setType] = useState(() => ({ ...props.type })); // Working copy of the ContentType being edited.
 	const typeRef = useRef(type);
 	typeRef.current = type;
+	// `<controller>` written straight to the saved form-definition this session. Rollback and diff
+	// start from `props.type`, which predates that write, so they apply this on top.
+	const persistedJsControllerRef = useRef<boolean | null>(null);
+	const withPersistedJsController = <T extends ContentType>(baseType: T): T =>
+		persistedJsControllerRef.current === null
+			? baseType
+			: { ...baseType, hasJsController: persistedJsControllerRef.current };
+	const typeControllerFlagContext = useMemo<TypeControllerFlagContextProps>(
+		() => ({
+			onJsControllerPersisted(enabled) {
+				persistedJsControllerRef.current = enabled;
+				setType((current) =>
+					current.hasJsController === enabled ? current : { ...current, hasJsController: enabled }
+				);
+				// If the type properties form was reopened after the write started, its atom was seeded
+				// from the old working copy and would write that back when the form commits.
+				const { activeFormContext, selectedField, selectedSection, selectedDataSource } = stateRef.current;
+				if (selectedField || selectedSection || selectedDataSource) return;
+				const flagAtom = activeFormContext?.atoms?.valueByFieldId?.hasJsController as
+					| PrimitiveAtom<unknown>
+					| undefined;
+				if (flagAtom && jotai.get(flagAtom) !== enabled) {
+					jotai.set(flagAtom, enabled);
+				}
+			}
+		}),
+		[jotai]
+	);
 	const [open, setOpen] = useState(false);
 	const xmlViewerDialogState = useEnhancedDialogState();
 	const [xmlViewerContent, setXmlViewerContent] = useState<string>(undefined);
@@ -503,12 +531,6 @@ export const EditTypeView = forwardRef<HTMLDivElement, EditTypeAppProps>((props,
 				}
 				break;
 			}
-			case 'jsController':
-				editTypeController(TYPE_GROOVY_CONTROLLER_BASE_PATH, type.id, dispatch, 'javascript');
-				break;
-			case 'groovyController':
-				editTypeController(TYPE_GROOVY_CONTROLLER_BASE_PATH, type.id, dispatch, 'groovy');
-				break;
 			case 'deleted':
 				onClose?.();
 				window.top.postMessage(
@@ -550,7 +572,7 @@ export const EditTypeView = forwardRef<HTMLDivElement, EditTypeAppProps>((props,
 				const latestUpdate = commitOpenFormChanges();
 				dialogContext?.updateSubmittingOrHasPendingChanges({ isSubmitting: true });
 				const typeToSave = latestUpdate ?? type;
-				save(site, typeToSave, configDescriptors).subscribe({
+				save(site, typeToSave.id, () => withPersistedJsController(typeToSave), configDescriptors).subscribe({
 					next() {
 						onUpdateHasPendingChanges(false);
 						dialogContext?.updateSubmittingOrHasPendingChanges({ isSubmitting: false, hasPendingChanges: false });
@@ -599,7 +621,7 @@ export const EditTypeView = forwardRef<HTMLDivElement, EditTypeAppProps>((props,
 				break;
 			}
 			case 'diff': {
-				const initialXml = buildXmlFromType(props.type, configDescriptors);
+				const initialXml = buildXmlFromType(withPersistedJsController(props.type), configDescriptors);
 				const currentXml = buildXmlFromType(type, configDescriptors);
 				openDiffXml(initialXml, currentXml);
 				break;
@@ -630,7 +652,7 @@ export const EditTypeView = forwardRef<HTMLDivElement, EditTypeAppProps>((props,
 							),
 							onOk: () => {
 								resetSelection();
-								setType(props.type);
+								setType(withPersistedJsController(props.type));
 								dispatch(popDialog({ id }));
 							},
 							onCancel: () => dispatch(popDialog({ id }))
@@ -746,14 +768,16 @@ export const EditTypeView = forwardRef<HTMLDivElement, EditTypeAppProps>((props,
 	};
 
 	// region const fieldEditorView = ...
-	const fieldEditorView = virtualContentType
-		? createElement(TypeBuilderFormsEngine, {
+	const fieldEditorView = virtualContentType ? (
+		<TypeControllerFlagContext.Provider value={typeControllerFlagContext}>
+			{createElement(TypeBuilderFormsEngine, {
 				...fieldFormViewProps,
 				isPanelReady: drawerOpenTransitionEnded,
 				onOpenInsertFieldDialog,
 				performCurrentFormErrorCheckAndWarning
-			})
-		: null;
+			})}
+		</TypeControllerFlagContext.Provider>
+	) : null;
 	// endregion
 
 	const handleMoveFieldToSection: FieldFormViewProps['onMoveFieldToSection'] = async (
@@ -1410,19 +1434,25 @@ function buildXmlFromType(
 
 // merge the basic details, the non-edited field values, the manipulated field atoms into a single object
 // that gets serialized to XML and stored
+// `getType` is read when the write's turn comes, after any queued `<controller>` write for this type
+// has landed, so the full definition carries the latest persisted flag instead of reverting it.
 function save(
 	siteId: string,
-	type: ContentType,
+	typeId: string,
+	getType: () => ContentType,
 	configDescriptors?: {
 		controlDescriptors: LookupTable<DescriptorContentType>;
 		dataSourceDescriptors: LookupTable<DescriptorContentType>;
 	}
 ): Observable<string> {
-	let xml = buildXmlFromType(type, configDescriptors);
-	xml = cleanupStaleDatasourceValuesFromXml(xml, type);
-	const requests = [writeConfiguration(siteId, createFormDefinitionPathFromTypeId(type.id), 'studio', xml)];
+	return queueFormDefinitionWrite(siteId, typeId, () => {
+		const type = getType();
+		let xml = buildXmlFromType(type, configDescriptors);
+		xml = cleanupStaleDatasourceValuesFromXml(xml, type);
+		const requests = [writeConfiguration(siteId, createFormDefinitionPathFromTypeId(type.id), 'studio', xml)];
 
-	return forkJoin(requests).pipe(map(() => xml));
+		return forkJoin(requests).pipe(map(() => xml));
+	});
 }
 
 /**

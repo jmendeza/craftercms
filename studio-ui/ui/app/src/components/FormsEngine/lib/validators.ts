@@ -39,6 +39,7 @@ import type { NodeSelectorItem } from '../controls/NodeSelector';
 import type { CheckboxGroupProps } from '../controls/CheckboxGroup';
 import { macroCreatorLookupTable } from '../../ContentTypeManagement/controls/PathWithMacroCreator';
 import { getPluginControlValidator } from '../controls/registry';
+import { isFieldPathIrrelevant } from '../formControllers/runtime';
 
 export interface ValidatorMetaData {
 	siteId: string;
@@ -51,6 +52,18 @@ export interface ValidatorMetaData {
 	currentIds?: string[];
 	/** `additionalFields` templates from the field's descriptor; expands the candidate variable name. */
 	additionalFields?: string[];
+	/** Qualified field paths the owning form's controller rejected. `null`/absent means no filtering. */
+	irrelevantFieldPaths?: Set<string> | null;
+	/**
+	 * Resolves the deny-list for an embedded component's own content type, using that type's
+	 * form controller. Returns `null` when the type has no controller or no relevance hook.
+	 * `path` is the containing item's path, the same one the component's form reports when opened.
+	 */
+	resolveEmbeddedRelevance?(
+		contentType: ContentType,
+		component: Record<string, unknown>,
+		path?: string
+	): Promise<Set<string> | null>;
 }
 export type ValidatorFunctionDef = (
 	field: ContentTypeField,
@@ -310,9 +323,10 @@ export async function repeatGroupValidator(
 
 	const validationPromises: Promise<FieldValidityState>[] = [];
 
-	// Validate fields of each repeat group item
+	// Validate fields of each repeat group item. Min/max occurrence checks above still apply.
 	currentValue?.forEach((item) => {
 		Object.values(fields).forEach((subField) => {
+			if (isFieldPathIrrelevant(meta.irrelevantFieldPaths, subField.id, field.id)) return;
 			const id = subField.id;
 			const value = item[id];
 			const validationPromise = validateFieldValue(subField, value, meta);
@@ -470,22 +484,28 @@ export async function nodeSelectorValidator(
 
 	const validationPromises: Promise<FieldValidityState>[] = [];
 
-	// Validate fields of each embedded item
-	embeddedContent.forEach(({ component }) => {
+	// Validate fields of each embedded item. Min/max size checks above still apply.
+	// `for...of` so each child's deny-list is resolved before its field promises are collected.
+	for (const { component } of embeddedContent) {
 		const contentTypeId = component['content-type'] as string;
 		const objectId = component['objectId'] as string;
-		if (visited.has(objectId)) return; // prevent circular validation
+		if (visited.has(objectId)) continue; // prevent circular validation
 		visited.add(objectId);
 		const contentType = meta.contentTypesById[contentTypeId];
-		if (!contentType) return;
+		if (!contentType) continue;
 		const fields = contentType.fields;
-		if (!fields) return;
+		if (!fields) continue;
+		const denyList =
+			(await meta.resolveEmbeddedRelevance?.(contentType, component as Record<string, unknown>, meta.itemMeta?.path)) ??
+			null;
+		const childMeta: ValidatorMetaData = { ...meta, irrelevantFieldPaths: denyList };
 		Object.values(fields).forEach((embeddedField) => {
+			if (isFieldPathIrrelevant(denyList, embeddedField.id)) return;
 			const value = component[embeddedField.id];
-			const validationPromise = validateFieldValue(embeddedField, value, meta);
+			const validationPromise = validateFieldValue(embeddedField, value, childMeta);
 			validationPromises.push(validationPromise);
 		});
-	});
+	}
 
 	const results = await Promise.all(validationPromises);
 	let invalidEmbedded = false;
