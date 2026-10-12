@@ -72,9 +72,10 @@ public class SiteAwareOpenSearchClient extends AbstractOpenSearchClientWrapper {
 
 	protected final boolean enableTranslation;
 
-	@ConstructorProperties({"client", "indexIdFormat", "enableTranslation"})
-	public SiteAwareOpenSearchClient(OpenSearchClient client, String indexIdFormat, boolean enableTranslation) {
-		super(client);
+	@ConstructorProperties({"client", "indexIdFormat", "enableTranslation", "failOnPartialShardFailure"})
+	public SiteAwareOpenSearchClient(OpenSearchClient client, String indexIdFormat, boolean enableTranslation,
+									  boolean failOnPartialShardFailure) {
+		super(client, failOnPartialShardFailure);
 		this.indexIdFormat = indexIdFormat;
 		this.enableTranslation = enableTranslation;
 	}
