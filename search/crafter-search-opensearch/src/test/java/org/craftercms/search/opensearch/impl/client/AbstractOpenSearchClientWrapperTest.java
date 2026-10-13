@@ -107,6 +107,58 @@ public class AbstractOpenSearchClientWrapperTest {
         }
     }
 
+    @Test
+    public void searchReportsTooManyNestedClausesFromACausedByChain() throws IOException {
+        wrapper = client(true);
+        ShardSearchFailure failure = ShardSearchFailure.of(f -> f
+                .index("test-index")
+                .shard(0)
+                .reason(c -> c
+                        .type("query_shard_exception")
+                        .reason("failed to create query")
+                        .causedBy(inner -> inner
+                                .type("too_many_nested_clauses")
+                                .reason("Query contains too many nested clauses")
+                        )
+                )
+        );
+        when(client.search(any(SearchRequest.class), eq(String.class)))
+                .thenReturn(searchResponse(5, 4, 1, List.of(failure)));
+
+        try {
+            wrapper.search(SearchRequest.of(r -> r.index("test-index")), String.class);
+            fail("Expected a nested-clause shard failure");
+        } catch (TooManyNestedClausesSearchException e) {
+            assertEquals("test-index", e.getIndexId());
+        }
+    }
+
+    @Test
+    public void searchReportsTooManyNestedClausesFromARootCause() throws IOException {
+        wrapper = client(true);
+        ShardSearchFailure failure = ShardSearchFailure.of(f -> f
+                .index("test-index")
+                .shard(0)
+                .reason(c -> c
+                        .type("search_phase_execution_exception")
+                        .reason("all shards failed")
+                        .rootCause(root -> root
+                                .type("too_many_nested_clauses")
+                                .reason("too many nested clauses")
+                        )
+                )
+        );
+        when(client.search(any(SearchRequest.class), eq(String.class)))
+                .thenReturn(searchResponse(5, 4, 1, List.of(failure)));
+
+        try {
+            wrapper.search(SearchRequest.of(r -> r.index("test-index")), String.class);
+            fail("Expected a nested-clause shard failure");
+        } catch (TooManyNestedClausesSearchException e) {
+            assertEquals("test-index", e.getIndexId());
+        }
+    }
+
     private AbstractOpenSearchClientWrapper client(boolean failOnPartialShardFailure) {
         return new AbstractOpenSearchClientWrapper(client, failOnPartialShardFailure) {
         };

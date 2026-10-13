@@ -122,10 +122,10 @@ public abstract class AbstractOpenSearchClientWrapper implements OpenSearchClien
         if (shards == null || shards.failed() == 0 ) {
             return;
         }
-		if (!failOnPartialShardFailure) {
-			logger.warn("Search failed on {} of {} shards, but failOnPartialShardFailure is false. Ignoring shard failures.", shards.failed(), shards.total());
-			return;
-		}
+        if (!failOnPartialShardFailure) {
+            logger.warn("Search failed on {} of {} shards, but failOnPartialShardFailure is false. Ignoring shard failures.", shards.failed(), shards.total());
+            return;
+        }
 
         String details = shards.failures().stream()
                 .map(this::describeShardFailure)
@@ -156,7 +156,8 @@ public abstract class AbstractOpenSearchClientWrapper implements OpenSearchClien
         if (TOO_MANY_NESTED_CLAUSES_ERROR.equalsIgnoreCase(cause.type())) {
             return true;
         }
-        return cause.rootCause().stream().anyMatch(root -> TOO_MANY_NESTED_CLAUSES_ERROR.equalsIgnoreCase(root.type()));
+        return isTooManyNestedClauses(cause.causedBy()) ||
+            cause.rootCause().stream().anyMatch(this::isTooManyNestedClauses);
     }
 
     /**
