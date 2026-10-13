@@ -158,7 +158,8 @@ public abstract class AbstractOpenSearchClientWrapper implements OpenSearchClien
 		if (TOO_MANY_NESTED_CLAUSES_ERROR.equalsIgnoreCase(cause.type())) {
 			return true;
 		}
-		return cause.rootCause().stream().anyMatch(root -> TOO_MANY_NESTED_CLAUSES_ERROR.equalsIgnoreCase(root.type()));
+		return isTooManyNestedClauses(cause.causedBy()) ||
+			cause.rootCause().stream().anyMatch(this::isTooManyNestedClauses);
 	}
 
 	/**
