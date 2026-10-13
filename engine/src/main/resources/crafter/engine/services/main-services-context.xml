@@ -767,6 +767,7 @@
         <constructor-arg name="indexIdFormat" value="${crafter.engine.search.index.format}"/>
         <constructor-arg name="enableTranslation" value="${crafter.engine.translation.enable}"/>
         <constructor-arg name="enableDefaultFilters" value="${crafter.engine.search.defaultFilters.enabled}"/>
+        <constructor-arg name="failOnPartialShardFailure" value="${crafter.engine.search.failOnPartialShardFailure}"/>
     </bean>
 
     <!-- ////////////////////////////////// -->
@@ -1008,6 +1009,7 @@
         <constructor-arg name="defaultSortField" value="${crafter.engine.graphql.query.sort.field}"/>
         <constructor-arg name="defaultSortOrder" value="${crafter.engine.graphql.query.sort.order}"/>
         <constructor-arg name="searchClient" ref="crafter.searchClient"/>
+        <constructor-arg name="ignoredFields" value="${crafter.engine.graphql.query.includes.ignore:__typename}"/>
     </bean>
 
     <bean id="crafter.urlTransformDataFetcher" class="org.craftercms.engine.graphql.impl.fetchers.UrlTransformDataFetcher">
