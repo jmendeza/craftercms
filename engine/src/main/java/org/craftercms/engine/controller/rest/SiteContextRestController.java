@@ -47,7 +47,6 @@ public class SiteContextRestController extends RestControllerBase {
 
 	public static final String URL_ROOT = "/site/context";
 	public static final String URL_CONTEXT_ID = "/id";
-	public static final String URL_DESTROY = "/destroy";
 	public static final String URL_REBUILD = "/rebuild";
 	public static final String URL_REBUILD_ALL = "/rebuild_all";
 	public static final String URL_GRAPHQL = "/graphql";
@@ -70,18 +69,6 @@ public class SiteContextRestController extends RestControllerBase {
 		validateToken(token);
 
 		return Collections.singletonMap(MODEL_ATTR_ID, SiteContext.getCurrent().getContext().getId());
-	}
-
-	@GetMapping(value = URL_DESTROY, produces = APPLICATION_JSON_VALUE)
-	public Map<String, Object> destroy(@RequestParam String token) throws InvalidManagementTokenException {
-		validateToken(token);
-
-		String siteName = SiteContext.getCurrent().getSiteName();
-
-		contextManager.startRemoveSiteContext(siteName);
-
-		return createResponseMessage(format("Started removal of site context for '%s' from the system. If a request " +
-			"for the site is received in the future, a new site context will be created and registered.", siteName));
 	}
 
 	@GetMapping(value = URL_REBUILD_ALL, produces = APPLICATION_JSON_VALUE)

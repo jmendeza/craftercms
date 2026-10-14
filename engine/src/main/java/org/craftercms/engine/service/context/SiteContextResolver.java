@@ -27,4 +27,21 @@ public interface SiteContextResolver {
 
 	SiteContext getContext(HttpServletRequest request);
 
+	/**
+	 * Site name resolved from the request, or empty when the request does not identify a site.
+	 * Does not fall back to the default site and does not create a context.
+	 *
+	 * @param request the current request
+	 * @return the site name, possibly empty
+	 */
+	String getSiteName(HttpServletRequest request);
+
+	/**
+	 * Destroys the preview context for the site when one is already registered.
+	 * Does not create a context.
+	 *
+	 * @param siteName the site name
+	 */
+	void destroyContext(String siteName);
+
 }

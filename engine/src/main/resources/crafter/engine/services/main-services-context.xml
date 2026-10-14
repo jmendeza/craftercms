@@ -233,6 +233,12 @@
 		<constructor-arg name="freeMarkerConfigFactory" ref="crafter.freeMarkerConfigFactory"/>
 	</bean>
 
+	<bean id="crafter.siteContextDestroyFilter"
+	      class="org.craftercms.engine.servlet.filter.SiteContextDestroyFilter">
+		<constructor-arg name="contextResolver" ref="crafter.siteContextResolver"/>
+		<constructor-arg name="configuredToken" value="${crafter.engine.management.authorizationToken}"/>
+	</bean>
+
 	<bean id="crafter.corsConfigSource" class="org.craftercms.engine.util.spring.cors.SiteAwareCorsConfigurationSource">
 		<constructor-arg name="cacheTemplate" ref="crafter.cacheTemplate"/>
 	</bean>

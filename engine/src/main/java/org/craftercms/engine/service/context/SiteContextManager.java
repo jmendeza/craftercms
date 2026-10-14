@@ -66,6 +66,18 @@ public class SiteContextManager implements ApplicationContextAware, DisposableBe
 	protected ApplicationContext applicationContext;
 	protected final LockByKey<String> sitesLock;
 	protected final Map<String, SiteContext> contextRegistry;
+	/**
+	 * Sites whose preview context is being removed. Rebuild and lazy creation must not
+	 * start a new context (and GraphQL schema build) for these sites. Values are the number of
+	 * in-flight removals, so the marker stays active until the last overlapping removal finishes.
+	 */
+	protected final Map<String, Integer> removingSites;
+	/**
+	 * Context being created for a site, published before {@link SiteContext#init(boolean)} blocks.
+	 * Removal can shut this context down without waiting for {@link #sitesLock}. The entry is
+	 * removed once the context is registered, or left for removal to destroy when creation is cancelled.
+	 */
+	protected final Map<String, SiteContext> creatingContexts;
 	protected final SiteContextFactory contextFactory;
 	protected final SiteContextFactory fallbackContextFactory;
 	protected final SiteListResolver siteListResolver;
@@ -141,6 +153,8 @@ public class SiteContextManager implements ApplicationContextAware, DisposableBe
 							  final boolean modePreview, final String[] watcherPaths, final String[] watcherIgnorePaths,
 							  final int watcherCounterLimit, final int watcherIntervalPeriod, final LockByKey<String> lockByKey) {
 		contextRegistry = new ConcurrentHashMap<>();
+		removingSites = new ConcurrentHashMap<>();
+		creatingContexts = new ConcurrentHashMap<>();
 		directoryWatcherRegistry = new ConcurrentHashMap<>();
 		directoryWatcherLastProcessedHash = new ConcurrentHashMap<>();
 		directoryWatcherCounter = new ConcurrentHashMap<>();
@@ -340,6 +354,9 @@ public class SiteContextManager implements ApplicationContextAware, DisposableBe
 		AtomicInteger changeCounterFromLastTask = new AtomicInteger(0);
 		Runnable task = () -> {
 			try {
+				if (isSiteBeingRemoved(siteName)) {
+					return;
+				}
 				logger.debug("Running rebuild task for site '{}'.", siteName);
 
 				// Is the counter reach limit (watcherCounterLimit * watcherIntervalPeriod second has passed)?
@@ -460,6 +477,37 @@ public class SiteContextManager implements ApplicationContextAware, DisposableBe
 	}
 
 	/**
+	 * Returns the registered context without creating one and without waiting for initialization.
+	 *
+	 * @param siteName the site name
+	 * @return the context, or null when none is registered
+	 */
+	public SiteContext findContext(String siteName) {
+		if (siteName == null) {
+			return null;
+		}
+		return contextRegistry.get(siteName);
+	}
+
+	/**
+	 * Synchronously removes the preview context for a site when one exists.
+	 * In-flight initialization is interrupted, the preview watcher is closed, and no rebuild is started.
+	 * Does nothing when the site has no context.
+	 *
+	 * @param siteName the site name
+	 */
+	public void destroySiteContext(String siteName) {
+		if (siteName == null || siteName.isEmpty()) {
+			return;
+		}
+		removeSiteContext(siteName);
+	}
+
+	protected boolean isSiteBeingRemoved(String siteName) {
+		return removingSites.containsKey(siteName) || !contextRegistry.containsKey(siteName);
+	}
+
+	/**
 	 * Gets the {@link SiteContext} for the specified site name. If no context exists, a new one is created.
 	 *
 	 * @param siteName the context's site name
@@ -468,6 +516,10 @@ public class SiteContextManager implements ApplicationContextAware, DisposableBe
 	 * @return the context
 	 */
 	public SiteContext getContext(@ValidSiteId String siteName, boolean fallback) {
+		if (removingSites.containsKey(siteName)) {
+			logger.debug("Site '{}' is being removed; context will not be created", siteName);
+			return null;
+		}
 		SiteContext siteContext = contextRegistry.get(siteName);
 		if (siteContext == null) {
 			if (!fallback && !siteName.equals(defaultSiteName) && !validateSiteCreationEntitlement()) {
@@ -476,6 +528,10 @@ public class SiteContextManager implements ApplicationContextAware, DisposableBe
 
 			sitesLock.lock(siteName);
 			try {
+				if (removingSites.containsKey(siteName)) {
+					logger.debug("Site '{}' is being removed; context will not be created", siteName);
+					return null;
+				}
 				// Double check locking, in case the context has been created already by another thread
 				siteContext = contextRegistry.get(siteName);
 				if (siteContext == null) {
@@ -485,7 +541,7 @@ public class SiteContextManager implements ApplicationContextAware, DisposableBe
 
 					siteContext = createContext(siteName, fallback);
 
-					if (modePreview) {
+					if (siteContext != null && modePreview) {
 						// files watch register
 						registerPreviewWatcher(siteName);
 						registerPreviewRebuildTask(siteName, fallback);
@@ -529,7 +585,7 @@ public class SiteContextManager implements ApplicationContextAware, DisposableBe
 	public void startContextRebuild(String siteName, boolean fallback, Consumer<SiteContext> callback) {
 		jobThreadPoolExecutor.execute(() -> {
 			SiteContext siteContext = rebuildContext(siteName, fallback);
-			if (callback != null) {
+			if (callback != null && siteContext != null) {
 				callback.accept(siteContext);
 			}
 		});
@@ -605,11 +661,31 @@ public class SiteContextManager implements ApplicationContextAware, DisposableBe
 	 * @param siteName the site name of the context to destroy
 	 */
 	protected void removeSiteContext(String siteName) {
+		removingSites.merge(siteName, 1, Integer::sum);
+		try {
+			// Shut down before taking sitesLock. Creation holds that lock while init blocks,
+			// so waiting for the lock would leave the initialization task running.
+			SiteContext current = contextRegistry.get(siteName);
+			if (current != null) {
+				current.requestShutdown();
+			}
+			SiteContext creating = creatingContexts.get(siteName);
+			if (creating != null && creating != current) {
+				creating.requestShutdown();
+			}
+			doRemoveSiteContext(siteName);
+		} finally {
+			removingSites.computeIfPresent(siteName, (key, count) -> count > 1 ? count - 1 : null);
+		}
+	}
+
+	private void doRemoveSiteContext(String siteName) {
 		logger.info("==================================================");
 		logger.info("<Removing site context: '{}'>", siteName);
 		logger.info("==================================================");
 
 		SiteContext siteContext;
+		SiteContext inFlight;
 		DirectoryWatcher watcher;
 		ScheduledExecutorService executor;
 
@@ -618,6 +694,9 @@ public class SiteContextManager implements ApplicationContextAware, DisposableBe
 			watcher = directoryWatcherRegistry.remove(siteName);
 			executor = directoryWatcherExecutor.remove(siteName);
 			siteContext = contextRegistry.remove(siteName);
+			// Creation may have published a context after the pre-lock lookup, then
+			// handed it off instead of registering it.
+			inFlight = creatingContexts.remove(siteName);
 		} finally {
 			sitesLock.unlock(siteName);
 		}
@@ -638,11 +717,22 @@ public class SiteContextManager implements ApplicationContextAware, DisposableBe
 		}
 		if (siteContext != null) {
 			try {
+				// Interrupt init/GraphQL on the context actually being removed, including one
+				// created by a rebuild that won the site lock after removal started.
+				siteContext.requestShutdown();
 				destroyContext(siteContext);
 			} catch (Exception e) {
 				logger.error("Error destroying site context for site '{}'", siteName, e);
 			} finally {
 				applicationContext.publishEvent(new SiteContextRemovedEvent(siteContext));
+			}
+		}
+		if (inFlight != null && inFlight != siteContext) {
+			try {
+				inFlight.requestShutdown();
+				destroyContext(inFlight);
+			} catch (Exception e) {
+				logger.error("Error destroying in-flight site context for site '{}'", siteName, e);
 			}
 		}
 
@@ -661,18 +751,52 @@ public class SiteContextManager implements ApplicationContextAware, DisposableBe
 			siteContext = contextFactory.createContext(siteName);
 		}
 
-		siteContext.init(waitForContextInit);
+		// Publish before init so removal can cancel initialization without sitesLock.
+		creatingContexts.put(siteName, siteContext);
+		boolean handOffToRemoval = false;
+		try {
+			if (removingSites.containsKey(siteName)) {
+				siteContext.requestShutdown();
+			}
+			siteContext.init(waitForContextInit);
+			if (removingSites.containsKey(siteName)) {
+				handOffToRemoval = true;
+				return null;
+			}
 
-		contextRegistry.put(siteName, siteContext);
+			contextRegistry.put(siteName, siteContext);
+			if (removingSites.containsKey(siteName)) {
+				return null;
+			}
 
-		logger.info("Site context created: '{}'", siteContext);
+			logger.info("Site context created: '{}'", siteContext);
 
-		return siteContext;
+			return siteContext;
+		} catch (RuntimeException e) {
+			if (removingSites.containsKey(siteName)) {
+				handOffToRemoval = true;
+				logger.info("Site '{}' context creation aborted because the site is being removed", siteName);
+				return null;
+			}
+			throw e;
+		} finally {
+			if (!handOffToRemoval) {
+				creatingContexts.remove(siteName, siteContext);
+			}
+		}
 	}
 
 	protected SiteContext rebuildContext(String siteName, boolean fallback) {
+		if (removingSites.containsKey(siteName)) {
+			logger.info("Site '{}' is being removed, skipping context rebuild", siteName);
+			return null;
+		}
 		sitesLock.lock(siteName);
 		try {
+			if (removingSites.containsKey(siteName) || !contextRegistry.containsKey(siteName)) {
+				logger.info("Site '{}' is being removed, skipping context rebuild", siteName);
+				return null;
+			}
 			logger.info("==================================================");
 			logger.info("<Rebuilding site context: '{}'>", siteName);
 			logger.info("==================================================");

@@ -53,6 +53,16 @@ public class SiteContextResolverImpl implements SiteContextResolver {
 	}
 
 	@Override
+	public String getSiteName(HttpServletRequest request) {
+		return StringUtils.lowerCase(siteResolver.getSiteName(request));
+	}
+
+	@Override
+	public void destroyContext(String siteName) {
+		siteContextManager.destroySiteContext(siteName);
+	}
+
+	@Override
 	public SiteContext getContext(HttpServletRequest request) {
 		boolean fallback = false;
 		String siteName = StringUtils.lowerCase(siteResolver.getSiteName(request));

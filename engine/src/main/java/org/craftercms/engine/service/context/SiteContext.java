@@ -19,6 +19,7 @@ import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -42,6 +43,7 @@ import static org.craftercms.commons.locale.LocaleUtils.CONFIG_KEY_SUPPORTED_LOC
 import org.craftercms.core.exception.CrafterException;
 import org.craftercms.core.service.ContentStoreService;
 import org.craftercms.core.service.Context;
+import org.craftercms.core.store.impl.filesystem.FileSystemContext;
 import org.craftercms.core.url.UrlTransformationEngine;
 import org.craftercms.core.util.cache.CacheTemplate;
 import org.craftercms.engine.cache.SiteCacheWarmer;
@@ -122,6 +124,7 @@ public class SiteContext {
 	protected long initTimeout;
 	protected CountDownLatch initializationLatch;
 	protected ExecutorService maintenanceTaskExecutor;
+	private final AtomicBoolean destroyStarted = new AtomicBoolean(false);
 	protected GraphQL graphQL;
 	protected State state;
 
@@ -131,6 +134,7 @@ public class SiteContext {
 	private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 	private final Lock accessLock = readWriteLock.readLock();
 	private final Lock shutdownLock = readWriteLock.writeLock();
+	private final Object stateLock = new Object();
 
 	protected SandboxInterceptor scriptSandbox;
 
@@ -512,26 +516,45 @@ public class SiteContext {
 					logger.info("<Initializing site context: " + siteName + ">");
 					logger.info("--------------------------------------------------");
 
+					if (shouldAbortMaintenance()) {
+						return;
+					}
+
 					if (cacheWarmer != null) {
 						cacheWarmer.warmUpCache(this, false);
 					}
 
+					if (shouldAbortMaintenance()) {
+						return;
+					}
+
 					buildGraphQLSchema();
+					if (shouldAbortMaintenance()) {
+						return;
+					}
 					executeInitScript();
 
-					state = State.READY;
+					synchronized (stateLock) {
+						if (state == State.DESTROYED) {
+							return;
+						}
+						state = State.READY;
 
-					logger.info("--------------------------------------------------");
-					logger.info("</Initializing site context: " + siteName + ">");
-					logger.info("--------------------------------------------------");
+						logger.info("--------------------------------------------------");
+						logger.info("</Initializing site context: " + siteName + ">");
+						logger.info("--------------------------------------------------");
 
-					publishEvent(new SiteContextInitializedEvent(this));
+						publishEvent(new SiteContextInitializedEvent(this));
+					}
 				} catch (Exception e) {
 					// to avoid a deadlock during destroy()
 					SiteContext.clear();
-					// If there is any exception during the init process then release the resources
-					// created so far
-					this.destroy();
+					// Shutdown requested by site removal already owns cleanup
+					if (state != State.DESTROYED) {
+						// If there is any exception during the init process then release the resources
+						// created so far
+						this.destroy();
+					}
 					throw e;
 				} finally {
 					initializationLatch.countDown();
@@ -590,7 +613,45 @@ public class SiteContext {
 		});
 	}
 
+	/**
+	 * Marks the context destroyed and interrupts in-flight init or GraphQL work.
+	 * Resource cleanup still happens in {@link #destroy()}.
+	 */
+	public void requestShutdown() {
+		synchronized (stateLock) {
+			state = State.DESTROYED;
+		}
+		try {
+			maintenanceTaskExecutor.shutdownNow();
+		} catch (Exception e) {
+			logger.debug("Error interrupting maintenance tasks for {}", this, e);
+		}
+	}
+
+	/**
+	 * @return true when init or a schema build must stop because the context is being removed
+	 * or the site repository is no longer on disk
+	 */
+	protected boolean shouldAbortMaintenance() {
+		if (state == State.DESTROYED || Thread.currentThread().isInterrupted()) {
+			logger.info("Aborting maintenance for site '{}' because the context is being destroyed", siteName);
+			return true;
+		}
+		if (context instanceof FileSystemContext fileSystemContext) {
+			java.io.File root = fileSystemContext.getRootFolder().getFile();
+			if (root != null && !root.exists()) {
+				logger.info("Aborting maintenance for site '{}' because the site repository is gone", siteName);
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public void destroy() throws CrafterException {
+		if (!destroyStarted.compareAndSet(false, true)) {
+			logger.debug("Destroy already started for {}", this);
+			return;
+		}
 		boolean locked;
 		try {
 			logger.debug("Getting shutdown lock for {}", this);
@@ -661,6 +722,7 @@ public class SiteContext {
 				}
 			}
 		} catch (InterruptedException e) {
+			destroyStarted.set(false);
 			throw new CrafterException("Interrupted while trying to destroy " + this, e);
 		}
 	}
@@ -685,6 +747,9 @@ public class SiteContext {
 	}
 
 	protected void buildGraphQLSchema() {
+		if (shouldAbortMaintenance()) {
+			return;
+		}
 		logger.info("Starting GraphQL schema build for site '{}'", siteName);
 
 		StopWatch stopWatch = new StopWatch();
@@ -692,6 +757,9 @@ public class SiteContext {
 
 		try {
 			GraphQL graphQL = graphQLFactory.getInstance(this);
+			if (shouldAbortMaintenance()) {
+				return;
+			}
 			if (Objects.nonNull(graphQL)) {
 				this.graphQL = graphQL;
 
@@ -708,6 +776,9 @@ public class SiteContext {
 	}
 
 	protected void executeInitScript() {
+		if (shouldAbortMaintenance()) {
+			return;
+		}
 		if (storeService.exists(context, initScriptPath)) {
 			try {
 				Map<String, Object> variables = new HashMap<>();
