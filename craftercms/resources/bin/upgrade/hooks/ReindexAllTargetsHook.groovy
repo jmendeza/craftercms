@@ -16,7 +16,7 @@
 package upgrade.hooks
 
 @Grapes([
-	@Grab(group='com.squareup.okhttp3', module='okhttp-jvm', version='5.3.2')
+	@Grab(group='com.squareup.okhttp3', module='okhttp-jvm', version='5.5.0')
 ])
 
 import groovy.json.JsonSlurper

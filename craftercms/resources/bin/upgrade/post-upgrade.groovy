@@ -16,13 +16,13 @@
 package upgrade
 
 @Grapes([
-    @Grab(group = 'org.slf4j', module = 'slf4j-nop', version = '1.7.36'),
-    @Grab(group = 'org.apache.commons', module = 'commons-lang3', version = '3.20.0'),
-    @Grab(group = 'org.apache.commons', module = 'commons-collections4', version = '4.5.0'),
-    @Grab(group = 'org.apache.commons', module = 'commons-configuration2', version = '2.13.0'),
+    @Grab(group = 'org.slf4j', module = 'slf4j-nop', version = '2.0.20'),
+    @Grab(group = 'org.apache.commons', module = 'commons-lang3', version = '3.21.0'),
+    @Grab(group = 'org.apache.commons', module = 'commons-collections4', version = '4.6.0'),
+    @Grab(group = 'org.apache.commons', module = 'commons-configuration2', version = '2.15.1'),
     @Grab(group = 'org.apache.commons', module = 'commons-text', version = '1.15.0'),
     @Grab(group = 'commons-beanutils', module = 'commons-beanutils', version = '1.11.0'),
-    @Grab(group = 'org.yaml', module = 'snakeyaml', version = '2.5')
+    @Grab(group = 'org.yaml', module = 'snakeyaml', version = '2.7')
 ])
 
 import groovy.cli.commons.CliBuilder

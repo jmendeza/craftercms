@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2025 Crafter Software Corporation. All Rights Reserved.
+# Copyright (C) 2007-2026 Crafter Software Corporation. All Rights Reserved.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 3 as published by
@@ -16,7 +16,7 @@ FROM eclipse-temurin:21-jdk-alpine AS main
 ############# INSTALL NATIVE TOMCAT #############
 ENV CATALINA_HOME=/usr/local/tomcat \
     TOMCAT_MAJOR="11" \
-    TOMCAT_VERSION="11.0.20"
+    TOMCAT_VERSION="11.0.26"
 
 # Download Tomcat, and then Build tc-native
 RUN apk add --no-cache --virtual .my-build-deps apr-dev openssl-dev make g++ && \
