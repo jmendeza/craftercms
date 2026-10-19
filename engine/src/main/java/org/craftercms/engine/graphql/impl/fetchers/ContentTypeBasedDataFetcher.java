@@ -225,12 +225,24 @@ public class ContentTypeBasedDataFetcher extends RequestAwareDataFetcher<Object>
      */
     protected void processSelection(String path, Selection currentSelection, BoolQuery.Builder query,
                                     Set<String> queryFieldIncludes, DataFetchingEnvironment env)  {
+        processSelection(path, currentSelection, query, queryFieldIncludes, env, false);
+    }
+
+    /**
+     * Adds the required filters to the ES query for the given field.
+     * Ignored fields and their descendants are left out of the source includes, but filters are still applied.
+     *
+     * @param omitIncludes true when an ancestor is ignored and this path must be left out of the source includes
+     */
+    private void processSelection(String path, Selection currentSelection, BoolQuery.Builder query,
+                                  Set<String> queryFieldIncludes, DataFetchingEnvironment env,
+                                  boolean omitIncludes)  {
         if (currentSelection instanceof Field) {
             // If the current selection is a field
             Field currentField = (Field) currentSelection;
 
             // Fields in the list of ignored fields are not included in the query, but their filters still apply
-            boolean ignored = ignoredFields.contains(currentField.getName());
+            boolean excludeFromIncludes = omitIncludes || ignoredFields.contains(currentField.getName());
             // Get the original field name
             String propertyName = getOriginalName(currentField.getName());
             // Build the ES-friendly path
@@ -238,11 +250,8 @@ public class ContentTypeBasedDataFetcher extends RequestAwareDataFetcher<Object>
 
             // If the field has sub selection
             if (Objects.nonNull(currentField.getSelectionSet())) {
-                if (ignored) {
-                    return;
-                }
                 // If the field is a flattened component
-                if (fullPath.matches(COMPONENT_INCLUDE_REGEX)) {
+                if (!excludeFromIncludes && fullPath.matches(COMPONENT_INCLUDE_REGEX)) {
                     // Include the 'content-type' field to make sure the type can be resolved during runtime
                     String contentTypeFieldPath = fullPath + "." + QUERY_FIELD_NAME_CONTENT_TYPE;
                     if (!queryFieldIncludes.contains(contentTypeFieldPath)) {
@@ -250,13 +259,14 @@ public class ContentTypeBasedDataFetcher extends RequestAwareDataFetcher<Object>
                     }
                 }
 
-                // Process recursively and finish
+                // Keep walking children so nested filters are built, even when this path is omitted from includes
                 currentField.getSelectionSet().getSelections()
-                    .forEach(selection -> processSelection(fullPath, selection, query, queryFieldIncludes, env));
+                    .forEach(selection -> processSelection(fullPath, selection, query, queryFieldIncludes, env,
+                            excludeFromIncludes));
                 return;
             }
 
-            if (!ignored) {
+            if (!excludeFromIncludes) {
                 // Add the field to the list
                 logger.debug("Adding selected field '{}' to query", fullPath);
                 queryFieldIncludes.add(fullPath);
@@ -282,13 +292,13 @@ public class ContentTypeBasedDataFetcher extends RequestAwareDataFetcher<Object>
             // If the current selection is an inline fragment, process recursively
             InlineFragment fragment = (InlineFragment) currentSelection;
             fragment.getSelectionSet().getSelections()
-                .forEach(selection -> processSelection(path, selection, query, queryFieldIncludes, env));
+                .forEach(selection -> processSelection(path, selection, query, queryFieldIncludes, env, omitIncludes));
         } else if (currentSelection instanceof FragmentSpread) {
             // If the current selection is a fragment spread, find the fragment and process recursively
             FragmentSpread fragmentSpread = (FragmentSpread) currentSelection;
             FragmentDefinition fragmentDefinition = env.getFragmentsByName().get(fragmentSpread.getName());
             fragmentDefinition.getSelectionSet().getSelections()
-                .forEach(selection -> processSelection(path, selection, query, queryFieldIncludes, env));
+                .forEach(selection -> processSelection(path, selection, query, queryFieldIncludes, env, omitIncludes));
         }
     }
 
