@@ -21,6 +21,11 @@ import org.craftercms.core.service.ContentStoreService;
 import org.craftercms.core.service.Context;
 import org.craftercms.engine.service.context.SiteContext;
 import org.craftercms.engine.service.context.SiteContextManager;
+import org.craftercms.engine.store.s3.S3ContentStoreAdapter;
+import org.craftercms.engine.store.s3.S3Context;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Uri;
+import software.amazon.awssdk.services.s3.S3Utilities;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,6 +35,7 @@ import org.mockito.MockitoAnnotations;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Properties;
@@ -155,6 +161,31 @@ public class DeploymentEventsWatcherTest {
 		verify(siteContext, times(1)).startCacheClear(any(Runnable.class));
 		verify(siteContext, times(1)).startGraphQLSchemaBuild(any(Runnable.class));
 		verify(watcher.latestDeploymentEventsPerSite, times(1)).put(SITENAME, currDeploymentEvents);
+	}
+
+	@Test
+	public void checkRetriesManifestLoadWhenPreviousLoadFailed() throws IOException {
+		S3ContentStoreAdapter adapter = mock(S3ContentStoreAdapter.class);
+		S3Utilities utilities = S3Utilities.builder().region(Region.US_EAST_1).build();
+		S3Uri uri = utilities.parseUri(URI.create("s3://test-bucket/sites/acme"));
+		S3Context s3Context = new S3Context("id", adapter, "s3://test-bucket/sites/acme", false, true, 1000,
+			true, uri, null);
+		s3Context.markContentStoreManifestLoadFailed();
+		when(siteContext.getContext()).thenReturn(s3Context);
+
+		Instant now = Instant.now();
+		Properties deploymentEvents = createDeploymentEvents(now, now, now);
+		Content deploymentEventsContent = getDeploymentEventsAsContent(deploymentEvents);
+		watcher.latestDeploymentEventsPerSite.put(SITENAME, deploymentEvents);
+		when(contentStoreService.findContent(s3Context, CACHE_OFF_CACHING_OPTIONS, DEFAULT_DEPLOYMENT_EVENTS_FILE_URL))
+			.thenReturn(deploymentEventsContent);
+
+		watcher.checkForEvents();
+
+		verify(adapter).reloadContentStoreManifest(s3Context);
+		verify(siteContextManager, never()).startContextRebuild(anyString(), anyBoolean(), any(Consumer.class));
+		verify(siteContext, never()).startCacheClear(any(Runnable.class));
+		verify(siteContext, never()).startGraphQLSchemaBuild(any(Runnable.class));
 	}
 
 	private Properties createDeploymentEvents(Instant rebuildContextEvent, Instant clearCacheEvent, Instant rebuildGraphQLEvent) {

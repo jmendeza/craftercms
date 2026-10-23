@@ -27,9 +27,13 @@ import org.craftercms.core.exception.StoreException;
 import org.craftercms.core.service.CachingOptions;
 import org.craftercms.core.service.Content;
 import org.craftercms.core.service.Context;
+import org.craftercms.core.store.ContentStoreIndex;
+import org.craftercms.core.store.ContentStoreManifest;
 import org.craftercms.core.store.impl.File;
+import org.craftercms.core.util.ContentStoreUtils;
 import org.craftercms.core.util.cache.CacheTemplate;
 import org.craftercms.core.util.cache.impl.CachingAwareList;
+import org.craftercms.engine.util.store.decorators.DecoratedStoreAdapterContext;
 import org.craftercms.engine.exception.s3.S3BucketNotConfiguredException;
 import org.craftercms.engine.store.AbstractCachedFileBasedContentStoreAdapter;
 import org.craftercms.engine.store.s3.util.S3ClientBuilder;
@@ -45,6 +49,7 @@ import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Iterable;
 
 import java.beans.ConstructorProperties;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.time.Instant;
@@ -66,10 +71,18 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 
 	public static final String DELIMITER = "/";
 
+	public static final String DEFAULT_DEPLOYMENT_EVENTS_FILE_URL = "deployment-events.properties";
+
 	protected final S3ClientBuilder clientBuilder;
 	protected S3Client client;
 	protected final int contentMaxLength;
 	protected final String[] cacheAllowedPaths;
+
+	/**
+	 * Store path of the deployment events file. Lookups for this path read the object from S3
+	 * and skip the content store index, because the file is published after the manifest.
+	 */
+	protected String deploymentEventsFileUrl = DEFAULT_DEPLOYMENT_EVENTS_FILE_URL;
 
 	@ConstructorProperties({"pathValidator", "descriptorFileExtension", "metadataFileExtension", "cacheTemplate",
 		"clientBuilder", "contentMaxLength", "cacheAllowedPaths"})
@@ -89,6 +102,10 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 
 	public void destroy() {
 		client.close();
+	}
+
+	public void setDeploymentEventsFileUrl(String deploymentEventsFileUrl) {
+		this.deploymentEventsFileUrl = deploymentEventsFileUrl;
 	}
 
 	/**
@@ -112,9 +129,22 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 		throws RootFolderNotFoundException, StoreException, AuthenticationException {
 
 		S3Uri uri = client.utilities().parseUri(URI.create(removeEnd(rootFolderPath, DELIMITER)));
+		String bucketName = uri.bucket().orElseThrow(S3BucketNotConfiguredException::new);
+		String rootKey = uri.key().orElse("");
+		ContentStoreIndex index = fetchContentStoreManifest(bucketName, rootKey);
+		if (index != null) {
+			if (index.typeOf(ContentStoreIndex.ROOT_PATH) == null) {
+				throw new RootFolderNotFoundException(format("Root folder '%s' not found", rootFolderPath));
+			}
+			S3Context context = new S3Context(id, this, rootFolderPath, mergingOn, cacheOn, maxAllowedItemsInCache,
+				ignoreHiddenFiles, uri, configurationVariables);
+			context.setContentStoreIndex(index);
+			return context;
+		}
+
 		ListObjectsV2Request request = ListObjectsV2Request.builder()
-			.bucket(uri.bucket().orElseThrow(S3BucketNotConfiguredException::new))
-			.prefix(uri.key().orElse(""))
+			.bucket(bucketName)
+			.prefix(rootKey)
 			.delimiter(DELIMITER).build();
 		ListObjectsV2Response result = client.listObjectsV2(request);
 
@@ -122,8 +152,58 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 			throw new RootFolderNotFoundException(format("Root folder '%s' not found", rootFolderPath));
 		}
 
-		return new S3Context(id, this, rootFolderPath, mergingOn, cacheOn, maxAllowedItemsInCache,
+		S3Context context = new S3Context(id, this, rootFolderPath, mergingOn, cacheOn, maxAllowedItemsInCache,
 			ignoreHiddenFiles, uri, configurationVariables);
+		context.setContentStoreIndex(null);
+		return context;
+	}
+
+	/**
+	 * Reloads the content store manifest for a site context. Called when Engine reads the deployment-events
+	 * signal so the next content lookups use the manifest published with that signal.
+	 * <p>
+	 * Contexts that are not backed by S3 are ignored. A missing manifest leaves the context on the S3 list path.
+	 * A failed load is marked on the context so the deployment events watcher can retry it.
+	 *
+	 * @param context the site context, possibly wrapped by store-adapter decorators
+	 */
+	public static void refreshContentStoreManifest(Context context) {
+		S3Context s3Context = findS3Context(context);
+		if (s3Context == null || !(s3Context.getStoreAdapter() instanceof S3ContentStoreAdapter adapter)) {
+			return;
+		}
+		adapter.reloadContentStoreManifest(s3Context);
+	}
+
+	/**
+	 * @param context the site context, possibly wrapped by store-adapter decorators
+	 * @return true when the last manifest reload for this S3 context failed
+	 */
+	public static boolean isContentStoreManifestLoadFailed(Context context) {
+		S3Context s3Context = findS3Context(context);
+		return s3Context != null && s3Context.isContentStoreManifestLoadFailed();
+	}
+
+	/**
+	 * Fetches the manifest, builds the directory index, and replaces the one held by the context.
+	 * A failed fetch clears the index under the context lock so lookups list S3, marks the context
+	 * so the deployment events watcher retries the load, then rethrows the failure.
+	 *
+	 * @param context the S3 context
+	 */
+	public void reloadContentStoreManifest(S3Context context) {
+		ContentStoreIndex index;
+		try {
+			index = fetchContentStoreManifest(context.getBucket(), context.getKey());
+		} catch (RuntimeException e) {
+			synchronized (context.getContentStoreIndexLock()) {
+				context.markContentStoreManifestLoadFailed();
+			}
+			throw e;
+		}
+		synchronized (context.getContentStoreIndexLock()) {
+			context.setContentStoreIndex(index);
+		}
 	}
 
 	@Override
@@ -147,7 +227,14 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 
 		S3Context s3Context = (S3Context) context;
 		String bucketName = s3Context.getBucket();
-		String key = stripStart(appendIfMissing(s3Context.getKey(), path), DELIMITER);
+		String key = toS3Key(s3Context, path);
+		if (isDeploymentEventsFile(path)) {
+			return getObject(s3Context, client, bucketName, key);
+		}
+		ContentStoreIndex index = currentIndex(s3Context);
+		if (index != null) {
+			return findFileInIndex(index, s3Context, bucketName, key, path);
+		}
 
 		if (isEmpty(FilenameUtils.getExtension(key))) {
 			// If it is a folder, check if there are objects with the prefix
@@ -190,6 +277,10 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 
 		S3Context s3Context = (S3Context) context;
 		String bucketName = s3Context.getBucket();
+		ContentStoreIndex index = currentIndex(s3Context);
+		if (index != null) {
+			return childrenFromIndex(index, s3Context, bucketName, s3Prefix, context.ignoreHiddenFiles());
+		}
 
 		logger.debug("Listing objects for S3 prefix 's3://{}/{}'", bucketName, s3Prefix);
 
@@ -219,6 +310,11 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 	@Override
 	public boolean validate(final Context context) throws StoreException, AuthenticationException {
 		S3Context s3Context = (S3Context) context;
+		ContentStoreIndex index = currentIndex(s3Context);
+		if (index != null) {
+			return index.typeOf(ContentStoreIndex.ROOT_PATH) != null;
+		}
+
 		String bucketName = s3Context.getBucket();
 		String rootPrefix = s3Context.getKey();
 
@@ -245,6 +341,132 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 
 	private boolean isHidden(final String path) {
 		return FilenameUtils.getName(path).startsWith(".");
+	}
+
+	/**
+	 * The deployment events file is uploaded after the manifest, so it is not listed in the index.
+	 */
+	protected boolean isDeploymentEventsFile(String path) {
+		if (isEmpty(deploymentEventsFileUrl)) {
+			return false;
+		}
+		return ContentStoreUtils.normalizePath(deploymentEventsFileUrl).equals(ContentStoreUtils.normalizePath(path));
+	}
+
+	/**
+	 * Returns the directory index for the context, loading the manifest on first use.
+	 * A resolved null means the manifest object is absent and callers should list S3.
+	 */
+	protected ContentStoreIndex currentIndex(S3Context context) {
+		if (context.isContentStoreIndexResolved()) {
+			return context.getContentStoreIndex();
+		}
+		synchronized (context.getContentStoreIndexLock()) {
+			if (context.isContentStoreIndexResolved()) {
+				return context.getContentStoreIndex();
+			}
+			context.setContentStoreIndex(fetchContentStoreManifest(context.getBucket(), context.getKey()));
+			return context.getContentStoreIndex();
+		}
+	}
+
+	/**
+	 * GETs the manifest object and builds the directory index from its file list.
+	 * {@link NoSuchKeyException} is an absent manifest, not a failed read.
+	 */
+	protected ContentStoreIndex fetchContentStoreManifest(String bucketName, String rootKey) {
+		String manifestKey = toManifestKey(rootKey);
+		logger.debug("Loading content store manifest from s3://{}/{}", bucketName, manifestKey);
+
+		GetObjectRequest request = GetObjectRequest.builder()
+			.bucket(bucketName)
+			.key(manifestKey)
+			.build();
+		try (ResponseInputStream<GetObjectResponse> object = client.getObject(request)) {
+			ContentStoreManifest manifest = ContentStoreManifest.readGzipJson(object);
+			logger.info("Loaded content store manifest from s3://{}/{}", bucketName, manifestKey);
+			return ContentStoreIndex.from(manifest);
+		} catch (NoSuchKeyException e) {
+			logger.info("Content store manifest s3://{}/{} was not found. Folder lookups will list S3",
+				bucketName, manifestKey);
+			return null;
+		} catch (S3Exception e) {
+			if (e.statusCode() == HttpStatus.SC_NOT_FOUND) {
+				logger.info("Content store manifest s3://{}/{} was not found. Folder lookups will list S3",
+					bucketName, manifestKey);
+				return null;
+			}
+			throw new StoreException(format("Error loading content store manifest from s3://%s/%s", bucketName, manifestKey), e);
+		} catch (IOException e) {
+			throw new StoreException(format("Error reading content store manifest from s3://%s/%s", bucketName, manifestKey), e);
+		}
+	}
+
+	protected File findFileInIndex(ContentStoreIndex index, S3Context context, String bucketName,
+				       String key, String path) {
+		if (index.typeOf(path) == null) {
+			return null;
+		}
+		if (index.isDirectory(path)) {
+			return new S3Prefix(bucketName, key);
+		}
+		return getObject(context, client, bucketName, key);
+	}
+
+	protected List<File> childrenFromIndex(ContentStoreIndex index, S3Context context, String bucketName,
+					       S3Prefix directory, boolean ignoreHiddenFiles) {
+		String storePath = storePathFromS3Key(context, directory.getPrefix());
+		List<File> children = new CachingAwareList<>();
+		for (String name : index.childrenOf(storePath)) {
+			if (ignoreHiddenFiles && isHidden(name)) {
+				continue;
+			}
+			String childPath = ContentStoreIndex.ROOT_PATH.equals(storePath) ? DELIMITER + name : storePath + DELIMITER + name;
+			String childKey = toS3Key(context, childPath);
+			if (index.isDirectory(childPath)) {
+				children.add(new S3Prefix(bucketName, childKey));
+			} else {
+				children.add(new S3File(bucketName, childKey));
+			}
+		}
+		return children;
+	}
+
+	protected String toS3Key(S3Context context, String storePath) {
+		return stripStart(appendIfMissing(context.getKey(), storePath), DELIMITER);
+	}
+
+	protected String toManifestKey(String rootKey) {
+		String root = strip(rootKey, DELIMITER);
+		if (isEmpty(root)) {
+			return ContentStoreManifest.FILE_NAME;
+		}
+		return root + DELIMITER + ContentStoreManifest.FILE_NAME;
+	}
+
+	protected String storePathFromS3Key(S3Context context, String s3Key) {
+		String root = strip(context.getKey(), DELIMITER);
+		String key = strip(s3Key, DELIMITER);
+		String relative = key;
+		if (isNotEmpty(root)) {
+			if (key.equals(root)) {
+				relative = "";
+			} else if (key.startsWith(root + DELIMITER)) {
+				relative = key.substring(root.length() + 1);
+			}
+		}
+		return ContentStoreUtils.normalizePath(isEmpty(relative) ? ContentStoreIndex.ROOT_PATH : relative);
+	}
+
+	protected static S3Context findS3Context(Context context) {
+		Context current = context;
+		while (current instanceof DecoratedStoreAdapterContext decorated) {
+			current = decorated.getActualContext();
+		}
+		if (current instanceof S3Context s3Context) {
+			return s3Context;
+		}
+		return null;
 	}
 
 	/**

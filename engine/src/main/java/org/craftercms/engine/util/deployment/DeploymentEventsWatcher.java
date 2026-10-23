@@ -23,6 +23,7 @@ import org.craftercms.core.service.Context;
 import org.craftercms.engine.event.*;
 import org.craftercms.engine.service.context.SiteContext;
 import org.craftercms.engine.service.context.SiteContextManager;
+import org.craftercms.engine.store.s3.S3ContentStoreAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEvent;
@@ -102,9 +103,24 @@ public class DeploymentEventsWatcher implements ApplicationListener<ApplicationE
 
 			latestDeploymentEventsPerSite.put(siteName, currentDeploymentEvents);
 		} else if (Objects.equals(currentDeploymentEvents, latestDeploymentEvents)) {
-			logger.debug("No new deployment events for site {}", siteName);
+			if (S3ContentStoreAdapter.isContentStoreManifestLoadFailed(siteContext.getContext())) {
+				logger.debug("Retrying content store manifest load for site {}", siteName);
+				try {
+					S3ContentStoreAdapter.refreshContentStoreManifest(siteContext.getContext());
+				} catch (RuntimeException e) {
+					logger.warn("Unable to load content store manifest for site '{}'", siteName, e);
+				}
+			} else {
+				logger.debug("No new deployment events for site {}", siteName);
+			}
 		} else {
 			logger.debug("New deployment events received for site {}", siteName);
+
+			try {
+				S3ContentStoreAdapter.refreshContentStoreManifest(siteContext.getContext());
+			} catch (RuntimeException e) {
+				logger.warn("Unable to load content store manifest for site '{}'", siteName, e);
+			}
 
 			long latestRebuildContextEvent = getEventProperty(latestDeploymentEvents, REBUILD_CONTEXT_EVENT_KEY);
 			long currentRebuildContextEvent = getEventProperty(currentDeploymentEvents, REBUILD_CONTEXT_EVENT_KEY);
