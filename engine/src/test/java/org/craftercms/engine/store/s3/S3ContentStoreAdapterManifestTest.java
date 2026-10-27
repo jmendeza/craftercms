@@ -24,18 +24,25 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Uri;
 import software.amazon.awssdk.services.s3.S3Utilities;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -45,6 +52,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -173,6 +181,81 @@ public class S3ContentStoreAdapterManifestTest {
 		adapter.reloadContentStoreManifest(context);
 		assertNull(context.getContentStoreIndex());
 		assertFalse(context.isContentStoreManifestLoadFailed());
+	}
+
+	@Test
+	public void testCreateContextFallsBackWhenManifestGetIsForbidden() {
+		when(client.getObject(any(GetObjectRequest.class)))
+			.thenThrow(S3Exception.builder().statusCode(403).message("denied").build());
+
+		assertCreateContextListsS3();
+	}
+
+	@Test
+	public void testCreateContextFallsBackWhenManifestGetFails() {
+		when(client.getObject(any(GetObjectRequest.class)))
+			.thenThrow(S3Exception.builder().statusCode(500).message("unavailable").build());
+
+		assertCreateContextListsS3();
+	}
+
+	@Test
+	public void testCreateContextFallsBackWhenManifestGzipIsCorrupt() {
+		when(client.getObject(any(GetObjectRequest.class)))
+			.thenReturn(objectWithBytes(new byte[] {1, 2, 3, 4}));
+
+		assertCreateContextListsS3();
+	}
+
+	@Test
+	public void testCreateContextIgnoresUnknownManifestProperties() throws Exception {
+		String json = "{\"schemaVersion\":2,\"files\":[{\"path\":\"/site/website/index.xml\",\"type\":\"file\",\"size\":12}]}";
+		when(client.utilities()).thenReturn(S3Utilities.builder().region(Region.US_EAST_1).build());
+		when(client.getObject(any(GetObjectRequest.class))).thenReturn(objectWithBytes(gzip(json)));
+
+		S3Context created = createSiteContext();
+
+		assertNotNull(created.getContentStoreIndex());
+		assertEquals(ContentStoreManifest.TYPE_FILE, created.getContentStoreIndex().typeOf("/site/website/index.xml"));
+		assertFalse(created.isContentStoreManifestLoadFailed());
+		File folder = adapter.doFindFile(created, "/site/website");
+		assertNotNull(folder);
+		assertTrue(folder.isDirectory());
+		verify(client, never()).listObjectsV2(any(ListObjectsV2Request.class));
+	}
+
+	private void assertCreateContextListsS3() {
+		when(client.utilities()).thenReturn(S3Utilities.builder().region(Region.US_EAST_1).build());
+		when(client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(ListObjectsV2Response.builder()
+			.contents(software.amazon.awssdk.services.s3.model.S3Object.builder().key("sites/acme/site/").build())
+			.build());
+
+		S3Context created = createSiteContext();
+
+		assertNull(created.getContentStoreIndex());
+		assertTrue(created.isContentStoreIndexResolved());
+		assertTrue(created.isContentStoreManifestLoadFailed());
+		assertTrue(S3ContentStoreAdapter.isContentStoreManifestLoadFailed(created));
+		File folder = adapter.doFindFile(created, "/site");
+		assertNotNull(folder);
+		assertTrue(folder.isDirectory());
+		verify(client, atLeastOnce()).listObjectsV2(any(ListObjectsV2Request.class));
+	}
+
+	private S3Context createSiteContext() {
+		return (S3Context) adapter.createContext("id", "s3://test-bucket/sites/acme", false, true, 1000, true, null);
+	}
+
+	private static ResponseInputStream<GetObjectResponse> objectWithBytes(byte[] bytes) {
+		return new ResponseInputStream<>(GetObjectResponse.builder().build(), new ByteArrayInputStream(bytes));
+	}
+
+	private static byte[] gzip(String json) throws IOException {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		try (GZIPOutputStream gzip = new GZIPOutputStream(out)) {
+			gzip.write(json.getBytes(StandardCharsets.UTF_8));
+		}
+		return out.toByteArray();
 	}
 
 }

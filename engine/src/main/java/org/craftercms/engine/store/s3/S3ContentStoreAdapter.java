@@ -131,7 +131,17 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 		S3Uri uri = client.utilities().parseUri(URI.create(removeEnd(rootFolderPath, DELIMITER)));
 		String bucketName = uri.bucket().orElseThrow(S3BucketNotConfiguredException::new);
 		String rootKey = uri.key().orElse("");
-		ContentStoreIndex index = fetchContentStoreManifest(bucketName, rootKey);
+		// A missing manifest is null and uses the list path below. Any other read failure uses that same
+		// path and is marked so the deployment events watcher retries the load.
+		ContentStoreIndex index = null;
+		boolean manifestLoadFailed = false;
+		try {
+			index = fetchContentStoreManifest(bucketName, rootKey);
+		} catch (RuntimeException e) {
+			logger.warn("Unable to load content store manifest from s3://{}/{}. Folder lookups will list S3",
+				bucketName, toManifestKey(rootKey), e);
+			manifestLoadFailed = true;
+		}
 		if (index != null) {
 			if (index.typeOf(ContentStoreIndex.ROOT_PATH) == null) {
 				throw new RootFolderNotFoundException(format("Root folder '%s' not found", rootFolderPath));
@@ -154,7 +164,11 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 
 		S3Context context = new S3Context(id, this, rootFolderPath, mergingOn, cacheOn, maxAllowedItemsInCache,
 			ignoreHiddenFiles, uri, configurationVariables);
-		context.setContentStoreIndex(null);
+		if (manifestLoadFailed) {
+			context.markContentStoreManifestLoadFailed();
+		} else {
+			context.setContentStoreIndex(null);
+		}
 		return context;
 	}
 
@@ -177,7 +191,7 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 
 	/**
 	 * @param context the site context, possibly wrapped by store-adapter decorators
-	 * @return true when the last manifest reload for this S3 context failed
+	 * @return true when the last manifest load for this S3 context failed
 	 */
 	public static boolean isContentStoreManifestLoadFailed(Context context) {
 		S3Context s3Context = findS3Context(context);

@@ -18,7 +18,10 @@ package org.craftercms.core.store;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
 import static org.craftercms.core.store.ContentStoreManifest.TYPE_FILE;
 import static org.craftercms.core.store.ContentStoreManifest.TYPE_LEVEL_DESCRIPTOR;
@@ -61,6 +64,19 @@ public class ContentStoreManifestTest {
 		ContentStoreManifest manifest = ContentStoreManifest.ofPaths(List.of("site\\website\\index.xml"));
 
 		assertEquals(List.of(new ContentStoreManifest.Item("/site/website/index.xml", TYPE_FILE)), manifest.getFiles());
+	}
+
+	@Test
+	public void testReadGzipJsonIgnoresUnknownProperties() throws Exception {
+		String json = "{\"schemaVersion\":2,\"files\":[{\"path\":\"/site/website/index.xml\",\"type\":\"file\",\"size\":12}]}";
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		try (GZIPOutputStream gzip = new GZIPOutputStream(out)) {
+			gzip.write(json.getBytes(StandardCharsets.UTF_8));
+		}
+
+		ContentStoreManifest restored = ContentStoreManifest.readGzipJson(new ByteArrayInputStream(out.toByteArray()));
+
+		assertEquals(List.of(new ContentStoreManifest.Item("/site/website/index.xml", TYPE_FILE)), restored.getFiles());
 	}
 
 }

@@ -47,7 +47,7 @@ public class S3Context extends ContextImpl {
 	private volatile ContentStoreIndex contentStoreIndex;
 
 	/**
-	 * True when the last manifest reload failed. The deployment events watcher retries the load on its next cycle.
+	 * True when the last manifest load failed. The deployment events watcher retries the load on its next cycle.
 	 */
 	private volatile boolean contentStoreManifestLoadFailed;
 
@@ -97,7 +97,7 @@ public class S3Context extends ContextImpl {
 	}
 
 	/**
-	 * @return true when the last manifest reload failed and should be retried
+	 * @return true when the last manifest load failed and should be retried
 	 */
 	public boolean isContentStoreManifestLoadFailed() {
 		return contentStoreManifestLoadFailed;
@@ -116,7 +116,7 @@ public class S3Context extends ContextImpl {
 	}
 
 	/**
-	 * Clears the index and records that the manifest reload failed. Folder lookups list S3 until a later load succeeds.
+	 * Clears the index and records that the manifest load failed. Folder lookups list S3 until a later load succeeds.
 	 */
 	public void markContentStoreManifestLoadFailed() {
 		this.contentStoreIndex = null;

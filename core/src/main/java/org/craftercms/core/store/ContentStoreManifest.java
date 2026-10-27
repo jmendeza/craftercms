@@ -15,6 +15,7 @@
  */
 package org.craftercms.core.store;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.craftercms.core.util.ContentStoreUtils;
 
@@ -39,6 +40,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
  * { "files": [ { "path": "/site/website/index.xml", "type": "file" }, { "path": "/site/website/crafter-level-descriptor.level.xml", "type": "levelDescriptor" } ] }
  * </pre>
  * Directories are not stored. {@link ContentStoreIndex} splits these paths into the children and type maps.
+ * Extra JSON properties are ignored so a newer document still loads on an older Engine.
  */
 public class ContentStoreManifest {
 
@@ -50,7 +52,8 @@ public class ContentStoreManifest {
 
 	public static final String LEVEL_DESCRIPTOR_FILE_NAME = "crafter-level-descriptor.level.xml";
 
-	private static final ObjectMapper MAPPER = new ObjectMapper();
+	private static final ObjectMapper MAPPER = new ObjectMapper()
+		.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
 	private List<Item> files = List.of();
 
