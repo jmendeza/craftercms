@@ -23,8 +23,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
-import static org.craftercms.core.store.ContentStoreManifest.TYPE_FILE;
-import static org.craftercms.core.store.ContentStoreManifest.TYPE_LEVEL_DESCRIPTOR;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -42,8 +40,8 @@ public class ContentStoreManifestTest {
 		));
 
 		assertEquals(List.of(
-			new ContentStoreManifest.Item("/site/website/crafter-level-descriptor.level.xml", TYPE_LEVEL_DESCRIPTOR),
-			new ContentStoreManifest.Item("/site/website/index.xml", TYPE_FILE)
+			new ContentStoreManifest.Item("/site/website/crafter-level-descriptor.level.xml"),
+			new ContentStoreManifest.Item("/site/website/index.xml")
 		), manifest.getFiles());
 	}
 
@@ -63,7 +61,7 @@ public class ContentStoreManifestTest {
 	public void testNormalizesSeparators() {
 		ContentStoreManifest manifest = ContentStoreManifest.ofPaths(List.of("site\\website\\index.xml"));
 
-		assertEquals(List.of(new ContentStoreManifest.Item("/site/website/index.xml", TYPE_FILE)), manifest.getFiles());
+		assertEquals(List.of(new ContentStoreManifest.Item("/site/website/index.xml")), manifest.getFiles());
 	}
 
 	@Test
@@ -76,7 +74,7 @@ public class ContentStoreManifestTest {
 
 		ContentStoreManifest restored = ContentStoreManifest.readGzipJson(new ByteArrayInputStream(out.toByteArray()));
 
-		assertEquals(List.of(new ContentStoreManifest.Item("/site/website/index.xml", TYPE_FILE)), restored.getFiles());
+		assertEquals(List.of(new ContentStoreManifest.Item("/site/website/index.xml")), restored.getFiles());
 	}
 
 }

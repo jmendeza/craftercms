@@ -21,8 +21,7 @@ import java.io.ByteArrayInputStream;
 import java.util.List;
 
 import static org.craftercms.core.store.ContentStoreIndex.TYPE_DIRECTORY;
-import static org.craftercms.core.store.ContentStoreManifest.TYPE_FILE;
-import static org.craftercms.core.store.ContentStoreManifest.TYPE_LEVEL_DESCRIPTOR;
+import static org.craftercms.core.store.ContentStoreIndex.TYPE_FILE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -44,7 +43,7 @@ public class ContentStoreIndexTest {
 		assertEquals(TYPE_DIRECTORY, index.typeOf("/site/website"));
 		assertEquals(TYPE_DIRECTORY, index.typeOf("/site/website/products"));
 		assertEquals(TYPE_FILE, index.typeOf("/site/website/index.xml"));
-		assertEquals(TYPE_LEVEL_DESCRIPTOR, index.typeOf("/site/website/crafter-level-descriptor.level.xml"));
+		assertEquals(TYPE_FILE, index.typeOf("/site/website/crafter-level-descriptor.level.xml"));
 		assertEquals(TYPE_FILE, index.typeOf("/templates/web/entry.ftl"));
 		assertNull(index.typeOf("/site/missing"));
 
@@ -65,23 +64,9 @@ public class ContentStoreIndexTest {
 
 		ContentStoreIndex index = ContentStoreIndex.from(restored);
 
-		assertEquals(TYPE_LEVEL_DESCRIPTOR, index.typeOf("/site/website/crafter-level-descriptor.level.xml"));
+		assertEquals(TYPE_FILE, index.typeOf("/site/website/crafter-level-descriptor.level.xml"));
 		assertEquals(TYPE_FILE, index.typeOf("/site/website/index.xml"));
 		assertEquals(List.of("crafter-level-descriptor.level.xml", "index.xml"), index.childrenOf("/site/website"));
-	}
-
-	@Test
-	public void testDirectoryTypeOnAnItemIsReclassified() {
-		ContentStoreManifest manifest = ContentStoreManifest.ofItems(List.of(
-			new ContentStoreManifest.Item("/site/website/index.xml", TYPE_DIRECTORY),
-			new ContentStoreManifest.Item("/site/website/crafter-level-descriptor.level.xml", "")
-		));
-
-		ContentStoreIndex index = ContentStoreIndex.from(manifest);
-
-		assertEquals(TYPE_FILE, index.typeOf("/site/website/index.xml"));
-		assertEquals(TYPE_LEVEL_DESCRIPTOR, index.typeOf("/site/website/crafter-level-descriptor.level.xml"));
-		assertEquals(TYPE_DIRECTORY, index.typeOf("/site/website"));
 	}
 
 	@Test

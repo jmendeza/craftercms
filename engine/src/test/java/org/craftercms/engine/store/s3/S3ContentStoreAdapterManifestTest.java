@@ -216,7 +216,7 @@ public class S3ContentStoreAdapterManifestTest {
 		S3Context created = createSiteContext();
 
 		assertNotNull(created.getContentStoreIndex());
-		assertEquals(ContentStoreManifest.TYPE_FILE, created.getContentStoreIndex().typeOf("/site/website/index.xml"));
+		assertEquals(ContentStoreIndex.TYPE_FILE, created.getContentStoreIndex().typeOf("/site/website/index.xml"));
 		assertFalse(created.isContentStoreManifestLoadFailed());
 		File folder = adapter.doFindFile(created, "/site/website");
 		assertNotNull(folder);

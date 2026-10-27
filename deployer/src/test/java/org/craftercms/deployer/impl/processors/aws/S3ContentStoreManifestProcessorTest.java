@@ -15,14 +15,12 @@
  */
 package org.craftercms.deployer.impl.processors.aws;
 
-import org.craftercms.core.store.ContentStoreManifest;
 import org.junit.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -51,8 +49,6 @@ public class S3ContentStoreManifestProcessorTest {
 		assertTrue(paths.contains("/site/website/crafter-level-descriptor.level.xml"));
 		assertFalse(paths.contains("/.git/config"));
 		assertFalse(paths.stream().anyMatch(path -> path.endsWith(".blob")));
-		assertEquals(ContentStoreManifest.TYPE_LEVEL_DESCRIPTOR,
-			ContentStoreManifest.typeFor("/site/website/crafter-level-descriptor.level.xml"));
 	}
 
 }

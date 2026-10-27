@@ -22,7 +22,6 @@ import org.craftercms.core.util.ContentStoreUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -37,20 +36,14 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
  * <p>
  * Deployer writes this document and Engine reads the same list back. The on-disk form is gzip-compressed JSON:
  * <pre>
- * { "files": [ { "path": "/site/website/index.xml", "type": "file" }, { "path": "/site/website/crafter-level-descriptor.level.xml", "type": "levelDescriptor" } ] }
+ * { "files": [ { "path": "/site/website/index.xml" }, { "path": "/site/website/crafter-level-descriptor.level.xml" } ] }
  * </pre>
- * Directories are not stored. {@link ContentStoreIndex} splits these paths into the children and type maps.
+ * Each entry is a path. Engine derives existence and parent directories from those paths.
  * Extra JSON properties are ignored so a newer document still loads on an older Engine.
  */
 public class ContentStoreManifest {
 
 	public static final String FILE_NAME = "content-store-manifest.json.gz";
-
-	public static final String TYPE_FILE = "file";
-
-	public static final String TYPE_LEVEL_DESCRIPTOR = "levelDescriptor";
-
-	public static final String LEVEL_DESCRIPTOR_FILE_NAME = "crafter-level-descriptor.level.xml";
 
 	private static final ObjectMapper MAPPER = new ObjectMapper()
 		.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
@@ -74,8 +67,6 @@ public class ContentStoreManifest {
 
 		private String path;
 
-		private String type;
-
 		/**
 		 * Used by Jackson when reading a file entry.
 		 */
@@ -84,11 +75,9 @@ public class ContentStoreManifest {
 
 		/**
 		 * @param path store path, with a leading slash and no trailing slash
-		 * @param type {@link ContentStoreManifest#TYPE_FILE} or {@link ContentStoreManifest#TYPE_LEVEL_DESCRIPTOR}
 		 */
-		public Item(String path, String type) {
+		public Item(String path) {
 			this.path = path;
-			this.type = type;
 		}
 
 		/**
@@ -105,20 +94,6 @@ public class ContentStoreManifest {
 			this.path = path;
 		}
 
-		/**
-		 * @return {@link ContentStoreManifest#TYPE_FILE} or {@link ContentStoreManifest#TYPE_LEVEL_DESCRIPTOR}
-		 */
-		public String getType() {
-			return type;
-		}
-
-		/**
-		 * @param type the file type
-		 */
-		public void setType(String type) {
-			this.type = type;
-		}
-
 		@Override
 		public boolean equals(Object obj) {
 			if (this == obj) {
@@ -127,33 +102,18 @@ public class ContentStoreManifest {
 			if (!(obj instanceof Item other)) {
 				return false;
 			}
-			return Objects.equals(path, other.path) && Objects.equals(type, other.type);
+			return Objects.equals(path, other.path);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(path, type);
+			return Objects.hash(path);
 		}
 
 	}
 
 	/**
-	 * @param path a content-store path
-	 * @return {@link #TYPE_LEVEL_DESCRIPTOR} when the file is a level descriptor, otherwise {@link #TYPE_FILE}
-	 */
-	public static String typeFor(String path) {
-		String normalized = normalize(path);
-		int slash = normalized.lastIndexOf('/');
-		String name = slash >= 0 ? normalized.substring(slash + 1) : normalized;
-		if (LEVEL_DESCRIPTOR_FILE_NAME.equals(name)) {
-			return TYPE_LEVEL_DESCRIPTOR;
-		}
-		return TYPE_FILE;
-	}
-
-	/**
-	 * Builds the file list Deployer uploads. Each path is stored with {@link #typeFor(String)}.
-	 * Duplicate paths keep the last occurrence.
+	 * Builds the file list Deployer uploads. Duplicate paths keep the last occurrence.
 	 *
 	 * @param paths repo paths of the files uploaded to S3
 	 * @return the manifest document
@@ -166,29 +126,10 @@ public class ContentStoreManifest {
 					continue;
 				}
 				String normalized = normalize(path);
-				byPath.put(normalized, new Item(normalized, typeFor(normalized)));
+				byPath.put(normalized, new Item(normalized));
 			}
 		}
 		return new ContentStoreManifest(List.copyOf(byPath.values()));
-	}
-
-	/**
-	 * Builds a manifest from an existing file list. Empty paths are skipped.
-	 *
-	 * @param items published files
-	 * @return the manifest document
-	 */
-	public static ContentStoreManifest ofItems(Collection<Item> items) {
-		List<Item> files = new ArrayList<>();
-		if (items != null) {
-			for (Item item : items) {
-				if (item == null || isEmpty(item.getPath())) {
-					continue;
-				}
-				files.add(new Item(normalize(item.getPath()), item.getType()));
-			}
-		}
-		return new ContentStoreManifest(List.copyOf(files));
 	}
 
 	/**
