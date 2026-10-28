@@ -65,6 +65,19 @@ public class ContentStoreManifestTest {
 	}
 
 	@Test
+	public void testCollapsesDuplicateSlashes() {
+		ContentStoreManifest manifest = ContentStoreManifest.ofPaths(List.of(
+			"//site//website///index.xml/",
+			"site\\/website\\/about.xml"
+		));
+
+		assertEquals(List.of(
+			new ContentStoreManifest.Item("/site/website/about.xml"),
+			new ContentStoreManifest.Item("/site/website/index.xml")
+		), manifest.getFiles());
+	}
+
+	@Test
 	public void testReadGzipJsonIgnoresUnknownProperties() throws Exception {
 		String json = "{\"schemaVersion\":2,\"files\":[{\"path\":\"/site/website/index.xml\",\"type\":\"file\",\"size\":12}]}";
 		ByteArrayOutputStream out = new ByteArrayOutputStream();

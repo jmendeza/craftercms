@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -47,6 +48,8 @@ public class ContentStoreManifest {
 
 	private static final ObjectMapper MAPPER = new ObjectMapper()
 		.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
+	private static final Pattern DUPLICATE_SLASHES = Pattern.compile("/+");
 
 	private List<Item> files = List.of();
 
@@ -175,10 +178,14 @@ public class ContentStoreManifest {
 
 	/**
 	 * Normalizes a repo or store path to a leading-slash path without a trailing slash.
+	 * Paths that already use single forward slashes skip separator collapsing.
 	 */
 	public static String normalize(String path) {
-		String normalized = path.replace('\\', '/').replaceAll("/+", "/");
-		return ContentStoreUtils.normalizePath(normalized);
+		if (path.indexOf('\\') < 0 && path.indexOf("//") < 0) {
+			return ContentStoreUtils.normalizePath(path);
+		}
+		String collapsed = DUPLICATE_SLASHES.matcher(path.replace('\\', '/')).replaceAll("/");
+		return ContentStoreUtils.normalizePath(collapsed);
 	}
 
 }

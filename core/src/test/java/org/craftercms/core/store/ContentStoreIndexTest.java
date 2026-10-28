@@ -75,6 +75,8 @@ public class ContentStoreIndexTest {
 
 		assertEquals(TYPE_FILE, index.typeOf("site\\website\\index.xml"));
 		assertEquals(TYPE_DIRECTORY, index.typeOf("site\\website"));
+		assertEquals(TYPE_FILE, index.typeOf("//site//website//index.xml/"));
+		assertEquals(TYPE_DIRECTORY, index.typeOf("site\\/website"));
 	}
 
 }

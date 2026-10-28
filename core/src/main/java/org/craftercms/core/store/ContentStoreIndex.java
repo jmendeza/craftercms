@@ -55,19 +55,22 @@ public class ContentStoreIndex {
 	 * @return the directory index
 	 */
 	public static ContentStoreIndex from(ContentStoreManifest manifest) {
-		Map<String, String> types = new HashMap<>();
-		Map<String, TreeSet<String>> childNames = new HashMap<>();
+		List<ContentStoreManifest.Item> files = manifest == null || manifest.getFiles() == null
+			? List.of() : manifest.getFiles();
+		// Each file also records its parent directories. Four entries per file covers a typical
+		// /site/website/... path, including shared parents, without resizing at large manifests.
+		int capacity = files.size() > Integer.MAX_VALUE / 4 ? Integer.MAX_VALUE : files.size() * 4;
+		Map<String, String> types = HashMap.newHashMap(capacity);
+		Map<String, TreeSet<String>> childNames = HashMap.newHashMap(capacity);
 
-		if (manifest != null && manifest.getFiles() != null) {
-			for (ContentStoreManifest.Item item : manifest.getFiles()) {
-				if (item == null || isEmpty(item.getPath())) {
-					continue;
-				}
-				addFile(types, childNames, ContentStoreManifest.normalize(item.getPath()));
+		for (ContentStoreManifest.Item item : files) {
+			if (item == null || isEmpty(item.getPath())) {
+				continue;
 			}
+			addFile(types, childNames, ContentStoreManifest.normalize(item.getPath()));
 		}
 
-		Map<String, List<String>> children = new HashMap<>();
+		Map<String, List<String>> children = HashMap.newHashMap(childNames.size());
 		childNames.forEach((directory, names) -> children.put(directory, List.copyOf(names)));
 		return new ContentStoreIndex(types, children);
 	}

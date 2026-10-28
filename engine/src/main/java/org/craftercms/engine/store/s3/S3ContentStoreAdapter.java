@@ -436,10 +436,11 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 
 	protected File findFileInIndex(ContentStoreIndex index, S3Context context, String bucketName,
 				       String key, String path) {
-		if (index.typeOf(path) == null) {
+		String type = index.typeOf(path);
+		if (type == null) {
 			return null;
 		}
-		if (index.isDirectory(path)) {
+		if (ContentStoreIndex.TYPE_DIRECTORY.equals(type)) {
 			return new S3Prefix(bucketName, key);
 		}
 		return getObject(context, client, bucketName, key);
