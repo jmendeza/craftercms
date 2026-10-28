@@ -47,10 +47,13 @@ public class ContentStoreIndexTest {
 		assertEquals(TYPE_FILE, index.typeOf("/templates/web/entry.ftl"));
 		assertNull(index.typeOf("/site/missing"));
 
-		assertEquals(List.of("site", "templates"), index.childrenOf("/"));
-		assertEquals(List.of("crafter-level-descriptor.level.xml", "index.xml", "products"),
+		assertEquals(List.of("/site", "/templates"), index.childrenOf("/"));
+		assertEquals(List.of(
+			"/site/website/crafter-level-descriptor.level.xml",
+			"/site/website/index.xml",
+			"/site/website/products"),
 			index.childrenOf("/site/website"));
-		assertEquals(List.of("index.xml"), index.childrenOf("/site/website/products"));
+		assertEquals(List.of("/site/website/products/index.xml"), index.childrenOf("/site/website/products"));
 		assertEquals(List.of(), index.childrenOf("/site/missing"));
 	}
 
@@ -66,7 +69,10 @@ public class ContentStoreIndexTest {
 
 		assertEquals(TYPE_FILE, index.typeOf("/site/website/crafter-level-descriptor.level.xml"));
 		assertEquals(TYPE_FILE, index.typeOf("/site/website/index.xml"));
-		assertEquals(List.of("crafter-level-descriptor.level.xml", "index.xml"), index.childrenOf("/site/website"));
+		assertEquals(List.of(
+			"/site/website/crafter-level-descriptor.level.xml",
+			"/site/website/index.xml"),
+			index.childrenOf("/site/website"));
 	}
 
 	@Test

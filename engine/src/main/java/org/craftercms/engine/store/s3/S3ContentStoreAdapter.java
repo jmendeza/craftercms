@@ -450,11 +450,10 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 					       S3Prefix directory, boolean ignoreHiddenFiles) {
 		String storePath = storePathFromS3Key(context, directory.getPrefix());
 		List<File> children = new CachingAwareList<>();
-		for (String name : index.childrenOf(storePath)) {
-			if (ignoreHiddenFiles && isHidden(name)) {
+		for (String childPath : index.childrenOf(storePath)) {
+			if (ignoreHiddenFiles && isHidden(childPath)) {
 				continue;
 			}
-			String childPath = ContentStoreIndex.ROOT_PATH.equals(storePath) ? DELIMITER + name : storePath + DELIMITER + name;
 			String childKey = toS3Key(context, childPath);
 			if (index.isDirectory(childPath)) {
 				children.add(new S3Prefix(bucketName, childKey));

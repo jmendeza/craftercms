@@ -23,14 +23,13 @@ import java.util.Map;
 import java.util.TreeSet;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 /**
  * Directory index built from a {@link ContentStoreManifest}.
  * <p>
- * Each file path is split into its parent directories. Each path is stored once, with its type and direct child
- * names, so existence and children lookups do not need to list the bucket. Every listed path is a file, and every
- * parent path is a directory. A published file is never the parent of another file.
+ * Each file path is split into its parent directories. Each path is stored once, with its type and the full paths
+ * of its direct children, so existence and children lookups do not need to list the bucket. Every listed path is a
+ * file, and every parent path is a directory. A published file is never the parent of another file.
  */
 public class ContentStoreIndex {
 
@@ -96,7 +95,7 @@ public class ContentStoreIndex {
 
 	/**
 	 * @param path a directory path
-	 * @return the direct child names, sorted. Empty when the directory is not in the index.
+	 * @return the direct child paths, sorted. Empty when the directory is not in the index.
 	 */
 	public List<String> childrenOf(String path) {
 		Entry entry = entryOf(path);
@@ -109,16 +108,11 @@ public class ContentStoreIndex {
 
 	private static void addFile(Map<String, MutableEntry> entries, String path) {
 		entries.computeIfAbsent(path, key -> MutableEntry.file());
-
-		String parent = FilenameUtils.getFullPathNoEndSeparator(path);
-		String name = FilenameUtils.getName(path);
-		while (isNotEmpty(name)) {
-			entries.computeIfAbsent(parent, key -> MutableEntry.directory()).addChild(name);
-			if (ROOT_PATH.equals(parent)) {
-				break;
-			}
-			name = FilenameUtils.getName(parent);
-			parent = FilenameUtils.getFullPathNoEndSeparator(parent);
+		String childPath = path;
+		while (!ROOT_PATH.equals(childPath)) {
+			String parentPath = FilenameUtils.getFullPathNoEndSeparator(childPath);
+			entries.computeIfAbsent(parentPath, key -> MutableEntry.directory()).addChild(childPath);
+			childPath = parentPath;
 		}
 	}
 
@@ -145,7 +139,7 @@ public class ContentStoreIndex {
 
 		private final boolean file;
 
-		private TreeSet<String> childNames;
+		private TreeSet<String> children;
 
 		private MutableEntry(boolean file) {
 			this.file = file;
@@ -159,16 +153,16 @@ public class ContentStoreIndex {
 			return new MutableEntry(false);
 		}
 
-		private void addChild(String name) {
-			if (childNames == null) {
-				childNames = new TreeSet<>();
+		private void addChild(String childPath) {
+			if (children == null) {
+				children = new TreeSet<>();
 			}
-			childNames.add(name);
+			children.add(childPath);
 		}
 
 		private Entry toEntry() {
-			List<String> names = childNames == null ? List.of() : List.copyOf(childNames);
-			return new Entry(!file, names);
+			List<String> childPaths = children == null ? List.of() : List.copyOf(children);
+			return new Entry(!file, childPaths);
 		}
 
 	}
