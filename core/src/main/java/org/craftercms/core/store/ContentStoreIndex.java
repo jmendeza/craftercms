@@ -15,6 +15,8 @@
  */
 package org.craftercms.core.store;
 
+import org.apache.commons.io.FilenameUtils;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,9 +28,9 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 /**
  * Directory index built from a {@link ContentStoreManifest}.
  * <p>
- * Each file path is split into its parent directories. Those directories are recorded in the type map and in the
- * children map so existence and children lookups do not need to list the bucket. Every listed path is a file,
- * and every parent path is a directory.
+ * Each file path is split into its parent directories. Each path is stored once, with its type and direct child
+ * names, so existence and children lookups do not need to list the bucket. Every listed path is a file, and every
+ * parent path is a directory. A published file is never the parent of another file.
  */
 public class ContentStoreIndex {
 
@@ -38,17 +40,14 @@ public class ContentStoreIndex {
 
 	public static final String ROOT_PATH = "/";
 
-	private final Map<String, String> types;
+	private final Map<String, Entry> entries;
 
-	private final Map<String, List<String>> children;
-
-	private ContentStoreIndex(Map<String, String> types, Map<String, List<String>> children) {
-		this.types = types;
-		this.children = children;
+	private ContentStoreIndex(Map<String, Entry> entries) {
+		this.entries = entries;
 	}
 
 	/**
-	 * Splits the manifest's file paths into the children and type maps.
+	 * Splits the manifest's file paths into one path map.
 	 * Every path is a file. Parent directories are derived from those paths.
 	 *
 	 * @param manifest the flat file list read from S3, or null
@@ -60,19 +59,18 @@ public class ContentStoreIndex {
 		// Each file also records its parent directories. Four entries per file covers a typical
 		// /site/website/... path, including shared parents, without resizing at large manifests.
 		int capacity = files.size() > Integer.MAX_VALUE / 4 ? Integer.MAX_VALUE : files.size() * 4;
-		Map<String, String> types = HashMap.newHashMap(capacity);
-		Map<String, TreeSet<String>> childNames = HashMap.newHashMap(capacity);
+		Map<String, MutableEntry> building = HashMap.newHashMap(capacity);
 
 		for (ContentStoreManifest.Item item : files) {
 			if (item == null || isEmpty(item.getPath())) {
 				continue;
 			}
-			addFile(types, childNames, ContentStoreManifest.normalize(item.getPath()));
+			addFile(building, ContentStoreManifest.normalize(item.getPath()));
 		}
 
-		Map<String, List<String>> children = HashMap.newHashMap(childNames.size());
-		childNames.forEach((directory, names) -> children.put(directory, List.copyOf(names)));
-		return new ContentStoreIndex(types, children);
+		Map<String, Entry> entries = HashMap.newHashMap(building.size());
+		building.forEach((path, node) -> entries.put(path, node.toEntry()));
+		return new ContentStoreIndex(entries);
 	}
 
 	/**
@@ -80,7 +78,11 @@ public class ContentStoreIndex {
 	 * @return the entry type, or null when the path is not in the index
 	 */
 	public String typeOf(String path) {
-		return types.get(ContentStoreManifest.normalize(path));
+		Entry entry = entryOf(path);
+		if (entry == null) {
+			return null;
+		}
+		return entry.directory ? TYPE_DIRECTORY : TYPE_FILE;
 	}
 
 	/**
@@ -88,7 +90,8 @@ public class ContentStoreIndex {
 	 * @return true when the path is a directory derived from a published file
 	 */
 	public boolean isDirectory(String path) {
-		return TYPE_DIRECTORY.equals(typeOf(path));
+		Entry entry = entryOf(path);
+		return entry != null && entry.directory;
 	}
 
 	/**
@@ -96,43 +99,78 @@ public class ContentStoreIndex {
 	 * @return the direct child names, sorted. Empty when the directory is not in the index.
 	 */
 	public List<String> childrenOf(String path) {
-		List<String> names = children.get(ContentStoreManifest.normalize(path));
-		return names == null ? List.of() : names;
+		Entry entry = entryOf(path);
+		return entry == null ? List.of() : entry.children;
 	}
 
-	private static void addFile(Map<String, String> types, Map<String, TreeSet<String>> childNames, String path) {
-		types.put(path, TYPE_FILE);
+	private Entry entryOf(String path) {
+		return entries.get(ContentStoreManifest.normalize(path));
+	}
 
-		String parent = parentOf(path);
-		String name = nameOf(path);
+	private static void addFile(Map<String, MutableEntry> entries, String path) {
+		entries.computeIfAbsent(path, key -> MutableEntry.file());
+
+		String parent = FilenameUtils.getFullPathNoEndSeparator(path);
+		String name = FilenameUtils.getName(path);
 		while (isNotEmpty(name)) {
-			childNames.computeIfAbsent(parent, key -> new TreeSet<>()).add(name);
-			types.putIfAbsent(parent, TYPE_DIRECTORY);
+			entries.computeIfAbsent(parent, key -> MutableEntry.directory()).addChild(name);
 			if (ROOT_PATH.equals(parent)) {
 				break;
 			}
-			name = nameOf(parent);
-			parent = parentOf(parent);
+			name = FilenameUtils.getName(parent);
+			parent = FilenameUtils.getFullPathNoEndSeparator(parent);
 		}
 	}
 
-	private static String parentOf(String path) {
-		if (ROOT_PATH.equals(path)) {
-			return ROOT_PATH;
+	/**
+	 * One indexed path. A file has an empty child list.
+	 */
+	private static final class Entry {
+
+		private final boolean directory;
+
+		private final List<String> children;
+
+		private Entry(boolean directory, List<String> children) {
+			this.directory = directory;
+			this.children = children;
 		}
-		int slash = path.lastIndexOf('/');
-		if (slash <= 0) {
-			return ROOT_PATH;
-		}
-		return path.substring(0, slash);
+
 	}
 
-	private static String nameOf(String path) {
-		if (ROOT_PATH.equals(path)) {
-			return "";
+	/**
+	 * Path accumulated while the manifest is read.
+	 */
+	private static final class MutableEntry {
+
+		private final boolean file;
+
+		private TreeSet<String> childNames;
+
+		private MutableEntry(boolean file) {
+			this.file = file;
 		}
-		int slash = path.lastIndexOf('/');
-		return slash >= 0 ? path.substring(slash + 1) : path;
+
+		private static MutableEntry file() {
+			return new MutableEntry(true);
+		}
+
+		private static MutableEntry directory() {
+			return new MutableEntry(false);
+		}
+
+		private void addChild(String name) {
+			if (childNames == null) {
+				childNames = new TreeSet<>();
+			}
+			childNames.add(name);
+		}
+
+		private Entry toEntry() {
+			List<String> names = childNames == null ? List.of() : List.copyOf(childNames);
+			return new Entry(!file, names);
+		}
+
 	}
 
 }
