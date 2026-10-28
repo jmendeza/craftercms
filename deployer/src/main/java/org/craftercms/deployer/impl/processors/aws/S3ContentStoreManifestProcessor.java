@@ -16,6 +16,7 @@
 package org.craftercms.deployer.impl.processors.aws;
 
 import static org.eclipse.jgit.lib.Constants.DOT_GIT;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.configuration2.Configuration;
 import org.craftercms.commons.config.ConfigurationException;
 import org.craftercms.core.store.ContentStoreManifest;
@@ -26,24 +27,32 @@ import org.craftercms.deployer.api.exceptions.DeployerException;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.beans.ConstructorProperties;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.Strings.CS;
 import static org.craftercms.commons.config.ConfigUtils.getBooleanProperty;
 
 /**
- * Writes a single content-store manifest to S3, overwriting it on every publish.
+ * Writes a single content-store manifest to S3.
  * The manifest lists every file uploaded for the site so Engine can answer folder
  * existence and children lookups without listing the bucket.
+ * <p>
+ * A publish that only updates existing files does not change that list. When a manifest
+ * is already in the bucket, the processor leaves it in place. Created files, deleted files,
+ * or a missing manifest rebuild it from the local repository.
  * <p>
  * Runs after the S3 sync and before {@link S3DeploymentEventsProcessor}, so the
  * deployment-events signal is published only after the manifest is in place.
@@ -59,6 +68,8 @@ public class S3ContentStoreManifestProcessor extends AbstractS3Processor {
 	public static final String CONFIG_KEY_IGNORE_BLOBS = "ignoreBlobs";
 
 	private static final String GIT_ROOT = DOT_GIT + "/";
+
+	private static final int NOT_FOUND = 404;
 
 	protected String localRepoUrl;
 
@@ -84,6 +95,12 @@ public class S3ContentStoreManifestProcessor extends AbstractS3Processor {
 	@Override
 	protected ChangeSet doMainProcess(Deployment deployment, ProcessorExecution execution, ChangeSet filteredChangeSet,
 					  ChangeSet originalChangeSet) throws DeployerException {
+		if (!manifestFileListChanged(filteredChangeSet) && currentManifestExists()) {
+			logger.info("Skipping content store manifest rebuild for s3://{}/{} because this publish did not create or delete files",
+				getBucket(), getS3Key(ContentStoreManifest.FILE_NAME));
+			return null;
+		}
+
 		Path repoRoot = Path.of(localRepoUrl);
 		if (!Files.isDirectory(repoRoot)) {
 			throw new DeployerException("Local repository does not exist @ " + repoRoot);
@@ -122,8 +139,43 @@ public class S3ContentStoreManifestProcessor extends AbstractS3Processor {
 	}
 
 	/**
+	 * Created and deleted files change the manifest. Updates do not. A missing change set is rebuilt
+	 * because the file list cannot be confirmed.
+	 */
+	protected boolean manifestFileListChanged(ChangeSet changeSet) {
+		if (changeSet == null) {
+			return true;
+		}
+		return CollectionUtils.isNotEmpty(changeSet.getCreatedFiles())
+			|| CollectionUtils.isNotEmpty(changeSet.getDeletedFiles());
+	}
+
+	/**
+	 * @return true when the manifest object is already in the bucket. A missing object, or a check that
+	 * fails, returns false so the caller rebuilds the manifest.
+	 */
+	protected boolean currentManifestExists() {
+		String bucket = getBucket();
+		String key = getS3Key(ContentStoreManifest.FILE_NAME);
+		try (S3Client client = buildClient()) {
+			client.headObject(HeadObjectRequest.builder().bucket(bucket).key(key).build());
+			return true;
+		} catch (S3Exception e) {
+			if (e.statusCode() == NOT_FOUND) {
+				logger.info("Content store manifest s3://{}/{} was not found. Rebuilding it", bucket, key);
+			} else {
+				logger.warn("Unable to check content store manifest s3://{}/{}. Rebuilding it", bucket, key, e);
+			}
+			return false;
+		} catch (Exception e) {
+			logger.warn("Unable to check content store manifest s3://{}/{}. Rebuilding it", bucket, key, e);
+			return false;
+		}
+	}
+
+	/**
 	 * Lists the files in the local repository that S3 sync uploads.
-	 * {@code .git} and, when configured, blob pointer files are skipped.
+	 * {@code .git} directories are not entered. Blob pointer files are skipped when configured.
 	 *
 	 * @param repoRoot the local git working tree
 	 * @return store paths beginning with {@code /}
@@ -131,21 +183,35 @@ public class S3ContentStoreManifestProcessor extends AbstractS3Processor {
 	 */
 	protected List<String> listPublishedFiles(Path repoRoot) throws IOException {
 		List<String> paths = new ArrayList<>();
-		try (Stream<Path> walk = Files.walk(repoRoot)) {
-			walk.filter(Files::isRegularFile).forEach(file -> {
+		Files.walkFileTree(repoRoot, new SimpleFileVisitor<>() {
+			@Override
+			public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+				Path fileName = dir.getFileName();
+				if (!dir.equals(repoRoot) && fileName != null && DOT_GIT.equals(fileName.toString())) {
+					return FileVisitResult.SKIP_SUBTREE;
+				}
+				return FileVisitResult.CONTINUE;
+			}
+
+			@Override
+			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+				if (!attrs.isRegularFile()) {
+					return FileVisitResult.CONTINUE;
+				}
 				String relative = repoRoot.relativize(file).toString().replace('\\', '/');
-				if (relative.equals(DOT_GIT) || relative.startsWith(GIT_ROOT)) {
-					return;
+				if (DOT_GIT.equals(relative) || relative.startsWith(GIT_ROOT)) {
+					return FileVisitResult.CONTINUE;
 				}
 				if (ignoreBlobs && CS.endsWith(relative, blobExtension)) {
-					return;
+					return FileVisitResult.CONTINUE;
 				}
 				String storePath = "/" + relative;
 				if (shouldIncludeFile(storePath)) {
 					paths.add(storePath);
 				}
-			});
-		}
+				return FileVisitResult.CONTINUE;
+			}
+		});
 		return paths;
 	}
 
