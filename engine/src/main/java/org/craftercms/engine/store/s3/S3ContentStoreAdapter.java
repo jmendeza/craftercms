@@ -133,22 +133,22 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 		String rootKey = uri.key().orElse("");
 		// A missing manifest is null and uses the list path below. Any other read failure uses that same
 		// path and is marked so the deployment events watcher retries the load.
-		ContentStoreIndex index = null;
+		ManifestLoad load = null;
 		boolean manifestLoadFailed = false;
 		try {
-			index = fetchContentStoreManifest(bucketName, rootKey);
+			load = fetchContentStoreManifest(bucketName, rootKey, null);
 		} catch (RuntimeException e) {
 			logger.warn("Unable to load content store manifest from s3://{}/{}. Folder lookups will list S3",
 				bucketName, toManifestKey(rootKey), e);
 			manifestLoadFailed = true;
 		}
-		if (index != null) {
-			if (index.typeOf(ContentStoreIndex.ROOT_PATH) == null) {
+		if (load != null && load.index != null) {
+			if (load.index.typeOf(ContentStoreIndex.ROOT_PATH) == null) {
 				throw new RootFolderNotFoundException(format("Root folder '%s' not found", rootFolderPath));
 			}
 			S3Context context = new S3Context(id, this, rootFolderPath, mergingOn, cacheOn, maxAllowedItemsInCache,
 				ignoreHiddenFiles, uri, configurationVariables);
-			context.setContentStoreIndex(index);
+			context.setContentStoreIndex(load.index, load.eTag);
 			return context;
 		}
 
@@ -200,15 +200,17 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 
 	/**
 	 * Fetches the manifest, builds the directory index, and replaces the one held by the context.
-	 * A failed fetch clears the index under the context lock so lookups list S3, marks the context
-	 * so the deployment events watcher retries the load, then rethrows the failure.
+	 * When the context already has a manifest ETag, the fetch is conditional. An unchanged manifest
+	 * leaves the current index in place. A failed fetch clears the index under the context lock so
+	 * lookups list S3, marks the context so the deployment events watcher retries the load, then rethrows.
 	 *
 	 * @param context the S3 context
 	 */
 	public void reloadContentStoreManifest(S3Context context) {
-		ContentStoreIndex index;
+		String currentETag = context.getContentStoreManifestETag();
+		ManifestLoad load;
 		try {
-			index = fetchContentStoreManifest(context.getBucket(), context.getKey());
+			load = fetchContentStoreManifest(context.getBucket(), context.getKey(), currentETag);
 		} catch (RuntimeException e) {
 			synchronized (context.getContentStoreIndexLock()) {
 				context.markContentStoreManifestLoadFailed();
@@ -216,7 +218,11 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 			throw e;
 		}
 		synchronized (context.getContentStoreIndexLock()) {
-			context.setContentStoreIndex(index);
+			if (!load.notModified) {
+				context.setContentStoreIndex(load.index, load.eTag);
+			} else if (currentETag.equals(context.getContentStoreManifestETag())) {
+				context.retainContentStoreManifest();
+			}
 		}
 	}
 
@@ -379,36 +385,48 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 			if (context.isContentStoreIndexResolved()) {
 				return context.getContentStoreIndex();
 			}
-			context.setContentStoreIndex(fetchContentStoreManifest(context.getBucket(), context.getKey()));
+			ManifestLoad load = fetchContentStoreManifest(context.getBucket(), context.getKey(), null);
+			context.setContentStoreIndex(load.index, load.eTag);
 			return context.getContentStoreIndex();
 		}
 	}
 
 	/**
 	 * GETs the manifest object and builds the directory index from its file list.
-	 * {@link NoSuchKeyException} is an absent manifest, not a failed read.
+	 * A stored ETag is sent as {@code If-None-Match}. {@link NoSuchKeyException} is an absent manifest, not a failed read.
+	 * A {@code 304 Not Modified} response does not carry a new index.
+	 *
+	 * @param bucketName  the site bucket
+	 * @param rootKey     the site prefix
+	 * @param currentETag the ETag from the previous load, or null to fetch unconditionally
 	 */
-	protected ContentStoreIndex fetchContentStoreManifest(String bucketName, String rootKey) {
+	protected ManifestLoad fetchContentStoreManifest(String bucketName, String rootKey, String currentETag) {
 		String manifestKey = toManifestKey(rootKey);
 		logger.debug("Loading content store manifest from s3://{}/{}", bucketName, manifestKey);
 
-		GetObjectRequest request = GetObjectRequest.builder()
+		GetObjectRequest.Builder request = GetObjectRequest.builder()
 			.bucket(bucketName)
-			.key(manifestKey)
-			.build();
-		try (ResponseInputStream<GetObjectResponse> object = client.getObject(request)) {
+			.key(manifestKey);
+		if (isNotEmpty(currentETag)) {
+			request.ifNoneMatch(currentETag);
+		}
+		try (ResponseInputStream<GetObjectResponse> object = client.getObject(request.build())) {
 			ContentStoreManifest manifest = ContentStoreManifest.readGzipJson(object);
 			logger.info("Loaded content store manifest from s3://{}/{}", bucketName, manifestKey);
-			return ContentStoreIndex.from(manifest);
+			return new ManifestLoad(ContentStoreIndex.from(manifest), object.response().eTag(), false);
 		} catch (NoSuchKeyException e) {
 			logger.info("Content store manifest s3://{}/{} was not found. Folder lookups will list S3",
 				bucketName, manifestKey);
-			return null;
+			return new ManifestLoad(null, null, false);
 		} catch (S3Exception e) {
+			if (e.statusCode() == HttpStatus.SC_NOT_MODIFIED) {
+				logger.info("Content store manifest s3://{}/{} is unchanged", bucketName, manifestKey);
+				return new ManifestLoad(null, currentETag, true);
+			}
 			if (e.statusCode() == HttpStatus.SC_NOT_FOUND) {
 				logger.info("Content store manifest s3://{}/{} was not found. Folder lookups will list S3",
 					bucketName, manifestKey);
-				return null;
+				return new ManifestLoad(null, null, false);
 			}
 			throw new StoreException(format("Error loading content store manifest from s3://%s/%s", bucketName, manifestKey), e);
 		} catch (IOException e) {
@@ -556,6 +574,23 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 			.build();
 
 		return () -> client.getObject(getObjectRequest);
+	}
+
+	/**
+	 * Result of reading the content store manifest. {@code notModified} means S3 returned 304 and {@code index} is unset.
+	 */
+	private static final class ManifestLoad {
+
+		private final ContentStoreIndex index;
+		private final String eTag;
+		private final boolean notModified;
+
+		private ManifestLoad(ContentStoreIndex index, String eTag, boolean notModified) {
+			this.index = index;
+			this.eTag = eTag;
+			this.notModified = notModified;
+		}
+
 	}
 
 }

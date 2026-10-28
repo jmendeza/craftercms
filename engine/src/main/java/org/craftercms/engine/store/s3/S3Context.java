@@ -51,6 +51,11 @@ public class S3Context extends ContextImpl {
 	 */
 	private volatile boolean contentStoreManifestLoadFailed;
 
+	/**
+	 * ETag of the manifest object the current index was built from. Null when the manifest is absent or the last load failed.
+	 */
+	private volatile String contentStoreManifestETag;
+
 	private final Object contentStoreIndexLock = new Object();
 
 	public S3Context(final String id, final ContentStoreAdapter storeAdapter, final String rootFolderPath,
@@ -104,13 +109,40 @@ public class S3Context extends ContextImpl {
 	}
 
 	/**
+	 * @return the ETag of the manifest the current index was built from, or null when there is nothing to revalidate
+	 */
+	public String getContentStoreManifestETag() {
+		return contentStoreManifestETag;
+	}
+
+	/**
 	 * Stores the index built from a manifest load. A null index means the manifest object does not exist and
-	 * folder lookups should list S3. A successful store clears a previous load failure.
+	 * folder lookups should list S3. A successful store clears a previous load failure and any ETag.
 	 *
 	 * @param contentStoreIndex the index built from the manifest, or null when the manifest is absent
 	 */
 	public void setContentStoreIndex(ContentStoreIndex contentStoreIndex) {
+		setContentStoreIndex(contentStoreIndex, null);
+	}
+
+	/**
+	 * Stores the index and the ETag of the manifest it was built from. A null index clears the ETag.
+	 * A successful store clears a previous load failure.
+	 *
+	 * @param contentStoreIndex the index built from the manifest, or null when the manifest is absent
+	 * @param eTag              the manifest ETag, kept only while an index is stored
+	 */
+	public void setContentStoreIndex(ContentStoreIndex contentStoreIndex, String eTag) {
 		this.contentStoreIndex = contentStoreIndex;
+		this.contentStoreManifestETag = contentStoreIndex == null ? null : eTag;
+		this.contentStoreIndexResolved = true;
+		this.contentStoreManifestLoadFailed = false;
+	}
+
+	/**
+	 * Keeps the current index and ETag after S3 reports that the manifest has not changed.
+	 */
+	public void retainContentStoreManifest() {
 		this.contentStoreIndexResolved = true;
 		this.contentStoreManifestLoadFailed = false;
 	}
@@ -120,6 +152,7 @@ public class S3Context extends ContextImpl {
 	 */
 	public void markContentStoreManifestLoadFailed() {
 		this.contentStoreIndex = null;
+		this.contentStoreManifestETag = null;
 		this.contentStoreIndexResolved = true;
 		this.contentStoreManifestLoadFailed = true;
 	}

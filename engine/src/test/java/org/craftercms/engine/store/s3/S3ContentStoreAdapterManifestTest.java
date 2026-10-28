@@ -48,6 +48,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
@@ -155,7 +156,8 @@ public class S3ContentStoreAdapterManifestTest {
 
 	@Test
 	public void testManifestLoadFailureClearsIndexAndRethrows() {
-		context.setContentStoreIndex(ContentStoreIndex.from(ContentStoreManifest.ofPaths(List.of("/site/website/index.xml"))));
+		context.setContentStoreIndex(ContentStoreIndex.from(ContentStoreManifest.ofPaths(List.of("/site/website/index.xml"))),
+			"\"manifest-1\"");
 		when(client.getObject(any(GetObjectRequest.class)))
 			.thenThrow(S3Exception.builder().statusCode(500).message("unavailable").build());
 		when(client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(ListObjectsV2Response.builder()
@@ -167,6 +169,7 @@ public class S3ContentStoreAdapterManifestTest {
 			fail("Expected StoreException");
 		} catch (StoreException expected) {
 			assertNull(context.getContentStoreIndex());
+			assertNull(context.getContentStoreManifestETag());
 			assertTrue(context.isContentStoreIndexResolved());
 			assertTrue(context.isContentStoreManifestLoadFailed());
 			assertTrue(S3ContentStoreAdapter.isContentStoreManifestLoadFailed(context));
@@ -218,10 +221,77 @@ public class S3ContentStoreAdapterManifestTest {
 		assertNotNull(created.getContentStoreIndex());
 		assertEquals(ContentStoreIndex.TYPE_FILE, created.getContentStoreIndex().typeOf("/site/website/index.xml"));
 		assertFalse(created.isContentStoreManifestLoadFailed());
+		assertNull(created.getContentStoreManifestETag());
 		File folder = adapter.doFindFile(created, "/site/website");
 		assertNotNull(folder);
 		assertTrue(folder.isDirectory());
 		verify(client, never()).listObjectsV2(any(ListObjectsV2Request.class));
+	}
+
+	@Test
+	public void testCreateContextStoresManifestETag() throws Exception {
+		String json = "{\"files\":[{\"path\":\"/site/website/index.xml\"}]}";
+		when(client.utilities()).thenReturn(S3Utilities.builder().region(Region.US_EAST_1).build());
+		when(client.getObject(any(GetObjectRequest.class))).thenReturn(objectWithETag(gzip(json), "\"manifest-1\""));
+
+		S3Context created = createSiteContext();
+
+		assertEquals("\"manifest-1\"", created.getContentStoreManifestETag());
+		assertNotNull(created.getContentStoreIndex());
+		verify(client).getObject(argThat((GetObjectRequest request) ->
+			request.ifNoneMatch() == null && "sites/acme/content-store-manifest.json.gz".equals(request.key())));
+	}
+
+	@Test
+	public void testReloadKeepsIndexWhenManifestIsUnchanged() {
+		ContentStoreIndex original = ContentStoreIndex.from(ContentStoreManifest.ofPaths(List.of("/site/website/index.xml")));
+		context.setContentStoreIndex(original, "\"manifest-1\"");
+		when(client.getObject(any(GetObjectRequest.class)))
+			.thenThrow(S3Exception.builder().statusCode(304).message("not modified").build());
+
+		adapter.reloadContentStoreManifest(context);
+
+		assertSame(original, context.getContentStoreIndex());
+		assertEquals("\"manifest-1\"", context.getContentStoreManifestETag());
+		assertFalse(context.isContentStoreManifestLoadFailed());
+		verify(client).getObject(argThat((GetObjectRequest request) ->
+			"\"manifest-1\"".equals(request.ifNoneMatch())
+				&& "sites/acme/content-store-manifest.json.gz".equals(request.key())));
+	}
+
+	@Test
+	public void testReloadReplacesIndexWhenManifestChanges() throws Exception {
+		context.setContentStoreIndex(ContentStoreIndex.from(ContentStoreManifest.ofPaths(List.of("/site/website/index.xml"))),
+			"\"manifest-1\"");
+		String json = "{\"files\":[{\"path\":\"/site/website/about.xml\"}]}";
+		when(client.getObject(any(GetObjectRequest.class))).thenReturn(objectWithETag(gzip(json), "\"manifest-2\""));
+
+		adapter.reloadContentStoreManifest(context);
+
+		assertEquals("\"manifest-2\"", context.getContentStoreManifestETag());
+		assertEquals(ContentStoreIndex.TYPE_FILE, context.getContentStoreIndex().typeOf("/site/website/about.xml"));
+		assertNull(context.getContentStoreIndex().typeOf("/site/website/index.xml"));
+		assertFalse(context.isContentStoreManifestLoadFailed());
+		verify(client).getObject(argThat((GetObjectRequest request) -> "\"manifest-1\"".equals(request.ifNoneMatch())));
+	}
+
+	@Test
+	public void testMissingManifestClearsStoredETag() {
+		context.setContentStoreIndex(ContentStoreIndex.from(ContentStoreManifest.ofPaths(List.of("/site/website/index.xml"))),
+			"\"manifest-1\"");
+		when(client.getObject(any(GetObjectRequest.class))).thenThrow(NoSuchKeyException.builder().message("missing").build());
+		when(client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(ListObjectsV2Response.builder()
+			.contents(software.amazon.awssdk.services.s3.model.S3Object.builder().key("sites/acme/site/").build())
+			.build());
+
+		adapter.reloadContentStoreManifest(context);
+
+		assertNull(context.getContentStoreIndex());
+		assertNull(context.getContentStoreManifestETag());
+		assertFalse(context.isContentStoreManifestLoadFailed());
+		File folder = adapter.doFindFile(context, "/site");
+		assertNotNull(folder);
+		assertTrue(folder.isDirectory());
 	}
 
 	private void assertCreateContextListsS3() {
@@ -233,6 +303,7 @@ public class S3ContentStoreAdapterManifestTest {
 		S3Context created = createSiteContext();
 
 		assertNull(created.getContentStoreIndex());
+		assertNull(created.getContentStoreManifestETag());
 		assertTrue(created.isContentStoreIndexResolved());
 		assertTrue(created.isContentStoreManifestLoadFailed());
 		assertTrue(S3ContentStoreAdapter.isContentStoreManifestLoadFailed(created));
@@ -247,7 +318,11 @@ public class S3ContentStoreAdapterManifestTest {
 	}
 
 	private static ResponseInputStream<GetObjectResponse> objectWithBytes(byte[] bytes) {
-		return new ResponseInputStream<>(GetObjectResponse.builder().build(), new ByteArrayInputStream(bytes));
+		return objectWithETag(bytes, null);
+	}
+
+	private static ResponseInputStream<GetObjectResponse> objectWithETag(byte[] bytes, String eTag) {
+		return new ResponseInputStream<>(GetObjectResponse.builder().eTag(eTag).build(), new ByteArrayInputStream(bytes));
 	}
 
 	private static byte[] gzip(String json) throws IOException {
