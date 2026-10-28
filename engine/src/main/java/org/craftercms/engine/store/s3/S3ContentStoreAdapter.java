@@ -59,6 +59,7 @@ import java.util.function.Supplier;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.*;
+import static org.apache.commons.lang3.Strings.CS;
 
 /**
  * Implementation of {@link org.craftercms.core.store.ContentStoreAdapter} to read files from AWS S3.
@@ -128,7 +129,7 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 								 final boolean ignoreHiddenFiles, Map<String, String> configurationVariables)
 		throws RootFolderNotFoundException, StoreException, AuthenticationException {
 
-		S3Uri uri = client.utilities().parseUri(URI.create(removeEnd(rootFolderPath, DELIMITER)));
+		S3Uri uri = client.utilities().parseUri(URI.create(CS.removeEnd(rootFolderPath, DELIMITER)));
 		String bucketName = uri.bucket().orElseThrow(S3BucketNotConfiguredException::new);
 		String rootKey = uri.key().orElse("");
 		// A missing manifest is null and uses the list path below. Any other read failure uses that same
@@ -263,7 +264,7 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 
 				ListObjectsV2Request request = ListObjectsV2Request.builder()
 					.bucket(bucketName)
-					.prefix(appendIfMissing(key, DELIMITER))
+					.prefix(CS.appendIfMissing(key, DELIMITER))
 					.delimiter(DELIMITER)
 					.build();
 				ListObjectsV2Response result = client.listObjectsV2(request);
@@ -465,7 +466,8 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 	}
 
 	protected String toS3Key(S3Context context, String storePath) {
-		return stripStart(appendIfMissing(context.getKey(), storePath), DELIMITER);
+		String key = CS.appendIfMissing(context.getKey(), DELIMITER) + stripStart(storePath, DELIMITER);
+		return stripStart(key, DELIMITER);
 	}
 
 	protected String toManifestKey(String rootKey) {
@@ -557,7 +559,7 @@ public class S3ContentStoreAdapter extends AbstractCachedFileBasedContentStoreAd
 	 */
 	protected boolean shouldCache(S3Context context, String key, long contentLength) {
 		String folderPrefix = context.getKey();
-		String path = removeStart(stripStart(key, DELIMITER), stripStart(folderPrefix, DELIMITER));
+		String path = CS.removeStart(stripStart(key, DELIMITER), stripStart(folderPrefix, DELIMITER));
 
 		if (!RegexUtils.matchesAny(path, cacheAllowedPaths)) {
 			return false;

@@ -82,6 +82,12 @@ public class S3ContentStoreAdapterManifestTest {
 	}
 
 	@Test
+	public void testToS3KeyJoinsRootAndStorePathWhenSuffixMatches() {
+		assertEquals("sites/acme", context.getKey());
+		assertEquals("sites/acme/acme", adapter.toS3Key(context, "/acme"));
+	}
+
+	@Test
 	public void testManifestAnswersFolderAndChildrenWithoutListing() {
 		context.setContentStoreIndex(ContentStoreIndex.from(ContentStoreManifest.ofPaths(List.of(
 			"/site/website/index.xml",
