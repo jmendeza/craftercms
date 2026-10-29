@@ -17,8 +17,6 @@ package org.craftercms.deployer.impl.processors.aws;
 
 import static org.eclipse.jgit.lib.Constants.DOT_GIT;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.configuration2.Configuration;
-import org.craftercms.commons.config.ConfigurationException;
 import org.craftercms.core.store.ContentStoreManifest;
 import org.craftercms.deployer.api.ChangeSet;
 import org.craftercms.deployer.api.Deployment;
@@ -42,12 +40,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang3.Strings.CS;
-import static org.craftercms.commons.config.ConfigUtils.getBooleanProperty;
 
 /**
  * Writes a single content-store manifest to S3.
- * The manifest lists every file uploaded for the site so Engine can answer folder
+ * The manifest lists every file in the local repository so Engine can answer folder
  * existence and children lookups without listing the bucket.
  * <p>
  * A publish that only updates existing files does not change that list. When a manifest
@@ -57,15 +53,9 @@ import static org.craftercms.commons.config.ConfigUtils.getBooleanProperty;
  * Runs after the S3 sync and before {@link S3DeploymentEventsProcessor}, so the
  * deployment-events signal is published only after the manifest is in place.
  * <p>
- * Can be configured with the following YAML properties:
- * <ul>
- *     <li><strong>ignoreBlobs:</strong> Do not include blob pointer files. Defaults to true,
- *     matching {@link S3SyncProcessor}.</li>
- * </ul>
+ * Blob pointer files are included. Engine uses that path to decide that an item lives in a blob store.
  */
 public class S3ContentStoreManifestProcessor extends AbstractS3Processor {
-
-	public static final String CONFIG_KEY_IGNORE_BLOBS = "ignoreBlobs";
 
 	private static final String GIT_ROOT = DOT_GIT + "/";
 
@@ -73,23 +63,10 @@ public class S3ContentStoreManifestProcessor extends AbstractS3Processor {
 
 	protected String localRepoUrl;
 
-	protected String blobExtension;
-
-	protected boolean ignoreBlobs;
-
-	@ConstructorProperties({"threadPoolTaskExecutor", "localRepoUrl", "blobExtension"})
-	public S3ContentStoreManifestProcessor(ThreadPoolTaskExecutor threadPoolTaskExecutor, String localRepoUrl,
-					       String blobExtension) {
+	@ConstructorProperties({"threadPoolTaskExecutor", "localRepoUrl"})
+	public S3ContentStoreManifestProcessor(ThreadPoolTaskExecutor threadPoolTaskExecutor, String localRepoUrl) {
 		super(threadPoolTaskExecutor);
 		this.localRepoUrl = localRepoUrl;
-		this.blobExtension = blobExtension;
-
-	}
-
-	@Override
-	protected void doInit(Configuration config) throws ConfigurationException {
-		super.doInit(config);
-		ignoreBlobs = getBooleanProperty(config, CONFIG_KEY_IGNORE_BLOBS, true);
 	}
 
 	@Override
@@ -174,8 +151,8 @@ public class S3ContentStoreManifestProcessor extends AbstractS3Processor {
 	}
 
 	/**
-	 * Lists the files in the local repository that S3 sync uploads.
-	 * {@code .git} directories are not entered. Blob pointer files are skipped when configured.
+	 * Lists the files in the local repository, including blob pointer files.
+	 * {@code .git} directories are not entered.
 	 *
 	 * @param repoRoot the local git working tree
 	 * @return store paths beginning with {@code /}
@@ -200,9 +177,6 @@ public class S3ContentStoreManifestProcessor extends AbstractS3Processor {
 				}
 				String relative = repoRoot.relativize(file).toString().replace('\\', '/');
 				if (DOT_GIT.equals(relative) || relative.startsWith(GIT_ROOT)) {
-					return FileVisitResult.CONTINUE;
-				}
-				if (ignoreBlobs && CS.endsWith(relative, blobExtension)) {
 					return FileVisitResult.CONTINUE;
 				}
 				String storePath = "/" + relative;

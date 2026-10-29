@@ -81,7 +81,7 @@ public class S3ContentStoreManifestProcessorTest {
 	}
 
 	@Test
-	public void testListPublishedFilesSkipsGitAndBlobs() throws Exception {
+	public void testListPublishedFilesSkipsGitAndIncludesBlobs() throws Exception {
 		Files.createDirectories(repo.resolve(".git"));
 		Files.writeString(repo.resolve(".git/config"), "git");
 		Files.writeString(repo.resolve("site/website/crafter-level-descriptor.level.xml"), "<level/>");
@@ -91,8 +91,8 @@ public class S3ContentStoreManifestProcessorTest {
 
 		assertTrue(paths.contains("/site/website/index.xml"));
 		assertTrue(paths.contains("/site/website/crafter-level-descriptor.level.xml"));
+		assertTrue(paths.contains("/site/website/hero.png.blob"));
 		assertFalse(paths.contains("/.git/config"));
-		assertFalse(paths.stream().anyMatch(path -> path.endsWith(".blob")));
 	}
 
 	@Test
@@ -185,9 +185,8 @@ public class S3ContentStoreManifestProcessorTest {
 	}
 
 	private S3ContentStoreManifestProcessor processor(Path repoRoot) {
-		return new S3ContentStoreManifestProcessor(null, repoRoot.toString(), ".blob") {
+		return new S3ContentStoreManifestProcessor(null, repoRoot.toString()) {
 			{
-				ignoreBlobs = true;
 				siteName = "acme";
 				s3Url = S3Utilities.builder().region(Region.US_EAST_1).build()
 					.parseUri(URI.create("s3://test-bucket/sites/acme/"));
