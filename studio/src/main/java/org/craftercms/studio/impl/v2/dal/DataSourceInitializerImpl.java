@@ -48,6 +48,8 @@ public class DataSourceInitializerImpl implements DataSourceInitializer {
 	 */
 	private final static String SCHEMA = "{schema}";
 	private final static String CRAFTER_SCHEMA_NAME = "@crafter_schema_name";
+	private final static String CRAFTER_CHARACTER_SET = "@crafter_character_set";
+	private final static String CRAFTER_COLLATION = "@crafter_collation";
 	private final static String CRAFTER_USER = "@crafter_user";
 	private final static String CRAFTER_PASSWORD = "@crafter_password";
 	private final static String DB_QUERY_CHECK_SCHEMA_EXISTS =
@@ -188,6 +190,8 @@ public class DataSourceInitializerImpl implements DataSourceInitializer {
 			String scriptContent = IOUtils.toString(is, UTF_8);
 			Reader reader = new StringReader(
 				scriptContent.replaceAll(CRAFTER_SCHEMA_NAME, studioConfiguration.getProperty(DB_SCHEMA))
+					.replaceAll(CRAFTER_CHARACTER_SET, studioConfiguration.getProperty(DB_CHARACTER_SET))
+					.replaceAll(CRAFTER_COLLATION, studioConfiguration.getProperty(DB_COLLATION))
 					.replaceAll(CRAFTER_USER, studioConfiguration.getProperty(DB_USER))
 					.replaceAll(CRAFTER_PASSWORD, studioConfiguration.getProperty(DB_PASSWORD)));
 			sr.runScript(reader);

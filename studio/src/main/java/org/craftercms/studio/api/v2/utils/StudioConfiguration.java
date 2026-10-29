@@ -82,6 +82,8 @@ public interface StudioConfiguration {
 	 */
 	String DB_DRIVER = "studio.db.driver";
 	String DB_SCHEMA = "studio.db.schema";
+	String DB_CHARACTER_SET = "studio.db.characterSet";
+	String DB_COLLATION = "studio.db.collation";
 	String DB_USER = "studio.db.user";
 	String DB_PASSWORD = "studio.db.password";
 	String DB_URL = "studio.db.url";
