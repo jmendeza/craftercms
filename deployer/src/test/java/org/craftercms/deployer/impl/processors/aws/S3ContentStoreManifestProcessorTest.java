@@ -16,7 +16,9 @@
 package org.craftercms.deployer.impl.processors.aws;
 
 import org.craftercms.deployer.api.ChangeSet;
+import org.craftercms.deployer.api.Deployment;
 import org.craftercms.deployer.api.exceptions.DeployerException;
+import org.eclipse.jgit.lib.ObjectId;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,6 +41,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -49,6 +52,8 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.craftercms.deployer.impl.DeploymentConstants.LATEST_COMMIT_ID_PARAM_NAME;
+import static org.craftercms.deployer.impl.DeploymentConstants.PREVIOUS_COMMIT_ID_PARAM_NAME;
 
 /**
  * Tests for {@link S3ContentStoreManifestProcessor}.
@@ -57,6 +62,9 @@ import static org.mockito.Mockito.when;
 public class S3ContentStoreManifestProcessorTest {
 
 	private static final String MANIFEST_KEY = "sites/acme/content-store-manifest.json.gz";
+	private static final String MANIFEST_COMMIT_ID_METADATA = "crafter-manifest-commit-id";
+	private static final ObjectId PREVIOUS_COMMIT_ID = ObjectId.fromString("0123456789012345678901234567890123456789");
+	private static final ObjectId LATEST_COMMIT_ID = ObjectId.fromString("9876543210987654321098765432109876543210");
 
 	@Mock
 	private S3Client client;
@@ -115,11 +123,12 @@ public class S3ContentStoreManifestProcessorTest {
 
 	@Test
 	public void testUpdateOnlyPublishSkipsExistingManifest() throws Exception {
-		when(client.headObject(any(HeadObjectRequest.class))).thenReturn(HeadObjectResponse.builder().build());
+		when(client.headObject(any(HeadObjectRequest.class))).thenReturn(HeadObjectResponse.builder()
+			.metadata(Map.of(MANIFEST_COMMIT_ID_METADATA, PREVIOUS_COMMIT_ID.name())).build());
 		S3ContentStoreManifestProcessor processor = processor(Path.of("/tmp/missing-manifest-repo"));
 
 		ChangeSet updates = new ChangeSet(List.of(), List.of("/site/website/index.xml"), List.of());
-		assertNull(processor.doMainProcess(null, null, updates, null));
+		assertNull(processor.doMainProcess(deployment(PREVIOUS_COMMIT_ID, LATEST_COMMIT_ID), null, updates, null));
 
 		verify(client).headObject(argThat((HeadObjectRequest request) ->
 			"test-bucket".equals(request.bucket()) && MANIFEST_KEY.equals(request.key())));
@@ -132,7 +141,7 @@ public class S3ContentStoreManifestProcessorTest {
 			.thenThrow(S3Exception.builder().statusCode(404).message("missing").build());
 
 		ChangeSet updates = new ChangeSet(List.of(), List.of("/site/website/index.xml"), List.of());
-		assertNull(processor().doMainProcess(null, null, updates, null));
+		assertNull(processor().doMainProcess(deployment(PREVIOUS_COMMIT_ID, LATEST_COMMIT_ID), null, updates, null));
 
 		verify(client).putObject(manifestPut(), any(RequestBody.class));
 	}
@@ -143,9 +152,21 @@ public class S3ContentStoreManifestProcessorTest {
 			.thenThrow(S3Exception.builder().statusCode(500).message("unavailable").build());
 
 		ChangeSet updates = new ChangeSet(List.of(), List.of("/site/website/index.xml"), List.of());
-		assertNull(processor().doMainProcess(null, null, updates, null));
+		assertNull(processor().doMainProcess(deployment(PREVIOUS_COMMIT_ID, LATEST_COMMIT_ID), null, updates, null));
 
 		verify(client).putObject(manifestPut(), any(RequestBody.class));
+	}
+
+	@Test
+	public void testUpdateOnlyPublishRebuildsManifestFromDifferentCommit() throws Exception {
+		when(client.headObject(any(HeadObjectRequest.class))).thenReturn(HeadObjectResponse.builder()
+			.metadata(Map.of(MANIFEST_COMMIT_ID_METADATA, LATEST_COMMIT_ID.name())).build());
+
+		ChangeSet updates = new ChangeSet(List.of(), List.of("/site/website/index.xml"), List.of());
+		assertNull(processor().doMainProcess(deployment(PREVIOUS_COMMIT_ID, LATEST_COMMIT_ID), null, updates, null));
+
+		verify(client).putObject(argThat((PutObjectRequest request) ->
+			LATEST_COMMIT_ID.name().equals(request.metadata().get(MANIFEST_COMMIT_ID_METADATA))), any(RequestBody.class));
 	}
 
 	@Test
@@ -202,6 +223,13 @@ public class S3ContentStoreManifestProcessorTest {
 	private static PutObjectRequest manifestPut() {
 		return argThat((PutObjectRequest request) ->
 			"test-bucket".equals(request.bucket()) && MANIFEST_KEY.equals(request.key()));
+	}
+
+	private static Deployment deployment(ObjectId previousCommitId, ObjectId latestCommitId) {
+		Deployment deployment = new Deployment(null);
+		deployment.addParam(PREVIOUS_COMMIT_ID_PARAM_NAME, previousCommitId);
+		deployment.addParam(LATEST_COMMIT_ID_PARAM_NAME, latestCommitId);
+		return deployment;
 	}
 
 	private static void hide(Path directory) throws IOException {

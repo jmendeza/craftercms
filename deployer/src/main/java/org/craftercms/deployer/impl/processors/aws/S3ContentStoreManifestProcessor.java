@@ -22,10 +22,12 @@ import org.craftercms.deployer.api.ChangeSet;
 import org.craftercms.deployer.api.Deployment;
 import org.craftercms.deployer.api.ProcessorExecution;
 import org.craftercms.deployer.api.exceptions.DeployerException;
+import org.eclipse.jgit.lib.ObjectId;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
@@ -40,6 +42,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.lang.String.format;
+import static org.craftercms.deployer.impl.DeploymentConstants.LATEST_COMMIT_ID_PARAM_NAME;
+import static org.craftercms.deployer.impl.DeploymentConstants.PREVIOUS_COMMIT_ID_PARAM_NAME;
 
 /**
  * Writes a single content-store manifest to S3.
@@ -61,6 +65,8 @@ public class S3ContentStoreManifestProcessor extends AbstractS3Processor {
 
 	private static final int NOT_FOUND = 404;
 
+	private static final String MANIFEST_COMMIT_ID_METADATA = "crafter-manifest-commit-id";
+
 	protected String localRepoUrl;
 
 	@ConstructorProperties({"threadPoolTaskExecutor", "localRepoUrl"})
@@ -72,8 +78,8 @@ public class S3ContentStoreManifestProcessor extends AbstractS3Processor {
 	@Override
 	protected ChangeSet doMainProcess(Deployment deployment, ProcessorExecution execution, ChangeSet filteredChangeSet,
 					  ChangeSet originalChangeSet) throws DeployerException {
-		if (!manifestFileListChanged(filteredChangeSet) && currentManifestExists()) {
-			logger.info("Skipping content store manifest rebuild for s3://{}/{} because this publish did not create or delete files",
+		if (!manifestFileListChanged(filteredChangeSet) && manifestMatchesPreviousCommit(deployment)) {
+			logger.info("Skipping content store manifest rebuild for s3://{}/{} because it matches the previous commit",
 				getBucket(), getS3Key(ContentStoreManifest.FILE_NAME));
 			return null;
 		}
@@ -102,12 +108,15 @@ public class S3ContentStoreManifestProcessor extends AbstractS3Processor {
 		logger.info("Uploading content store manifest with {} files to s3://{}/{}", paths.size(), getBucket(), key);
 
 		try (S3Client client = buildClient()) {
-			PutObjectRequest request = PutObjectRequest.builder()
+			PutObjectRequest.Builder request = PutObjectRequest.builder()
 				.bucket(getBucket())
 				.key(key)
-				.contentType("application/gzip")
-				.build();
-			client.putObject(request, RequestBody.fromBytes(body));
+				.contentType("application/gzip");
+			String commitId = getCommitId(deployment, LATEST_COMMIT_ID_PARAM_NAME);
+			if (commitId != null) {
+				request.metadata(java.util.Map.of(MANIFEST_COMMIT_ID_METADATA, commitId));
+			}
+			client.putObject(request.build(), RequestBody.fromBytes(body));
 		} catch (Exception e) {
 			throw new DeployerException(format("Error uploading content store manifest to s3://%s/%s", getBucket(), key), e);
 		}
@@ -128,15 +137,25 @@ public class S3ContentStoreManifestProcessor extends AbstractS3Processor {
 	}
 
 	/**
-	 * @return true when the manifest object is already in the bucket. A missing object, or a check that
-	 * fails, returns false so the caller rebuilds the manifest.
+	 * @return true when the manifest was built from the commit that is the base of this deployment. A missing
+	 * manifest, missing metadata, a different commit, or a check failure returns false so the caller rebuilds it.
 	 */
-	protected boolean currentManifestExists() {
+	protected boolean manifestMatchesPreviousCommit(Deployment deployment) {
+		String previousCommitId = getCommitId(deployment, PREVIOUS_COMMIT_ID_PARAM_NAME);
+		if (previousCommitId == null) {
+			return false;
+		}
+
 		String bucket = getBucket();
 		String key = getS3Key(ContentStoreManifest.FILE_NAME);
 		try (S3Client client = buildClient()) {
-			client.headObject(HeadObjectRequest.builder().bucket(bucket).key(key).build());
-			return true;
+			HeadObjectResponse response = client.headObject(HeadObjectRequest.builder().bucket(bucket).key(key).build());
+			String manifestCommitId = response.metadata().get(MANIFEST_COMMIT_ID_METADATA);
+			if (previousCommitId.equals(manifestCommitId)) {
+				return true;
+			}
+			logger.info("Content store manifest s3://{}/{} does not match the previous commit. Rebuilding it", bucket, key);
+			return false;
 		} catch (S3Exception e) {
 			if (e.statusCode() == NOT_FOUND) {
 				logger.info("Content store manifest s3://{}/{} was not found. Rebuilding it", bucket, key);
@@ -148,6 +167,17 @@ public class S3ContentStoreManifestProcessor extends AbstractS3Processor {
 			logger.warn("Unable to check content store manifest s3://{}/{}. Rebuilding it", bucket, key, e);
 			return false;
 		}
+	}
+
+	private String getCommitId(Deployment deployment, String paramName) {
+		if (deployment == null) {
+			return null;
+		}
+		Object commitId = deployment.getParam(paramName);
+		if (commitId instanceof ObjectId) {
+			return ((ObjectId) commitId).name();
+		}
+		return commitId != null ? commitId.toString() : null;
 	}
 
 	/**
