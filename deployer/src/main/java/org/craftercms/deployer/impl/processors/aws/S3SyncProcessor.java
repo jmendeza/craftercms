@@ -158,7 +158,7 @@ public class S3SyncProcessor extends AbstractS3Processor {
 	}
 
 	/**
-	 * Uploads one local file to its S3 key. Failures are logged and do not fail the batch.
+	 * Uploads one local file to its S3 key. Failures are logged and complete the returned future exceptionally.
 	 */
 	private CompletableFuture<Void> scheduleUpload(S3TransferManager transferManager, Path path, String item) {
 		UploadFileRequest uploadFileRequest = UploadFileRequest.builder()
@@ -168,9 +168,10 @@ public class S3SyncProcessor extends AbstractS3Processor {
 		return CompletableFuture
 			.runAsync(() -> transferManager.uploadFile(uploadFileRequest).completionFuture().join(), threadPoolTaskExecutor)
 			.thenRun(() -> logger.debug("Uploaded file: {}", item))
-			.exceptionally(e -> {
-				logger.error("Error uploading file: {}", item, e);
-				return null;
+			.whenComplete((ignored, error) -> {
+				if (error != null) {
+					logger.error("Error uploading file: {}", item, error);
+				}
 			});
 	}
 

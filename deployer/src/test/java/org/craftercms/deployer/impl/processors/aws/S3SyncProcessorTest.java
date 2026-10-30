@@ -139,6 +139,21 @@ public class S3SyncProcessorTest {
 	}
 
 	@Test
+	public void testFailedUploadFailsTheBatch() throws Exception {
+		Files.writeString(repo.resolve("static-assets/index.xml"), "<page/>");
+		when(fileUpload.completionFuture())
+			.thenReturn(CompletableFuture.failedFuture(new RuntimeException("upload failed")));
+
+		try {
+			processor(true).uploadFiles(null, List.of(PAGE));
+			fail("Expected DeployerException");
+		} catch (DeployerException expected) {
+			assertTrue(expected.getMessage().contains(PAGE));
+			assertTrue(causedByMessage(expected, "upload failed"));
+		}
+	}
+
+	@Test
 	public void testMissingFileFails() throws Exception {
 		try {
 			processor(false).uploadFiles(null, List.of(IMAGE));
@@ -169,6 +184,17 @@ public class S3SyncProcessorTest {
 				return transferManager;
 			}
 		};
+	}
+
+	private static boolean causedByMessage(Throwable error, String message) {
+		Throwable cause = error;
+		while (cause != null) {
+			if (cause.getMessage() != null && cause.getMessage().contains(message)) {
+				return true;
+			}
+			cause = cause.getCause();
+		}
+		return false;
 	}
 
 	private static void deleteRecursively(Path root) throws IOException {
