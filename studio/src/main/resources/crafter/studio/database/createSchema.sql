@@ -1,5 +1,5 @@
 CREATE DATABASE IF NOT EXISTS @crafter_schema_name
-	DEFAULT CHARACTER SET @crafter_character_set
+	DEFAULT CHARACTER SET utf8mb3
 	COLLATE utf8mb3_uca1400_ai_ci ;
 
 FLUSH PRIVILEGES ;
