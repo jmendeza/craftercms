@@ -50,10 +50,14 @@ import static org.mockito.Mockito.when;
  * {@code publish_package.old_package_id} is {@code utf8mb3_uca1400_ai_ci}. That mix rejects
  * {@code old_package_id = package_id}. The operation makes the database default and every table
  * match {@code site}, and a table created afterwards with no character set inherits that collation.
+ * <p>
+ * A second schema stores {@code site} as {@code utf8mb3_uca1400_ai_ci}. The upgrade must resolve
+ * that full name to character set {@code utf8mb3} and apply it.
  */
 public class DatabaseCollationUpgradeOperationMariaDBTest {
 
 	private static final String DATABASE = "collation_upgrade_test";
+	private static final String UCA_SITE_DATABASE = "collation_upgrade_uca_site";
 	private static final String CHARACTER_SET = "utf8mb3";
 	private static final String SITE_COLLATION = "utf8mb3_general_ci";
 	private static final String OTHER_COLLATION = "utf8mb3_uca1400_ai_ci";
@@ -62,6 +66,11 @@ public class DatabaseCollationUpgradeOperationMariaDBTest {
 		SELECT pr.package_id
 		FROM publish_request pr
 		INNER JOIN publish_package pp ON pp.old_package_id = pr.package_id
+		""";
+	private static final String SCHEMA_CHARSET_SQL = """
+		SELECT default_character_set_name
+		FROM information_schema.schemata
+		WHERE schema_name = ?
 		""";
 	private static final String SCHEMA_COLLATION_SQL = """
 		SELECT default_collation_name
@@ -73,6 +82,12 @@ public class DatabaseCollationUpgradeOperationMariaDBTest {
 		FROM information_schema.tables
 		WHERE table_schema = ?
 		  AND table_type = 'BASE TABLE'
+		""";
+	private static final String COLUMN_CHARSET_SQL = """
+		SELECT character_set_name
+		FROM information_schema.columns
+		WHERE table_schema = ?
+		  AND character_set_name IS NOT NULL
 		""";
 	private static final String COLUMN_COLLATION_SQL = """
 		SELECT collation_name
@@ -93,6 +108,7 @@ public class DatabaseCollationUpgradeOperationMariaDBTest {
 		database = DB.newEmbeddedDB(config.build());
 		database.start();
 		database.createDB(DATABASE);
+		database.createDB(UCA_SITE_DATABASE);
 
 		UnpooledDataSource unpooled = new UnpooledDataSource();
 		unpooled.setDriver("org.mariadb.jdbc.Driver");
@@ -123,6 +139,15 @@ public class DatabaseCollationUpgradeOperationMariaDBTest {
 				""");
 			insertPackageId(connection, "INSERT INTO publish_request (package_id) VALUES (?)");
 			insertPackageId(connection, "INSERT INTO publish_package (old_package_id) VALUES (?)");
+
+			statement.execute("ALTER DATABASE `" + UCA_SITE_DATABASE + "` CHARACTER SET " + CHARACTER_SET
+				+ " COLLATE " + SITE_COLLATION);
+			statement.execute("CREATE TABLE `" + UCA_SITE_DATABASE + "`.site ("
+				+ " site_id VARCHAR(50) NOT NULL"
+				+ " ) ENGINE=InnoDB DEFAULT CHARSET=" + CHARACTER_SET + " COLLATE " + OTHER_COLLATION);
+			statement.execute("CREATE TABLE `" + UCA_SITE_DATABASE + "`.workflow ("
+				+ " name VARCHAR(50) NOT NULL"
+				+ " ) ENGINE=InnoDB DEFAULT CHARSET=" + CHARACTER_SET + " COLLATE " + SITE_COLLATION);
 		}
 	}
 
@@ -161,6 +186,34 @@ public class DatabaseCollationUpgradeOperationMariaDBTest {
 		assertEquals(PACKAGE_ID, joinedPackageId());
 	}
 
+	@Test
+	public void readsUca14SiteDefaults() throws Exception {
+		assertEquals(Set.of(CHARACTER_SET), queryStrings(UCA_SITE_DATABASE, SCHEMA_CHARSET_SQL));
+		assertEquals(Set.of(SITE_COLLATION), queryStrings(UCA_SITE_DATABASE, SCHEMA_COLLATION_SQL));
+		assertEquals(Set.of(OTHER_COLLATION, SITE_COLLATION), queryStrings(UCA_SITE_DATABASE, TABLE_COLLATION_SQL));
+		assertEquals(Set.of(CHARACTER_SET), queryStrings(UCA_SITE_DATABASE, COLUMN_CHARSET_SQL));
+		assertEquals(Set.of(OTHER_COLLATION, SITE_COLLATION), queryStrings(UCA_SITE_DATABASE, COLUMN_COLLATION_SQL));
+
+		StudioConfiguration studioConfiguration = mock(StudioConfiguration.class);
+		when(studioConfiguration.getProperty(DB_SCHEMA)).thenReturn(UCA_SITE_DATABASE);
+
+		DatabaseCollationUpgradeOperation operation = new DatabaseCollationUpgradeOperation(studioConfiguration);
+		operation.doExecute(new StudioUpgradeContext(UCA_SITE_DATABASE, studioConfiguration, dataSource, null, null));
+
+		try (Connection connection = dataSource.getConnection();
+		     Statement statement = connection.createStatement()) {
+			statement.execute("CREATE TABLE `" + UCA_SITE_DATABASE + "`.inherited_table ("
+				+ " name VARCHAR(50) NOT NULL"
+				+ " ) ENGINE=InnoDB");
+		}
+
+		assertEquals(Set.of(CHARACTER_SET), queryStrings(UCA_SITE_DATABASE, SCHEMA_CHARSET_SQL));
+		assertEquals(Set.of(OTHER_COLLATION), queryStrings(UCA_SITE_DATABASE, SCHEMA_COLLATION_SQL));
+		assertEquals(Set.of(OTHER_COLLATION), queryStrings(UCA_SITE_DATABASE, TABLE_COLLATION_SQL));
+		assertEquals(Set.of(CHARACTER_SET), queryStrings(UCA_SITE_DATABASE, COLUMN_CHARSET_SQL));
+		assertEquals(Set.of(OTHER_COLLATION), queryStrings(UCA_SITE_DATABASE, COLUMN_COLLATION_SQL));
+	}
+
 	private static void insertPackageId(Connection connection, String sql) throws SQLException {
 		try (PreparedStatement statement = connection.prepareStatement(sql)) {
 			statement.setString(1, PACKAGE_ID);
@@ -191,10 +244,14 @@ public class DatabaseCollationUpgradeOperationMariaDBTest {
 	}
 
 	private static Set<String> queryStrings(String sql) throws SQLException {
+		return queryStrings(DATABASE, sql);
+	}
+
+	private static Set<String> queryStrings(String schema, String sql) throws SQLException {
 		Set<String> values = new HashSet<>();
 		try (Connection connection = dataSource.getConnection();
 		     PreparedStatement statement = connection.prepareStatement(sql)) {
-			statement.setString(1, DATABASE);
+			statement.setString(1, schema);
 			try (ResultSet resultSet = statement.executeQuery()) {
 				while (resultSet.next()) {
 					values.add(resultSet.getString(1));

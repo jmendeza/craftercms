@@ -45,10 +45,13 @@ public class DatabaseCollationUpgradeOperation extends AbstractUpgradeOperation 
 
 	private static final Logger logger = LoggerFactory.getLogger(DatabaseCollationUpgradeOperation.class);
 
+	// COLLATIONS.COLLATION_NAME stores a UCA-14 collation as its short family name (uca1400_ai_ci).
+	// TABLES.TABLE_COLLATION stores the full name, which FULL_COLLATION_NAME matches.
 	static final String FIND_SITE_COLLATION_SQL = """
-		SELECT c.character_set_name, t.table_collation
+		SELECT a.character_set_name, t.table_collation
 		FROM information_schema.tables t
-		INNER JOIN information_schema.collations c ON c.collation_name = t.table_collation
+		INNER JOIN information_schema.collation_character_set_applicability a
+		  ON a.full_collation_name = t.table_collation
 		WHERE t.table_schema = ?
 		  AND t.table_name = 'site'
 		""";
