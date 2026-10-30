@@ -30,6 +30,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.lang.String.format;
 import static org.craftercms.studio.api.v2.utils.StudioConfiguration.DB_SCHEMA;
@@ -40,6 +42,11 @@ import static org.craftercms.studio.api.v2.utils.StudioConfiguration.DB_SCHEMA;
  *
  * <p>Runs before new tables are created, so those tables inherit {@code site}'s collation. Tables which already
  * match are not rebuilt, so an interrupted upgrade resumes with the remaining tables.</p>
+ *
+ * <p>Converting to {@code site}'s collation can make previously distinct values equal, for example {@code ß} and
+ * {@code ss} when {@code site} is {@code uca1400} and the other table is {@code general_ci}. A unique key on those
+ * values (such as an item path, username, or group name) then fails the conversion. That failure names the table
+ * and key.</p>
  */
 public class DatabaseCollationUpgradeOperation extends AbstractUpgradeOperation {
 
@@ -64,6 +71,10 @@ public class DatabaseCollationUpgradeOperation extends AbstractUpgradeOperation 
 		""";
 	static final String ALTER_DATABASE_SQL = "ALTER DATABASE %s CHARACTER SET %s COLLATE %s";
 	static final String ALTER_TABLE_SQL = "ALTER TABLE %s CONVERT TO CHARACTER SET %s COLLATE %s";
+	static final String INTEGRITY_CONSTRAINT_VIOLATION = "23000";
+
+	// MariaDB: Duplicate entry 'ss' for key 'user.user_ix_username'
+	private static final Pattern DUPLICATE_KEY_NAME = Pattern.compile("for key '([^']*)'");
 
 	public DatabaseCollationUpgradeOperation(StudioConfiguration studioConfiguration) {
 		super(studioConfiguration);
@@ -81,8 +92,15 @@ public class DatabaseCollationUpgradeOperation extends AbstractUpgradeOperation 
 					quoteIdentifier(defaults.characterSet()), quoteIdentifier(defaults.collation())));
 				for (String table : getTablesToConvert(connection, schema, defaults.collation())) {
 					logger.info("Convert table '{}.{}' to collation '{}'", schema, table, defaults.collation());
-					statement.execute(format(ALTER_TABLE_SQL, quoteIdentifier(schema) + "." + quoteIdentifier(table),
-						quoteIdentifier(defaults.characterSet()), quoteIdentifier(defaults.collation())));
+					try {
+						statement.execute(format(ALTER_TABLE_SQL, quoteIdentifier(schema) + "." + quoteIdentifier(table),
+							quoteIdentifier(defaults.characterSet()), quoteIdentifier(defaults.collation())));
+					} catch (SQLException e) {
+						if (INTEGRITY_CONSTRAINT_VIOLATION.equals(e.getSQLState())) {
+							throw uniqueKeyConflict(schema, table, defaults.collation(), e);
+						}
+						throw e;
+					}
 				}
 			}
 		} catch (SQLException e) {
@@ -118,6 +136,42 @@ public class DatabaseCollationUpgradeOperation extends AbstractUpgradeOperation 
 
 	static String quoteIdentifier(String identifier) {
 		return "`" + identifier.replace("`", "``") + "`";
+	}
+
+	/**
+	 * Key named by a duplicate-entry error, without a leading {@code table.} qualifier.
+	 * MariaDB reports either {@code table.key} or {@code key}. Returns null when the message does not name a key.
+	 */
+	static String uniqueKeyName(SQLException failure, String table) {
+		String message = failure.getMessage();
+		if (message == null) {
+			return null;
+		}
+		Matcher matcher = DUPLICATE_KEY_NAME.matcher(message);
+		String reported = null;
+		while (matcher.find()) {
+			reported = matcher.group(1);
+		}
+		if (reported == null || reported.isEmpty()) {
+			return null;
+		}
+		String prefix = table + ".";
+		if (reported.startsWith(prefix) && reported.length() > prefix.length()) {
+			return reported.substring(prefix.length());
+		}
+		return reported;
+	}
+
+	private static UpgradeException uniqueKeyConflict(String schema, String table, String collation, SQLException failure) {
+		String key = uniqueKeyName(failure, table);
+		if (key == null) {
+			return new UpgradeException(format(
+				"Failed to convert table '%s.%s' to collation '%s' because of an integrity constraint violation",
+				schema, table, collation), failure);
+		}
+		return new UpgradeException(format(
+			"Failed to convert table '%s.%s' to collation '%s' because unique key '%s' would contain duplicate values",
+			schema, table, collation, key), failure);
 	}
 
 	private record SchemaDefaults(String characterSet, String collation) {

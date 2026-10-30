@@ -21,6 +21,7 @@ import ch.vorburger.mariadb4j.DBConfigurationBuilder;
 import org.apache.ibatis.datasource.unpooled.UnpooledDataSource;
 import org.craftercms.studio.api.v2.utils.StudioConfiguration;
 import org.craftercms.studio.impl.v2.upgrade.StudioUpgradeContext;
+import org.craftercms.commons.upgrade.exception.UpgradeException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -53,11 +54,17 @@ import static org.mockito.Mockito.when;
  * <p>
  * A second schema stores {@code site} as {@code utf8mb3_uca1400_ai_ci}. The upgrade must resolve
  * that full name to character set {@code utf8mb3} and apply it.
+ * <p>
+ * A third schema stores {@code site} as {@code utf8mb3_uca1400_ai_ci} and {@code user.username} as
+ * {@code utf8mb3_general_ci}, with {@code ß} and {@code ss} both present. Those values are distinct
+ * under {@code general_ci} and equal under {@code uca1400}, so converting the unique key fails and
+ * the error names that table and key.
  */
 public class DatabaseCollationUpgradeOperationMariaDBTest {
 
 	private static final String DATABASE = "collation_upgrade_test";
 	private static final String UCA_SITE_DATABASE = "collation_upgrade_uca_site";
+	private static final String DUPLICATE_KEY_DATABASE = "collation_upgrade_duplicate_key";
 	private static final String CHARACTER_SET = "utf8mb3";
 	private static final String SITE_COLLATION = "utf8mb3_general_ci";
 	private static final String OTHER_COLLATION = "utf8mb3_uca1400_ai_ci";
@@ -109,6 +116,7 @@ public class DatabaseCollationUpgradeOperationMariaDBTest {
 		database.start();
 		database.createDB(DATABASE);
 		database.createDB(UCA_SITE_DATABASE);
+		database.createDB(DUPLICATE_KEY_DATABASE);
 
 		UnpooledDataSource unpooled = new UnpooledDataSource();
 		unpooled.setDriver("org.mariadb.jdbc.Driver");
@@ -148,6 +156,18 @@ public class DatabaseCollationUpgradeOperationMariaDBTest {
 			statement.execute("CREATE TABLE `" + UCA_SITE_DATABASE + "`.workflow ("
 				+ " name VARCHAR(50) NOT NULL"
 				+ " ) ENGINE=InnoDB DEFAULT CHARSET=" + CHARACTER_SET + " COLLATE " + SITE_COLLATION);
+
+			statement.execute("ALTER DATABASE `" + DUPLICATE_KEY_DATABASE + "` CHARACTER SET " + CHARACTER_SET
+				+ " COLLATE " + SITE_COLLATION);
+			statement.execute("CREATE TABLE `" + DUPLICATE_KEY_DATABASE + "`.site ("
+				+ " site_id VARCHAR(50) NOT NULL"
+				+ " ) ENGINE=InnoDB DEFAULT CHARSET=" + CHARACTER_SET + " COLLATE " + OTHER_COLLATION);
+			statement.execute("CREATE TABLE `" + DUPLICATE_KEY_DATABASE + "`.`user` ("
+				+ " username VARCHAR(255) NOT NULL,"
+				+ " UNIQUE INDEX user_ix_username (username)"
+				+ " ) ENGINE=InnoDB DEFAULT CHARSET=" + CHARACTER_SET + " COLLATE " + SITE_COLLATION);
+			insertUsername(connection, "\u00df");
+			insertUsername(connection, "ss");
 		}
 	}
 
@@ -212,6 +232,31 @@ public class DatabaseCollationUpgradeOperationMariaDBTest {
 		assertEquals(Set.of(OTHER_COLLATION), queryStrings(UCA_SITE_DATABASE, TABLE_COLLATION_SQL));
 		assertEquals(Set.of(CHARACTER_SET), queryStrings(UCA_SITE_DATABASE, COLUMN_CHARSET_SQL));
 		assertEquals(Set.of(OTHER_COLLATION), queryStrings(UCA_SITE_DATABASE, COLUMN_COLLATION_SQL));
+	}
+
+	@Test
+	public void namesUniqueKeyWhenUca1400CollapsesDistinctValues() throws Exception {
+		StudioConfiguration studioConfiguration = mock(StudioConfiguration.class);
+		when(studioConfiguration.getProperty(DB_SCHEMA)).thenReturn(DUPLICATE_KEY_DATABASE);
+
+		DatabaseCollationUpgradeOperation operation = new DatabaseCollationUpgradeOperation(studioConfiguration);
+		try {
+			operation.doExecute(new StudioUpgradeContext(DUPLICATE_KEY_DATABASE, studioConfiguration, dataSource, null, null));
+			fail("converting user.username from general_ci to uca1400 should reject ß and ss");
+		} catch (UpgradeException e) {
+			assertEquals("Failed to convert table '" + DUPLICATE_KEY_DATABASE + ".user' to collation '" + OTHER_COLLATION
+				+ "' because unique key 'user_ix_username' would contain duplicate values", e.getMessage());
+			assertTrue(e.getCause() instanceof SQLException);
+			assertEquals("23000", ((SQLException) e.getCause()).getSQLState());
+		}
+	}
+
+	private static void insertUsername(Connection connection, String username) throws SQLException {
+		try (PreparedStatement statement = connection.prepareStatement(
+			"INSERT INTO `" + DUPLICATE_KEY_DATABASE + "`.`user` (username) VALUES (?)")) {
+			statement.setString(1, username);
+			statement.executeUpdate();
+		}
 	}
 
 	private static void insertPackageId(Connection connection, String sql) throws SQLException {
