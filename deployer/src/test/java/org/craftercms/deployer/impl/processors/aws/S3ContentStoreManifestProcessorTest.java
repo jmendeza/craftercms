@@ -30,8 +30,10 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Utilities;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.model.MetadataDirective;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
@@ -134,6 +136,7 @@ public class S3ContentStoreManifestProcessorTest {
 	@Test
 	public void testUpdateOnlyPublishSkipsExistingManifest() throws Exception {
 		when(client.headObject(any(HeadObjectRequest.class))).thenReturn(HeadObjectResponse.builder()
+			.contentType("application/gzip")
 			.metadata(Map.of(MANIFEST_COMMIT_ID_METADATA, PREVIOUS_COMMIT_ID.name())).build());
 		S3ContentStoreManifestProcessor processor = processor(Path.of("/tmp/missing-manifest-repo"));
 
@@ -142,6 +145,25 @@ public class S3ContentStoreManifestProcessorTest {
 
 		verify(client).headObject(argThat((HeadObjectRequest request) ->
 			"test-bucket".equals(request.bucket()) && MANIFEST_KEY.equals(request.key())));
+		verify(client).copyObject(argThat((CopyObjectRequest request) ->
+			"test-bucket".equals(request.sourceBucket()) && MANIFEST_KEY.equals(request.sourceKey())
+				&& "test-bucket".equals(request.destinationBucket()) && MANIFEST_KEY.equals(request.destinationKey())
+				&& request.metadataDirective() == MetadataDirective.REPLACE
+				&& "application/gzip".equals(request.contentType())
+				&& LATEST_COMMIT_ID.name().equals(request.metadata().get(MANIFEST_COMMIT_ID_METADATA))));
+		verify(client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+	}
+
+	@Test
+	public void testUpdateOnlyPublishLeavesMetadataWhenCommitIsUnchanged() throws Exception {
+		when(client.headObject(any(HeadObjectRequest.class))).thenReturn(HeadObjectResponse.builder()
+			.metadata(Map.of(MANIFEST_COMMIT_ID_METADATA, PREVIOUS_COMMIT_ID.name())).build());
+		S3ContentStoreManifestProcessor processor = processor(Path.of("/tmp/missing-manifest-repo"));
+
+		ChangeSet updates = new ChangeSet(List.of(), List.of("/site/website/index.xml"), List.of());
+		assertNull(processor.doMainProcess(deployment(PREVIOUS_COMMIT_ID, PREVIOUS_COMMIT_ID), null, updates, null));
+
+		verify(client, never()).copyObject(any(CopyObjectRequest.class));
 		verify(client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
 	}
 
@@ -177,6 +199,7 @@ public class S3ContentStoreManifestProcessorTest {
 
 		verify(client).putObject(argThat((PutObjectRequest request) ->
 			LATEST_COMMIT_ID.name().equals(request.metadata().get(MANIFEST_COMMIT_ID_METADATA))), any(RequestBody.class));
+		verify(client, never()).copyObject(any(CopyObjectRequest.class));
 	}
 
 	@Test
