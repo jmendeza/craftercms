@@ -16,6 +16,7 @@
 package org.craftercms.engine.util.deployment;
 
 import org.apache.commons.lang3.StringUtils;
+import org.craftercms.core.exception.StoreException;
 import org.craftercms.core.service.CachingOptions;
 import org.craftercms.core.service.Content;
 import org.craftercms.core.service.ContentStoreService;
@@ -91,7 +92,8 @@ public class DeploymentEventsWatcher implements ApplicationListener<ApplicationE
 
 		try {
 			currentDeploymentEvents = loadDeploymentEvents(siteContext);
-		} catch (IOException e) {
+		} catch (IOException | StoreException e) {
+			// A failed read must not abort the poll for the remaining sites.
 			logger.error("Unable to load deployment events for site '{}'", siteName, e);
 			return;
 		}
@@ -99,7 +101,15 @@ public class DeploymentEventsWatcher implements ApplicationListener<ApplicationE
 		logger.debug("Checking deployment events for site {}...", siteName);
 
 		if (latestDeploymentEvents == null) {
-			logger.debug("No previous deployment events detected for site {}. Saving latest...", siteName);
+			logger.debug("No previous deployment events detected for site {}. Refreshing content store manifest and saving latest...", siteName);
+
+			// createContext may have loaded the manifest before a publish wrote a newer one.
+			// Refresh once here so that publish is visible without waiting for a later event.
+			try {
+				S3ContentStoreAdapter.refreshContentStoreManifest(siteContext.getContext());
+			} catch (RuntimeException e) {
+				logger.warn("Unable to load content store manifest for site '{}'", siteName, e);
+			}
 
 			latestDeploymentEventsPerSite.put(siteName, currentDeploymentEvents);
 		} else if (Objects.equals(currentDeploymentEvents, latestDeploymentEvents)) {
