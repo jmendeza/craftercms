@@ -76,7 +76,12 @@ public class DatabaseCollationUpgradeOperation extends AbstractUpgradeOperation 
 							characterSet, collation));
 					}
 				} finally {
-					statement.execute("SET FOREIGN_KEY_CHECKS = 1");
+					try {
+						statement.execute("SET FOREIGN_KEY_CHECKS = 1");
+					} catch (SQLException e) {
+						logger.error("Failed to re-enable foreign key checks after converting database '{}' to collation '{}'",
+							schema, collation, e);
+					}
 				}
 			}
 		} catch (SQLException e) {
