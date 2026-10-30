@@ -111,7 +111,10 @@ public class ContentStoreIndex {
 		String childPath = path;
 		while (!ROOT_PATH.equals(childPath)) {
 			String parentPath = FilenameUtils.getFullPathNoEndSeparator(childPath);
-			entries.computeIfAbsent(parentPath, key -> MutableEntry.directory()).addChild(childPath);
+			// A child already recorded means every ancestor above it was linked when that child was first added.
+			if (!entries.computeIfAbsent(parentPath, key -> MutableEntry.directory()).addChild(childPath)) {
+				break;
+			}
 			childPath = parentPath;
 		}
 	}
@@ -153,11 +156,11 @@ public class ContentStoreIndex {
 			return new MutableEntry(false);
 		}
 
-		private void addChild(String childPath) {
+		private boolean addChild(String childPath) {
 			if (children == null) {
 				children = new TreeSet<>();
 			}
-			children.add(childPath);
+			return children.add(childPath);
 		}
 
 		private Entry toEntry() {
