@@ -79,29 +79,10 @@ public class DatabaseCollationUpgradeOperation extends AbstractUpgradeOperation 
 					schema, defaults.characterSet(), defaults.collation());
 				statement.execute(format(ALTER_DATABASE_SQL, quoteIdentifier(schema),
 					quoteIdentifier(defaults.characterSet()), quoteIdentifier(defaults.collation())));
-				statement.execute("SET FOREIGN_KEY_CHECKS = 0");
-				SQLException conversionFailure = null;
-				try {
-					for (String table : getTablesToConvert(connection, schema, defaults.collation())) {
-						logger.info("Convert table '{}.{}' to collation '{}'", schema, table, defaults.collation());
-						statement.execute(format(ALTER_TABLE_SQL, quoteIdentifier(schema) + "." + quoteIdentifier(table),
-							quoteIdentifier(defaults.characterSet()), quoteIdentifier(defaults.collation())));
-					}
-				} catch (SQLException e) {
-					conversionFailure = e;
-					throw e;
-				} finally {
-					try {
-						statement.execute("SET FOREIGN_KEY_CHECKS = 1");
-					} catch (SQLException resetFailure) {
-						logger.error("Failed to re-enable foreign key checks after converting database '{}' to collation '{}'",
-							schema, defaults.collation(), resetFailure);
-						if (conversionFailure != null) {
-							conversionFailure.addSuppressed(resetFailure);
-						} else {
-							throw resetFailure;
-						}
-					}
+				for (String table : getTablesToConvert(connection, schema, defaults.collation())) {
+					logger.info("Convert table '{}.{}' to collation '{}'", schema, table, defaults.collation());
+					statement.execute(format(ALTER_TABLE_SQL, quoteIdentifier(schema) + "." + quoteIdentifier(table),
+						quoteIdentifier(defaults.characterSet()), quoteIdentifier(defaults.collation())));
 				}
 			}
 		} catch (SQLException e) {

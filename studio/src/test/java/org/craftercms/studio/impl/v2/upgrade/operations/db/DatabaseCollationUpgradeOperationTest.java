@@ -29,7 +29,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 
 import static org.craftercms.studio.api.v2.utils.StudioConfiguration.DB_SCHEMA;
@@ -81,55 +80,8 @@ public class DatabaseCollationUpgradeOperationTest {
 
 		InOrder statements = inOrder(statement);
 		statements.verify(statement).execute("ALTER DATABASE `crafter` CHARACTER SET `utf8mb3` COLLATE `utf8mb3_general_ci`");
-		statements.verify(statement).execute("SET FOREIGN_KEY_CHECKS = 0");
 		statements.verify(statement).execute("ALTER TABLE `crafter`.`workflow` CONVERT TO CHARACTER SET `utf8mb3` COLLATE `utf8mb3_general_ci`");
 		statements.verify(statement).execute("ALTER TABLE `crafter`.`item` CONVERT TO CHARACTER SET `utf8mb3` COLLATE `utf8mb3_general_ci`");
-		statements.verify(statement).execute("SET FOREIGN_KEY_CHECKS = 1");
-	}
-
-	@Test
-	public void failsWhenForeignKeyChecksCannotBeRestored() throws Exception {
-		DatabaseCollationUpgradeOperation operation = new DatabaseCollationUpgradeOperation(studioConfiguration);
-		stubSiteCollation();
-		when(tablesResultSet.next()).thenReturn(false);
-		SQLException resetFailure = new SQLException("reset failed");
-		when(statement.execute("SET FOREIGN_KEY_CHECKS = 1")).thenThrow(resetFailure);
-
-		try {
-			operation.doExecute(context);
-			Assert.fail("Upgrade should fail when foreign key checks cannot be restored");
-		} catch (UpgradeException e) {
-			Assert.assertSame(resetFailure, e.getCause());
-			Assert.assertEquals(0, resetFailure.getSuppressed().length);
-		}
-
-		verify(statement).execute("SET FOREIGN_KEY_CHECKS = 0");
-		verify(statement).execute("SET FOREIGN_KEY_CHECKS = 1");
-	}
-
-	@Test
-	public void preservesConversionFailureWhenForeignKeyChecksCannotBeRestored() throws Exception {
-		DatabaseCollationUpgradeOperation operation = new DatabaseCollationUpgradeOperation(studioConfiguration);
-		stubSiteCollation();
-		when(tablesResultSet.next()).thenReturn(true, false);
-		when(tablesResultSet.getString(1)).thenReturn("workflow");
-		SQLException conversionFailure = new SQLException("convert failed");
-		SQLException resetFailure = new SQLException("reset failed");
-		when(statement.execute(
-			"ALTER TABLE `crafter`.`workflow` CONVERT TO CHARACTER SET `utf8mb3` COLLATE `utf8mb3_general_ci`"))
-			.thenThrow(conversionFailure);
-		when(statement.execute("SET FOREIGN_KEY_CHECKS = 1")).thenThrow(resetFailure);
-
-		try {
-			operation.doExecute(context);
-			Assert.fail("Upgrade should fail when table conversion fails");
-		} catch (UpgradeException e) {
-			Assert.assertSame(conversionFailure, e.getCause());
-			Assert.assertEquals(1, conversionFailure.getSuppressed().length);
-			Assert.assertSame(resetFailure, conversionFailure.getSuppressed()[0]);
-		}
-
-		verify(statement).execute("SET FOREIGN_KEY_CHECKS = 1");
 	}
 
 	@Test(expected = UpgradeException.class)
@@ -147,18 +99,5 @@ public class DatabaseCollationUpgradeOperationTest {
 	@Test
 	public void quotesBackticksInIdentifiers() {
 		Assert.assertEquals("`cra``fter`", DatabaseCollationUpgradeOperation.quoteIdentifier("cra`fter"));
-	}
-
-	private void stubSiteCollation() throws Exception {
-		when(studioConfiguration.getProperty(DB_SCHEMA)).thenReturn("crafter");
-		when(context.getConnection()).thenReturn(connection);
-		when(connection.createStatement()).thenReturn(statement);
-		when(connection.prepareStatement(DatabaseCollationUpgradeOperation.FIND_SITE_COLLATION_SQL)).thenReturn(siteStatement);
-		when(connection.prepareStatement(DatabaseCollationUpgradeOperation.FIND_TABLES_SQL)).thenReturn(tablesStatement);
-		when(siteStatement.executeQuery()).thenReturn(siteResultSet);
-		when(tablesStatement.executeQuery()).thenReturn(tablesResultSet);
-		when(siteResultSet.next()).thenReturn(true);
-		when(siteResultSet.getString(1)).thenReturn("utf8mb3");
-		when(siteResultSet.getString(2)).thenReturn("utf8mb3_general_ci");
 	}
 }
