@@ -164,6 +164,34 @@ public class DeploymentEventsWatcherTest {
 	}
 
 	@Test
+	public void checkRefreshesManifestOnNewEvents() throws IOException {
+		S3ContentStoreAdapter adapter = mock(S3ContentStoreAdapter.class);
+		S3Utilities utilities = S3Utilities.builder().region(Region.US_EAST_1).build();
+		S3Uri uri = utilities.parseUri(URI.create("s3://test-bucket/sites/acme"));
+		S3Context s3Context = new S3Context("id", adapter, "s3://test-bucket/sites/acme", false, true, 1000,
+			true, uri, null);
+		when(siteContext.getContext()).thenReturn(s3Context);
+
+		Instant now = Instant.now();
+		Properties lastDeploymentEvents = createDeploymentEvents(now, now, now);
+		watcher.latestDeploymentEventsPerSite.put(SITENAME, lastDeploymentEvents);
+
+		Instant later = now.plusSeconds(10);
+		Properties currDeploymentEvents = createDeploymentEvents(later, later, later);
+		Content currDeploymentEventsContent = getDeploymentEventsAsContent(currDeploymentEvents);
+		when(contentStoreService.findContent(s3Context, CACHE_OFF_CACHING_OPTIONS, DEFAULT_DEPLOYMENT_EVENTS_FILE_URL))
+			.thenReturn(currDeploymentEventsContent);
+
+		watcher.checkForEvents();
+
+		verify(adapter).reloadContentStoreManifest(s3Context);
+		verify(siteContextManager, times(1)).startContextRebuild(anyString(), anyBoolean(), any(Consumer.class));
+		verify(siteContext, never()).startCacheClear(any(Runnable.class));
+		verify(siteContext, never()).startGraphQLSchemaBuild(any(Runnable.class));
+		verify(watcher.latestDeploymentEventsPerSite, times(1)).put(SITENAME, currDeploymentEvents);
+	}
+
+	@Test
 	public void checkRetriesManifestLoadWhenPreviousLoadFailed() throws IOException {
 		S3ContentStoreAdapter adapter = mock(S3ContentStoreAdapter.class);
 		S3Utilities utilities = S3Utilities.builder().region(Region.US_EAST_1).build();

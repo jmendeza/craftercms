@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
@@ -38,17 +39,18 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermission;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
+import static org.eclipse.jgit.lib.Constants.DOT_GIT;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -83,8 +85,6 @@ public class S3ContentStoreManifestProcessorTest {
 		if (repo == null || Files.notExists(repo)) {
 			return;
 		}
-		restoreGitPermissions(repo.resolve(".git"));
-		restoreGitPermissions(repo.resolve("site/.git"));
 		deleteRecursively(repo);
 	}
 
@@ -112,13 +112,23 @@ public class S3ContentStoreManifestProcessorTest {
 		Files.writeString(gitObjects.resolve("pack"), "pack");
 		Files.createDirectories(nestedGitObjects);
 		Files.writeString(nestedGitObjects.resolve("pack"), "nested");
-		hide(gitObjects);
-		hide(nestedGitObjects);
 
-		List<String> paths = processor().listPublishedFiles(repo);
+		// The walker opens a directory before preVisitDirectory. Failing opens of descendants
+		// proves .git was skipped. Mode 000 is ignored by root and is unavailable on Windows.
+		try (MockedStatic<Files> files = mockStatic(Files.class, CALLS_REAL_METHODS)) {
+			files.when(() -> Files.newDirectoryStream(any(Path.class))).thenAnswer(invocation -> {
+				Path directory = invocation.getArgument(0);
+				if (isInsideGit(directory)) {
+					throw new IOException("refusing to enter " + directory);
+				}
+				return invocation.callRealMethod();
+			});
 
-		assertTrue(paths.contains("/site/website/index.xml"));
-		assertFalse(paths.stream().anyMatch(path -> path.contains("/.git")));
+			List<String> paths = processor().listPublishedFiles(repo);
+
+			assertTrue(paths.contains("/site/website/index.xml"));
+			assertFalse(paths.stream().anyMatch(path -> path.contains("/.git")));
+		}
 	}
 
 	@Test
@@ -232,21 +242,14 @@ public class S3ContentStoreManifestProcessorTest {
 		return deployment;
 	}
 
-	private static void hide(Path directory) throws IOException {
-		Files.setPosixFilePermissions(directory, EnumSet.noneOf(PosixFilePermission.class));
-	}
-
-	private static void restoreGitPermissions(Path gitDirectory) throws IOException {
-		if (Files.notExists(gitDirectory)) {
-			return;
+	private static boolean isInsideGit(Path directory) {
+		for (Path parent = directory.getParent(); parent != null; parent = parent.getParent()) {
+			Path name = parent.getFileName();
+			if (name != null && DOT_GIT.equals(name.toString())) {
+				return true;
+			}
 		}
-		Path objects = gitDirectory.resolve("objects");
-		if (Files.exists(objects)) {
-			Files.setPosixFilePermissions(objects, EnumSet.of(
-				PosixFilePermission.OWNER_READ,
-				PosixFilePermission.OWNER_WRITE,
-				PosixFilePermission.OWNER_EXECUTE));
-		}
+		return false;
 	}
 
 	private static void deleteRecursively(Path root) throws IOException {
