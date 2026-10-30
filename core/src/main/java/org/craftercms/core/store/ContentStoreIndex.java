@@ -55,9 +55,9 @@ public class ContentStoreIndex {
 	public static ContentStoreIndex from(ContentStoreManifest manifest) {
 		List<ContentStoreManifest.Item> files = manifest == null || manifest.getFiles() == null
 			? List.of() : manifest.getFiles();
-		// Each file also records its parent directories. Four entries per file covers a typical
-		// /site/website/... path, including shared parents, without resizing at large manifests.
-		int capacity = files.size() > Integer.MAX_VALUE / 4 ? Integer.MAX_VALUE : files.size() * 4;
+		// Entries are the files plus their parent directories. Shared parents keep that
+		// close to one and a half entries per file, which avoids a resize at large manifests.
+		int capacity = files.size() > Integer.MAX_VALUE / 3 ? Integer.MAX_VALUE : files.size() * 3 / 2;
 		Map<String, MutableEntry> building = HashMap.newHashMap(capacity);
 
 		for (ContentStoreManifest.Item item : files) {
