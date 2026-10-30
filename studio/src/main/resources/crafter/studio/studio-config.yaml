@@ -591,9 +591,9 @@ studio.publishingManager.indexFile: index.xml
 studio.db.driver: org.mariadb.jdbc.Driver
 # Database schema name
 studio.db.schema: crafter
-# Character set and collation used when creating the schema and converting existing tables
+# Character set used when creating the database schema.
+# The schema collation is utf8mb3_uca1400_ai_ci, so this must stay utf8mb3.
 studio.db.characterSet: utf8mb3
-studio.db.collation: utf8mb3_uca1400_ai_ci
 # Database user
 studio.db.user: ${env:MARIADB_USER}
 # Database password:

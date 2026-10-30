@@ -32,20 +32,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.lang.String.format;
-import static org.craftercms.studio.api.v2.utils.StudioConfiguration.DB_CHARACTER_SET;
-import static org.craftercms.studio.api.v2.utils.StudioConfiguration.DB_COLLATION;
 import static org.craftercms.studio.api.v2.utils.StudioConfiguration.DB_SCHEMA;
 
 /**
- * Converts the Studio database tables to {@code studio.db.characterSet} and {@code studio.db.collation}.
+ * Sets the database default character set and collation to those of the {@code site} table, then converts any table
+ * that still uses a different collation.
  *
- * <p>This operation is retry-safe. Tables which already use the target collation are not rebuilt, so an interrupted
- * upgrade resumes with the remaining tables.</p>
+ * <p>Runs before new tables are created, so those tables inherit {@code site}'s collation. Tables which already
+ * match are not rebuilt, so an interrupted upgrade resumes with the remaining tables.</p>
  */
 public class DatabaseCollationUpgradeOperation extends AbstractUpgradeOperation {
 
 	private static final Logger logger = LoggerFactory.getLogger(DatabaseCollationUpgradeOperation.class);
 
+	static final String FIND_SITE_COLLATION_SQL = """
+		SELECT c.character_set_name, t.table_collation
+		FROM information_schema.tables t
+		INNER JOIN information_schema.collations c ON c.collation_name = t.table_collation
+		WHERE t.table_schema = ?
+		  AND t.table_name = 'site'
+		""";
 	static final String FIND_TABLES_SQL = """
 		SELECT table_name
 		FROM information_schema.tables
@@ -63,29 +69,43 @@ public class DatabaseCollationUpgradeOperation extends AbstractUpgradeOperation 
 	@Override
 	protected void doExecute(StudioUpgradeContext context) throws UpgradeException {
 		String schema = studioConfiguration.getProperty(DB_SCHEMA);
-		String characterSet = studioConfiguration.getProperty(DB_CHARACTER_SET);
-		String collation = studioConfiguration.getProperty(DB_COLLATION);
 		try (Connection connection = context.getConnection()) {
+			SchemaDefaults defaults = readSiteDefaults(connection, schema);
 			try (Statement statement = connection.createStatement()) {
-				statement.execute(format(ALTER_DATABASE_SQL, quoteIdentifier(schema), characterSet, collation));
+				logger.info("Set database '{}' default character set to '{}' and collation to '{}', matching table 'site'",
+					schema, defaults.characterSet(), defaults.collation());
+				statement.execute(format(ALTER_DATABASE_SQL, quoteIdentifier(schema),
+					quoteIdentifier(defaults.characterSet()), quoteIdentifier(defaults.collation())));
 				statement.execute("SET FOREIGN_KEY_CHECKS = 0");
 				try {
-					for (String table : getTablesToConvert(connection, schema, collation)) {
-						logger.info("Convert table '{}.{}' to collation '{}'", schema, table, collation);
+					for (String table : getTablesToConvert(connection, schema, defaults.collation())) {
+						logger.info("Convert table '{}.{}' to collation '{}'", schema, table, defaults.collation());
 						statement.execute(format(ALTER_TABLE_SQL, quoteIdentifier(schema) + "." + quoteIdentifier(table),
-							characterSet, collation));
+							quoteIdentifier(defaults.characterSet()), quoteIdentifier(defaults.collation())));
 					}
 				} finally {
 					try {
 						statement.execute("SET FOREIGN_KEY_CHECKS = 1");
 					} catch (SQLException e) {
 						logger.error("Failed to re-enable foreign key checks after converting database '{}' to collation '{}'",
-							schema, collation, e);
+							schema, defaults.collation(), e);
 					}
 				}
 			}
 		} catch (SQLException e) {
-			throw new UpgradeException(format("Failed to convert database '%s' to collation '%s'", schema, collation), e);
+			throw new UpgradeException(format("Failed to align database '%s' with the collation of table 'site'", schema), e);
+		}
+	}
+
+	protected SchemaDefaults readSiteDefaults(Connection connection, String schema) throws SQLException, UpgradeException {
+		try (PreparedStatement statement = connection.prepareStatement(FIND_SITE_COLLATION_SQL)) {
+			statement.setString(1, schema);
+			try (ResultSet resultSet = statement.executeQuery()) {
+				if (!resultSet.next()) {
+					throw new UpgradeException(format("Could not read the collation of table 'site' in database '%s'", schema));
+				}
+				return new SchemaDefaults(resultSet.getString(1), resultSet.getString(2));
+			}
 		}
 	}
 
@@ -105,5 +125,8 @@ public class DatabaseCollationUpgradeOperation extends AbstractUpgradeOperation 
 
 	static String quoteIdentifier(String identifier) {
 		return "`" + identifier.replace("`", "``") + "`";
+	}
+
+	private record SchemaDefaults(String characterSet, String collation) {
 	}
 }

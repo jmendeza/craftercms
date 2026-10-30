@@ -34,8 +34,6 @@ import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.craftercms.studio.api.v2.utils.StudioConfiguration.DB_CHARACTER_SET;
-import static org.craftercms.studio.api.v2.utils.StudioConfiguration.DB_COLLATION;
 import static org.craftercms.studio.api.v2.utils.StudioConfiguration.DB_SCHEMA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -47,17 +45,18 @@ import static org.mockito.Mockito.when;
 /**
  * Exercises {@link DatabaseCollationUpgradeOperation} against embedded MariaDB.
  * <p>
- * {@code publish_request.package_id} starts as {@code utf8mb3_general_ci} and
- * {@code publish_package.old_package_id} starts as {@code utf8mb3_uca1400_ai_ci}. That mix rejects
- * the publisher upgrade join {@code old_package_id = package_id}. After the operation, every collation
- * reported by {@code information_schema} is the target collation and the join returns the row.
+ * The database default starts as {@code utf8mb3_uca1400_ai_ci}. {@code site} and
+ * {@code publish_request.package_id} are {@code utf8mb3_general_ci}, while
+ * {@code publish_package.old_package_id} is {@code utf8mb3_uca1400_ai_ci}. That mix rejects
+ * {@code old_package_id = package_id}. The operation makes the database default and every table
+ * match {@code site}, and a table created afterwards with no character set inherits that collation.
  */
 public class DatabaseCollationUpgradeOperationMariaDBTest {
 
 	private static final String DATABASE = "collation_upgrade_test";
 	private static final String CHARACTER_SET = "utf8mb3";
-	private static final String LEGACY_COLLATION = "utf8mb3_general_ci";
-	private static final String TARGET_COLLATION = "utf8mb3_uca1400_ai_ci";
+	private static final String SITE_COLLATION = "utf8mb3_general_ci";
+	private static final String OTHER_COLLATION = "utf8mb3_uca1400_ai_ci";
 	private static final String PACKAGE_ID = "pkg-1";
 	private static final String JOIN_SQL = """
 		SELECT pr.package_id
@@ -106,7 +105,12 @@ public class DatabaseCollationUpgradeOperationMariaDBTest {
 		     Statement statement = connection.createStatement()) {
 			connection.setAutoCommit(true);
 			statement.execute("ALTER DATABASE `" + DATABASE + "` CHARACTER SET " + CHARACTER_SET
-				+ " COLLATE " + LEGACY_COLLATION);
+				+ " COLLATE " + OTHER_COLLATION);
+			statement.execute("""
+				CREATE TABLE site (
+					site_id VARCHAR(50) NOT NULL
+				) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
+				""");
 			statement.execute("""
 				CREATE TABLE publish_request (
 					package_id VARCHAR(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci
@@ -130,23 +134,30 @@ public class DatabaseCollationUpgradeOperationMariaDBTest {
 	}
 
 	@Test
-	public void convertsMixedCollationsSoPackageIdJoinWorks() throws Exception {
-		assertEquals(Set.of(LEGACY_COLLATION), queryStrings(SCHEMA_COLLATION_SQL));
-		assertEquals(Set.of(LEGACY_COLLATION, TARGET_COLLATION), queryStrings(TABLE_COLLATION_SQL));
-		assertEquals(Set.of(LEGACY_COLLATION, TARGET_COLLATION), queryStrings(COLUMN_COLLATION_SQL));
+	public void alignsDatabaseWithSiteSoPackageIdJoinWorks() throws Exception {
+		assertEquals(Set.of(OTHER_COLLATION), queryStrings(SCHEMA_COLLATION_SQL));
+		assertEquals(Set.of(SITE_COLLATION, OTHER_COLLATION), queryStrings(TABLE_COLLATION_SQL));
+		assertEquals(Set.of(SITE_COLLATION, OTHER_COLLATION), queryStrings(COLUMN_COLLATION_SQL));
 		assertPackageIdJoinRejected();
 
 		StudioConfiguration studioConfiguration = mock(StudioConfiguration.class);
 		when(studioConfiguration.getProperty(DB_SCHEMA)).thenReturn(DATABASE);
-		when(studioConfiguration.getProperty(DB_CHARACTER_SET)).thenReturn(CHARACTER_SET);
-		when(studioConfiguration.getProperty(DB_COLLATION)).thenReturn(TARGET_COLLATION);
 
 		DatabaseCollationUpgradeOperation operation = new DatabaseCollationUpgradeOperation(studioConfiguration);
 		operation.doExecute(new StudioUpgradeContext(DATABASE, studioConfiguration, dataSource, null, null));
 
-		assertEquals(Set.of(TARGET_COLLATION), queryStrings(SCHEMA_COLLATION_SQL));
-		assertEquals(Set.of(TARGET_COLLATION), queryStrings(TABLE_COLLATION_SQL));
-		assertEquals(Set.of(TARGET_COLLATION), queryStrings(COLUMN_COLLATION_SQL));
+		try (Connection connection = dataSource.getConnection();
+		     Statement statement = connection.createStatement()) {
+			statement.execute("""
+				CREATE TABLE inherited_table (
+					name VARCHAR(50) NOT NULL
+				) ENGINE=InnoDB
+				""");
+		}
+
+		assertEquals(Set.of(SITE_COLLATION), queryStrings(SCHEMA_COLLATION_SQL));
+		assertEquals(Set.of(SITE_COLLATION), queryStrings(TABLE_COLLATION_SQL));
+		assertEquals(Set.of(SITE_COLLATION), queryStrings(COLUMN_COLLATION_SQL));
 		assertEquals(PACKAGE_ID, joinedPackageId());
 	}
 

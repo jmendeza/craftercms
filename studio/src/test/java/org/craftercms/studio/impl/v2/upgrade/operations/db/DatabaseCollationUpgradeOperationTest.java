@@ -16,6 +16,7 @@
 
 package org.craftercms.studio.impl.v2.upgrade.operations.db;
 
+import org.craftercms.commons.upgrade.exception.UpgradeException;
 import org.craftercms.studio.api.v2.utils.StudioConfiguration;
 import org.craftercms.studio.impl.v2.upgrade.StudioUpgradeContext;
 import org.junit.Assert;
@@ -30,8 +31,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-import static org.craftercms.studio.api.v2.utils.StudioConfiguration.DB_CHARACTER_SET;
-import static org.craftercms.studio.api.v2.utils.StudioConfiguration.DB_COLLATION;
 import static org.craftercms.studio.api.v2.utils.StudioConfiguration.DB_SCHEMA;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
@@ -49,34 +48,54 @@ public class DatabaseCollationUpgradeOperationTest {
 	@Mock
 	private Statement statement;
 	@Mock
-	private PreparedStatement preparedStatement;
+	private PreparedStatement siteStatement;
 	@Mock
-	private ResultSet resultSet;
+	private PreparedStatement tablesStatement;
+	@Mock
+	private ResultSet siteResultSet;
+	@Mock
+	private ResultSet tablesResultSet;
 
 	@Test
-	public void convertsOnlyTablesUsingAnotherCollation() throws Exception {
+	public void alignsDatabaseAndOtherTablesWithSite() throws Exception {
 		DatabaseCollationUpgradeOperation operation = new DatabaseCollationUpgradeOperation(studioConfiguration);
 		when(studioConfiguration.getProperty(DB_SCHEMA)).thenReturn("crafter");
-		when(studioConfiguration.getProperty(DB_CHARACTER_SET)).thenReturn("utf8mb3");
-		when(studioConfiguration.getProperty(DB_COLLATION)).thenReturn("utf8mb3_uca1400_ai_ci");
 		when(context.getConnection()).thenReturn(connection);
 		when(connection.createStatement()).thenReturn(statement);
-		when(connection.prepareStatement(DatabaseCollationUpgradeOperation.FIND_TABLES_SQL)).thenReturn(preparedStatement);
-		when(preparedStatement.executeQuery()).thenReturn(resultSet);
-		when(resultSet.next()).thenReturn(true, true, false);
-		when(resultSet.getString(1)).thenReturn("workflow", "item");
+		when(connection.prepareStatement(DatabaseCollationUpgradeOperation.FIND_SITE_COLLATION_SQL)).thenReturn(siteStatement);
+		when(connection.prepareStatement(DatabaseCollationUpgradeOperation.FIND_TABLES_SQL)).thenReturn(tablesStatement);
+		when(siteStatement.executeQuery()).thenReturn(siteResultSet);
+		when(tablesStatement.executeQuery()).thenReturn(tablesResultSet);
+		when(siteResultSet.next()).thenReturn(true);
+		when(siteResultSet.getString(1)).thenReturn("utf8mb3");
+		when(siteResultSet.getString(2)).thenReturn("utf8mb3_general_ci");
+		when(tablesResultSet.next()).thenReturn(true, true, false);
+		when(tablesResultSet.getString(1)).thenReturn("workflow", "item");
 
 		operation.doExecute(context);
 
-		verify(preparedStatement).setString(1, "crafter");
-		verify(preparedStatement).setString(2, "utf8mb3_uca1400_ai_ci");
+		verify(siteStatement).setString(1, "crafter");
+		verify(tablesStatement).setString(1, "crafter");
+		verify(tablesStatement).setString(2, "utf8mb3_general_ci");
 
 		InOrder statements = inOrder(statement);
-		statements.verify(statement).execute("ALTER DATABASE `crafter` CHARACTER SET utf8mb3 COLLATE utf8mb3_uca1400_ai_ci");
+		statements.verify(statement).execute("ALTER DATABASE `crafter` CHARACTER SET `utf8mb3` COLLATE `utf8mb3_general_ci`");
 		statements.verify(statement).execute("SET FOREIGN_KEY_CHECKS = 0");
-		statements.verify(statement).execute("ALTER TABLE `crafter`.`workflow` CONVERT TO CHARACTER SET utf8mb3 COLLATE utf8mb3_uca1400_ai_ci");
-		statements.verify(statement).execute("ALTER TABLE `crafter`.`item` CONVERT TO CHARACTER SET utf8mb3 COLLATE utf8mb3_uca1400_ai_ci");
+		statements.verify(statement).execute("ALTER TABLE `crafter`.`workflow` CONVERT TO CHARACTER SET `utf8mb3` COLLATE `utf8mb3_general_ci`");
+		statements.verify(statement).execute("ALTER TABLE `crafter`.`item` CONVERT TO CHARACTER SET `utf8mb3` COLLATE `utf8mb3_general_ci`");
 		statements.verify(statement).execute("SET FOREIGN_KEY_CHECKS = 1");
+	}
+
+	@Test(expected = UpgradeException.class)
+	public void failsWhenSiteTableIsMissing() throws Exception {
+		DatabaseCollationUpgradeOperation operation = new DatabaseCollationUpgradeOperation(studioConfiguration);
+		when(studioConfiguration.getProperty(DB_SCHEMA)).thenReturn("crafter");
+		when(context.getConnection()).thenReturn(connection);
+		when(connection.prepareStatement(DatabaseCollationUpgradeOperation.FIND_SITE_COLLATION_SQL)).thenReturn(siteStatement);
+		when(siteStatement.executeQuery()).thenReturn(siteResultSet);
+		when(siteResultSet.next()).thenReturn(false);
+
+		operation.doExecute(context);
 	}
 
 	@Test
