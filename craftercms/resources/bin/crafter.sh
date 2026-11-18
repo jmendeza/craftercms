@@ -798,13 +798,30 @@ function createOpenSearchDocker() {
   fi
 }
 
+# True for the OpenSearch image this script starts, with or without a tag.
+function isOpenSearchImage() {
+  case "$1" in
+    opensearchproject/opensearch|opensearchproject/opensearch:*)
+      return 0
+      ;;
+  esac
+  return 1
+}
+
 function destroyOpenSearchDocker() {
   # `docker rm` without -f leaves a running container in place, and the old
-  # inspect check discarded its own output. Force-remove so the port is released.
+  # inspect check discarded its own output. Remove the named container only
+  # when it is OpenSearch, so another image that reused the name keeps running.
   if docker inspect "$SEARCH_DOCKER_NAME" > /dev/null 2>&1; then
-    # `docker rm -f` SIGKILLs a running container. Stop first so OpenSearch can flush.
-    docker stop -t 30 "$SEARCH_DOCKER_NAME" > /dev/null 2>&1
-    docker rm -f "$SEARCH_DOCKER_NAME" > /dev/null 2>&1
+    local image
+    image=$(docker inspect --format '{{.Config.Image}}' "$SEARCH_DOCKER_NAME" 2>/dev/null || true)
+    if isOpenSearchImage "$image"; then
+      # `docker rm -f` SIGKILLs a running container. Stop first so OpenSearch can flush.
+      docker stop -t 30 "$SEARCH_DOCKER_NAME" > /dev/null 2>&1
+      docker rm -f "$SEARCH_DOCKER_NAME" > /dev/null 2>&1
+    else
+      cecho "Container $SEARCH_DOCKER_NAME is not an OpenSearch image (${image:-unknown}). Leaving it running.\n" "warning"
+    fi
   fi
 }
 
@@ -889,12 +906,10 @@ function stopSearch() {
     # shellcheck disable=SC2086
     for id in $published; do
       image=$(docker inspect --format '{{.Config.Image}}' "$id" 2>/dev/null || true)
-      case "$image" in
-        opensearchproject/opensearch|opensearchproject/opensearch:*)
-          docker stop -t 30 "$id" > /dev/null 2>&1
-          docker rm -f "$id" > /dev/null 2>&1
-          ;;
-      esac
+      if isOpenSearchImage "$image"; then
+        docker stop -t 30 "$id" > /dev/null 2>&1
+        docker rm -f "$id" > /dev/null 2>&1
+      fi
     done
     rm -f "$SEARCH_PID"
   else
